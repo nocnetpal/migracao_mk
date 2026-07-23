@@ -12,6 +12,23 @@
 > CCR1036** através do link privado com o NE8000 — mecanismo exato ainda **a definir** (ver seção
 > abaixo).
 
+## Princípio: gerência do hypervisor (privada) ≠ IP das VMs (podem ser públicos e fixos)
+
+✅ **Confirmado (usuário, 2026-07-23).** Cada cluster Proxmox tem **um IP privado de gerência do
+hypervisor** (é o que pendura na CCR1036) e, dentro dele, **várias VMs com IP próprio** — várias
+delas públicas e fixas, do `177.72.104.0/27`. Essas VMs **não passam pela CCR1036**: seguem o
+padrão já descrito para o CDNTV, saindo por uma NIC própria direto na VLAN 16 (rede de acesso).
+
+Cruzando o Dude ([11](11-cruzamento-dude-devices.md)), existem **4 clusters Proxmox**, mas o plano
+de portas só previa gerência para 1:
+
+| Cluster | IP de gerência (hypervisor) | VMs nele (IP público) |
+|---|---|---|
+| Proxmox Docker | `192.168.116.122/30` ✅ no plano (`ether3`) | OpenVPN-2 `177.72.104.12`, Fusion Elaborados `.22`, Aplicações `.23`, Fusion Painéis Simples `.25`, Opa ChatBot `.30` |
+| **Proxmox HubSoft** | `192.168.115.210/30` ⚠️ **fora do plano** | HubSoft `177.72.104.16` |
+| **Proxmox DNS** | `192.168.115.138/30` ⚠️ **fora do plano** | OLT Cloud `177.72.104.24`, DNS Master `.58`, Automações `.29` |
+| Proxmox Zabbix | ⚠️ **nenhum IP de gerência identificado no Dude** — pode ser que ainda não exista separado (`ether5` já estava marcado como "mgmt privada nova", consistente com isso) | Zabbix `.6`, Fusion PM CPV `.14`, Fusion 0800 `.18`, Zeus TIP `.13`, "Proxmox Zabbix" `.5` (esse nome é a própria VM pública), DOCS Cloud `.7`, Servidor VPN `.9`, Fusion PM MST `.17`, SFTP OPA `.20` |
+
 ## Topologia lógica da CCR1036
 
 ```
@@ -20,12 +37,12 @@
                            │ 🆕 + rota do IP público de NAT (a definir)
                            │
                         CCR1036 ── 🆕 NAT (SRC-NAT geral, DST-NAT Dude/TS SIX)
-         ┌────────┬───────┼───────┬────────┐
-      ether2  ether3  ether4  ether5  ether6
-         │       │       │       │       │
-      TS SIX  Proxmox  DNS    Zabbix/ OLT CPV
-              Docker   rec.   Callcenter
-              CDNTV          (mgmt privada)
+         ┌────────┬───────┼───────┬────────┬─────────┬─────────┐
+      ether2  ether3  ether4  ether5    ether6     ether7?   ether8?
+         │       │       │       │         │          │         │
+      TS SIX  Proxmox  DNS    Zabbix/   OLT CPV   Proxmox    Proxmox
+              Docker   rec.   Callcenter          HubSoft⚠️   DNS⚠️
+              CDNTV          (mgmt nova)          (novo)      (novo)
                                  │
                     segunda NIC → VLAN 16 / 177.72.104.5 (tráfego público direto, sem NAT)
 ```
@@ -34,16 +51,26 @@
 
 | Porta CCR | Dispositivo (Dude) | IP / rede hoje | VLAN no alvo | Gateway no alvo | Observação |
 |---|---|---|---|---|---|
-| `ether1` | — (uplink NE8000) | — | `vlan2000` (p2p) + `vlan10` + `vlan66` + `vlan109` + `vlan116` + `vlan999` | — | Apenas tráfego privado |
+| `ether1` | — (uplink NE8000) | — | `vlan2000` (p2p) + `vlan10` + `vlan66` + `vlan109` + `vlan116` + `vlan999` + *novas abaixo* | — | Apenas tráfego privado |
 | `ether2` | **TS SIX** | `192.168.66.14/28` | `vlan66` untagged | NE8000 `192.168.66.1/28` | DST-NAT `:15389` continua apontando para cá |
 | `ether3` | **Proxmox Docker - CDNTV** | `192.168.116.122/30` | `vlan116` untagged | NE8000 `192.168.116.121/30` | Gerência privada; tráfego público dos serviços CDNTV vai por segunda NIC |
 | `ether4` | **DNS recursivo** | `10.200.255.254/30` | `vlan10` untagged | NE8000 `10.200.255.253/30` | Nome não consta no Dude; IP vem do `/ip address` do RB3011 |
 | `ether5` | **Proxmox Zabbix** (hoje) / **Callcenter** (a implantar) | mgmt privada nova | `vlan999` untagged | NE8000 `192.168.254.1/24` | O IP público `177.72.104.5/6` vai para a **segunda NIC** (VLAN16) |
 | `ether6` | **OLT CPV** | `192.168.115.42/30` | `vlan109` untagged | NE8000 `192.168.115.41/30` | Gerência da OLT |
+| 🆕 `ether7` (a criar) | **Proxmox HubSoft** | `192.168.115.210/30` | VLAN a definir | NE8000, endereço a definir | Faltava no plano — achado ao cruzar clusters Proxmox no Dude |
+| 🆕 `ether8` (a criar) | **Proxmox DNS** | `192.168.115.138/30` | VLAN a definir | NE8000, endereço a definir | Faltava no plano — idem |
+
+> Com a variante recomendada (**12G-4S**, ver discussão de hardware), sobram portas RJ45 de sobra
+> pra isso sem trocar de modelo: 6 em uso + 2 novas = 8, ainda restam 4 RJ45 + 4 SFP.
 
 > ✅ **Esclarecido (usuário, 2026-07-23):** "Callcenter" não aparece no Dude porque **ainda não
 > existe** — é um sistema novo a ser implantado, não um serviço a migrar. `ether5`/`vlan999` fica
 > reservada também para ele quando entrar em produção; hoje a porta é só do Proxmox Zabbix.
+
+> ⚠️ **Pendência nova:** confirmar se `192.168.115.210` (HubSoft) e `192.168.115.138` (DNS) são
+> IPs de gerência do próprio hypervisor Proxmox (mesmo padrão do Docker, `.116.122`) ou de outra
+> VM dentro do cluster — e se o cluster **Zabbix** realmente não tem gerência de hypervisor
+> separada hoje (nesse caso, `ether5` cobre isso ao criar a "mgmt privada nova").
 
 ## 🆕 NAT (SRC-NAT/DST-NAT) — correção 2026-07-23
 
@@ -149,6 +176,10 @@ add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-po
 - **OLT CPV** continua `192.168.115.42/30` — gateway passa para o NE8000.
 - **Proxmox Zabbix/Callcenter** ganha uma IP privado novo em `vlan999` para gerência; o IP
   público `177.72.104.5/6` migra para a **segunda NIC** (VLAN16 / rede de acesso).
+- 🆕 **Proxmox HubSoft** continua `192.168.115.210/30` — gateway passa para o NE8000. VM HubSoft
+  pública `177.72.104.16` segue por segunda NIC (VLAN16), sem passar pela CCR1036.
+- 🆕 **Proxmox DNS** continua `192.168.115.138/30` — gateway passa para o NE8000. VMs públicas
+  (OLT Cloud `.24`, DNS Master `.58`, Automações `.29`) seguem por segunda NIC (VLAN16).
 
 ## Subinterfaces que o NE8000 precisa criar (no link com a CCR1036)
 
@@ -159,6 +190,8 @@ interface GigabitEthernet0/1/X.109  -> 192.168.115.41/30    (OLT CPV)
 interface GigabitEthernet0/1/X.116  -> 192.168.116.121/30   (Proxmox Docker/CDNTV)
 interface GigabitEthernet0/1/X.999  -> 192.168.254.1/24     (gerência Zabbix/Callcenter)
 interface GigabitEthernet0/1/X.2000 -> 10.254.254.253/30    (p2p CCR1036)
+interface GigabitEthernet0/1/X.???  -> a definir            (🆕 gerência Proxmox HubSoft, 192.168.115.210/30)
+interface GigabitEthernet0/1/X.???  -> a definir            (🆕 gerência Proxmox DNS, 192.168.115.138/30)
 ```
 
 A VLAN 16 (pública) **não** aparece no link CCR1036↔NE8000 — ela chega ao NE8000 pelo DM4170

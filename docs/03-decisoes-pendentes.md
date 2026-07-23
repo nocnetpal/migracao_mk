@@ -263,3 +263,23 @@ válido (MD5 é por-interface), mas precisa ser decisão explícita, não aciden
 uma vulnerabilidade urgente.
 
 **Status:** em aberto (recomendação: A).
+
+## 12. 🆕 Clusters Proxmox sem gerência prevista na CCR1036
+
+Confirmado o modelo (usuário, 2026-07-23): cada cluster Proxmox tem **um IP privado de gerência do
+hypervisor** + várias VMs com IP público próprio (que não passam pela CCR1036, saem por segunda
+NIC direto na VLAN 16). Cruzando os clusters no Dude ([11](11-cruzamento-dude-devices.md)) contra o
+plano de portas da CCR1036 ([10](10-enderecamento-ccr1036.md)), **2 de 4 clusters ficaram de fora**:
+
+| Cluster | IP de gerência | Estava no plano? |
+|---|---|---|
+| Proxmox Docker | `192.168.116.122/30` | ✅ sim (`ether3`) |
+| Proxmox HubSoft | `192.168.115.210/30` | ❌ não |
+| Proxmox DNS | `192.168.115.138/30` | ❌ não |
+| Proxmox Zabbix | não identificado no Dude | (coberto pela "mgmt privada nova" já prevista em `ether5`) |
+
+**O que falta:** confirmar se `192.168.115.210` e `192.168.115.138` são mesmo os IPs de gerência
+dos hypervisors (mesmo padrão do Docker) e reservar porta/VLAN/subinterface no NE8000 pra cada um
+— provisoriamente `ether7` e `ether8` da CCR1036 (cabe na variante 12G-4S recomendada).
+
+**Status:** em aberto — pendência de endereçamento, não bloqueia o restante do plano.
