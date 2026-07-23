@@ -22,12 +22,26 @@ padrão já descrito para o CDNTV, saindo por uma NIC própria direto na VLAN 16
 Cruzando o Dude ([11](11-cruzamento-dude-devices.md)), existem **4 clusters Proxmox**, mas o plano
 de portas só previa gerência para 1:
 
-| Cluster | IP de gerência (hypervisor) | VMs nele (IP público) |
-|---|---|---|
-| Proxmox Docker | `192.168.116.122/30` ✅ no plano (`ether3`) | OpenVPN-2 `177.72.104.12`, Fusion Elaborados `.22`, Aplicações `.23`, Fusion Painéis Simples `.25`, Opa ChatBot `.30` |
-| **Proxmox HubSoft** | `192.168.115.210/30` ⚠️ **fora do plano** | HubSoft `177.72.104.16` |
-| **Proxmox DNS** | `192.168.115.138/30` ⚠️ **fora do plano** | OLT Cloud `177.72.104.24`, DNS Master `.58`, Automações `.29` |
-| Proxmox Zabbix | ⚠️ **nenhum IP de gerência identificado no Dude** — pode ser que ainda não exista separado (`ether5` já estava marcado como "mgmt privada nova", consistente com isso) | Zabbix `.6`, Fusion PM CPV `.14`, Fusion 0800 `.18`, Zeus TIP `.13`, "Proxmox Zabbix" `.5` (esse nome é a própria VM pública), DOCS Cloud `.7`, Servidor VPN `.9`, Fusion PM MST `.17`, SFTP OPA `.20` |
+| Cluster | IP de gerência (hypervisor) | VMs — **públicas** | VMs — **privadas** |
+|---|---|---|---|
+| Proxmox Docker | `192.168.116.122/30` ✅ no plano (`ether3`) | OpenVPN-2 `177.72.104.12`, Fusion Elaborados `.22`, Fusion Painéis Simples `.25`, Aplicações `.23`, Opa ChatBot `.30` | — |
+| **Proxmox HubSoft** | `192.168.115.210/30` ⚠️ **fora do plano** | HubSoft `177.72.104.16` | **Radius HubSoft `192.168.115.214`** ⚠️ |
+| **Proxmox DNS** | `192.168.115.138/30` ⚠️ **fora do plano** | OLT Cloud `177.72.104.24`, DNS Master `.58`, Automações `.29` | — |
+| Proxmox Zabbix | ⚠️ nenhum IP de gerência identificado no Dude (`ether5` já previa "mgmt privada nova", consistente) | Zabbix `.6`, Fusion PM CPV `.14`, Fusion 0800 `.18`, Zeus TIP `.13`, "Proxmox Zabbix" `.5`, DOCS Cloud `.7`, Servidor VPN `.9`, Fusion PM MST `.17`, SFTP OPA `.20` | Dude VLSUL `192.168.17.38` ⚠️, Dude PM CPV `192.168.17.42` ⚠️, Servidor Monsta `192.168.115.62` ⚠️ |
+
+### ⚠️ VMs privadas não cabem no `/30` de gerência do hypervisor
+
+`Radius HubSoft` (`192.168.115.214`), `Dude VLSUL` (`192.168.17.38`), `Dude PM CPV`
+(`192.168.17.42`) e `Servidor Monsta` (`192.168.115.62`) são VMs **sem IP público**, cada uma em
+sub-rede diferente da do hypervisor onde rodam. Um `/30` de gerência só tem 2 IPs úteis (já
+ocupados pelo hypervisor e seu gateway) — essas VMs **não cabem nele**, precisam de VLAN/rota
+própria. Ainda não está claro se elas saem pela mesma porta física do hypervisor (bridge
+adicional dentro do Proxmox, tagged) ou por outro caminho. **Confirmar antes de fechar o
+endereçamento da CCR1036/NE8000 para esses clusters.**
+
+> Cruzamento útil: `192.168.115.214` (Radius HubSoft) já aparecia em
+> [07-enderecamento-ip.md](07-enderecamento-ip.md) na lista `FORA_DO_NAT_RADIUS` do RB3011 — agora
+> sabe-se de qual VM/cluster ela é.
 
 ## Topologia lógica da CCR1036
 

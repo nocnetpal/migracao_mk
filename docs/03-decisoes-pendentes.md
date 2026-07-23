@@ -282,4 +282,12 @@ plano de portas da CCR1036 ([10](10-enderecamento-ccr1036.md)), **2 de 4 cluster
 dos hypervisors (mesmo padrão do Docker) e reservar porta/VLAN/subinterface no NE8000 pra cada um
 — provisoriamente `ether7` e `ether8` da CCR1036 (cabe na variante 12G-4S recomendada).
 
+🆕 **Achado adicional (mesma investigação):** dentro dos clusters há também **VMs privadas** (sem
+IP público) que não cabem no `/30` de gerência do hypervisor — `Radius HubSoft`
+(`192.168.115.214`), `Dude VLSUL` (`192.168.17.38`), `Dude PM CPV` (`192.168.17.42`),
+`Servidor Monsta` (`192.168.115.62`). Cada uma está numa sub-rede própria, diferente da do
+hypervisor. Não está definido se saem pela mesma porta física do hypervisor (bridge/VLAN adicional
+dentro do Proxmox) ou por outro caminho — precisa de confirmação antes de fechar o endereçamento
+desses clusters. Detalhe em [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
+
 **Status:** em aberto — pendência de endereçamento, não bloqueia o restante do plano.
