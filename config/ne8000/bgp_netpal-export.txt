@@ -1,0 +1,1557 @@
+!Software Version V800R012C10SPC300
+!Last configuration was updated at 2026-07-14 12:20:17-03:00 by Jdf1010(@VS:Admin-VS)
+!Last configuration was saved at 2026-07-14 12:21:18-03:00
+#
+sysname BGP_NETPAL
+#
+undo FTP server-source all-interface
+undo FTP ipv6 server-source all-interface
+#
+FTP client-source -a 177.72.104.61
+#
+info-center loghost 192.168.123.10 port 1050
+#
+service-template template-default0
+#
+service-template template-default1
+#
+service-template template-default2
+#
+service-template template-default3
+#
+service-template template-default4
+#
+vlan batch 198 4053
+#
+rsa peer-public-key 177.72.104.66
+ public-key-code begin
+ 308189
+  028181
+    00AEDAE2 4265FC8F 39F54D59 AC76F9AE CD38C39D C1AC63C7 C8D255E6 12D3D7FA
+    E6BA349C 33F52FC3 CC62E782 67253B1A E1DBB9F2 C354924A 9C7E313E 12695498
+    DCBB5273 A1DB6231 695A1EA2 0D646638 E30D73B0 B420DFA0 7FB916D6 F08C393A
+    C92A5BA6 9C7489AB 8D6556FC 1C12C79A CA52877E 634D49D7 E5465C40 5BEF418B
+    41
+  0203
+    010001
+ public-key-code end
+ peer-public-key end
+#
+ecc peer-public-key 192.168.15.35
+ public-key-code begin
+  04016E08 1BD3CDB7 1923990A 8CB393E0 B9930ECC C28591FD DDF65609 E7138E16
+  E6213D96 E34EF449 C0DD09CA 22F12C57 7526F5C1 148EAFA2 6891CA6C 45F1FF83
+  EC4CB500 3B845DFE 31D49FDB 4DF941D6 6D2191A1 AAC068E0 8BC88BB5 44471D37
+  98A88A6F 04EEA296 B6B4B29C 7735C6F6 51EDABE9 44BA381F 723B4A8E E6161183
+  7995AF5B 9E
+ public-key-code end
+ peer-public-key end
+#
+ecc peer-public-key 192.168.233.2
+ public-key-code begin
+  0400E043 A92D56C3 FE4D700B 86A00D0A B71DAE59 41F84212 3BBF9986 6859CF4D
+  5E80BA80 4D339549 EFA50F13 22B0D365 C0110214 A83DC11B 983C7571 70434F28
+  7355B501 23A503F0 B8494E6B 0DEE04A3 EC000E09 8197FC14 2E632C4A AC1F3B6F
+  2EFA2978 911ABC72 4509756B 690C15A1 BFD4BF24 0AC7ED96 4B12729E CC81AD2A
+  FA3724C9 54
+ public-key-code end
+ peer-public-key end
+#
+undo icmp name timestamp-reply send
+#
+ip netstream as-mode 32
+ip netstream timeout active 1
+ip netstream timeout inactive 15
+ip netstream export version 9 origin-as bgp-nexthop ttl
+ip netstream export template sequence-number fixed
+ip netstream export index-switch 32
+ip netstream export template timeout-rate 1
+ip netstream sampler fix-packets 1024 inbound
+ip netstream sampler fix-packets 1024 outbound
+ip netstream export source 177.72.104.54
+ip netstream export host 177.72.104.27 3055
+ip netstream export template option timeout-rate 1
+ip netstream export template option application-label
+#
+ipv6 netstream as-mode 32
+ipv6 netstream timeout active 1
+ipv6 netstream timeout inactive 15
+ipv6 netstream export version 9 origin-as bgp-nexthop ttl
+ipv6 netstream export template sequence-number fixed
+ipv6 netstream export index-switch 32
+ipv6 netstream export template timeout-rate 1
+ipv6 netstream sampler fix-packets 1024 inbound
+ipv6 netstream sampler fix-packets 1024 outbound
+ipv6 netstream export source 177.72.104.54
+ipv6 netstream export host 177.72.104.27 3055
+ipv6 netstream export template option timeout-rate 1
+#
+set save-configuration interval 4320 delay 1
+set save-configuration backup-to-server server 177.72.104.131 transport-type ftp user hwbkp password %^%#q<Dp/>/IIC{8d`*kyYc2aO0B@mMv^,Fl}dJkpdI!%^%# path /BGP
+#
+telnet server enable
+undo telnet server-source all-interface
+undo telnet ipv6 server-source all-interface
+#
+vlan 198
+ description BGP_LUCFIBRA
+#
+dhcp server request-packet all-interface disable
+#
+acl ip-pool CLIENTE_PORTAS_LIBERADA
+#
+acl ip-pool CLIENTE_PORTAS_LIBERADAS
+ ip address 177.72.105.136 0.0.0.7
+ ip address 177.72.104.78 0.0.0.0
+ ip address 177.72.104.0 0.0.0.31
+ ip address 177.72.105.201 0.0.0.0
+ ip address 177.72.104.112 0.0.0.15
+ ip address 177.93.247.136 0.0.0.3
+ ip address 177.72.105.44 0.0.0.0
+ ip address 177.72.105.119 0.0.0.0
+ ip address 177.93.247.3 0.0.0.0
+ ip address 177.93.247.242 0.0.0.0
+ ip address 177.93.247.228 0.0.0.3
+ ip address 177.72.105.87 0.0.0.0
+ ip address 177.93.247.25 0.0.0.0
+ ip address 177.72.105.65 0.0.0.0
+ ip address 177.72.104.2 0.0.0.0
+ ip address 177.72.104.5 0.0.0.0
+ ip address 177.72.104.8 0.0.0.0
+ ip address 177.72.106.7 0.0.0.0
+ ip address 177.72.104.104 0.0.0.7
+ ip address 192.168.15.0 0.0.0.255
+ ip address 177.72.106.90 0.0.0.0
+ ip address 177.72.104.40 0.0.0.3
+ ip address 177.72.104.44 0.0.0.3
+ ip address 177.72.104.76 0.0.0.3
+ ip address 177.72.104.92 0.0.0.3
+ ip address 177.72.104.96 0.0.0.3
+ ip address 192.168.116.0 0.0.0.255
+ ip address 177.72.105.118 0.0.0.0
+ ip address 177.72.105.120 0.0.0.0
+ ip address 177.72.104.13 0.0.0.0
+ ip address 177.72.104.14 0.0.0.0
+ ip address 177.72.105.3 0.0.0.0
+ ip address 177.72.104.17 0.0.0.0
+ ip address 177.72.105.217 0.0.0.0
+ ip address 177.72.105.221 0.0.0.0
+ ip address 192.168.15.16 0.0.0.3
+ ip address 177.72.104.131 0.0.0.0
+ ip address 177.93.244.165 0.0.0.0
+ ip address 177.72.105.66 0.0.0.0
+ ip address 177.72.104.26 0.0.0.0
+ ip address 177.93.247.21 0.0.0.0
+ ip address 177.72.106.252 0.0.0.3
+ ip address 177.72.106.240 0.0.0.7
+ ip address 172.72.106.7 0.0.0.0
+ ip address 177.72.104.58 0.0.0.0
+ ip address 177.72.104.24 0.0.0.0
+ ip address 177.72.105.71 0.0.0.0
+ ip address 177.72.106.70 0.0.0.0
+ ip address 177.93.247.80 0.0.0.7
+ ip address 177.72.105.36 0.0.0.0
+#
+acl ip-pool CLIENTE_PORTAS_LIB_PUBLICAS
+ ip address 177.72.104.8 0.0.0.0
+ ip address 177.72.105.36 0.0.0.0
+#
+acl ip-pool DOCKER_NETPAL
+ ip address 177.72.104.109 0.0.0.0
+#
+acl ip-pool IPV4_REDE_NETPAL
+ ip address 177.93.240.0 0.0.7.255
+ ip address 177.72.104.0 0.0.3.255
+ ip address 10.66.64.0 0.0.7.255
+#
+acl ip-pool RANGE_ACEITA_ICMP
+ ip address 177.93.240.0 0.0.7.255
+ ip address 100.64.0.0 0.0.31.255
+ ip address 177.72.104.0 0.0.3.255
+ ip address 100.127.0.0 0.0.15.255
+#
+acl ip-pool RANGE_GERENCIA_BLOQUEADA
+ ip address 177.93.240.0 0.0.7.255
+ ip address 177.72.104.109 0.0.0.0
+ ip address 192.168.116.30 0.0.0.0
+ ip address 100.64.0.0 0.0.31.255
+ ip address 177.72.104.0 0.0.3.255
+ ip address 100.127.0.0 0.0.15.255
+#
+acl ip-pool RANGE_LIBERADA_ACESSO_PORTAS
+ ip address 192.168.0.0 0.0.0.255
+ ip address 1.1.1.0 0.0.0.255
+ ip address 177.72.105.216 0.0.0.0
+ ip address 177.72.105.217 0.0.0.0
+ ip address 177.72.105.210 0.0.0.0
+ ip address 177.72.105.215 0.0.0.0
+ ip address 177.93.244.165 0.0.0.0
+ ip address 177.72.104.1 0.0.0.0
+ ip address 172.31.254.176 0.0.0.0
+ ip address 177.72.104.0 0.0.0.31
+ ip address 177.93.247.232 0.0.0.3
+ ip address 177.72.104.112 0.0.0.15
+ ip address 18.230.31.104 0.0.0.0
+ ip address 186.219.192.66 0.0.0.0
+ ip address 152.255.0.0 0.0.255.255
+ ip address 18.229.217.195 0.0.0.0
+ ip address 177.72.104.2 0.0.0.0
+ ip address 45.174.237.159 0.0.0.0
+ ip address 177.72.105.52 0.0.0.3
+ ip address 206.0.92.42 0.0.0.0
+ ip address 177.72.105.136 0.0.0.7
+ ip address 44.199.55.55 0.0.0.0
+ ip address 100.64.0.0 0.0.31.255
+ ip address 192.168.115.212 0.0.0.3
+ ip address 177.128.70.198 0.0.0.0
+ ip address 177.204.86.15 0.0.0.0
+ ip address 200.182.150.227 0.0.0.0
+ ip address 177.93.244.177 0.0.0.0
+ ip address 209.14.137.106 0.0.0.0
+ ip address 192.168.15.0 0.0.0.255
+ ip address 45.163.14.62 0.0.0.0
+ ip address 104.41.12.151 0.0.0.0
+ ip address 177.72.104.40 0.0.0.3
+ ip address 177.72.104.44 0.0.0.3
+ ip address 177.72.104.92 0.0.0.3
+ ip address 177.72.104.96 0.0.0.3
+ ip address 192.168.115.228 0.0.0.3
+ ip address 192.168.115.0 0.0.0.255
+ ip address 170.82.198.218 0.0.0.0
+ ip address 177.72.105.221 0.0.0.0
+ ip address 192.168.83.0 0.0.0.255
+ ip address 192.168.84.0 0.0.0.255
+ ip address 192.168.15.16 0.0.0.3
+ ip address 192.168.116.0 0.0.0.255
+ ip address 192.168.16.0 0.0.0.255
+ ip address 177.72.104.131 0.0.0.0
+ ip address 100.127.0.0 0.0.15.255
+ ip address 10.66.64.0 0.0.7.255
+ ip address 10.7.0.0 0.0.0.255
+ ip address 192.168.66.0 0.0.0.15
+ ip address 18.229.62.249 0.0.0.0
+ ip address 177.72.104.30 0.0.0.0
+ ip address 177.72.105.36 0.0.0.0
+#
+acl ip-pool RANGE_PORTAS_LIBERADA
+ ip address 177.72.105.136 0.0.0.7
+#
+acl port-pool PORTAS_BLOQUEADAS
+ eq 1900
+ eq 2122
+ eq 2323
+ eq 2534
+ eq 2756
+ eq 3389
+ eq 4443
+ eq 8291
+ eq 8728
+ eq 8729
+ eq 8858
+ eq 8959
+ eq 45345
+ range 1 87
+ range 89 499
+ range 555 690
+ range 695 992
+ range 994 1020
+#
+acl port-pool PORTAS_BLOQUEADAS_DOCKER
+ eq 8988
+ eq 8989
+ eq 9000
+ eq 9443
+ eq 13306
+ eq 33306
+ range 8000 8020
+#
+acl port-pool RANGE_PORTAS_LIBERADA
+ eq 88
+ eq 500
+ eq 3074
+ eq 3075
+ eq 3544
+ eq 4500
+#
+acl number 2999
+ rule 4 permit source 192.168.116.30 0
+ rule 5 permit source 177.72.104.1 0
+ rule 6 permit source 192.168.115.62 0
+ rule 7 permit source 192.168.116.18 0
+ rule 8 permit source 18.229.217.195 0
+ rule 9 permit source 45.174.237.159 0
+ rule 10 permit source 177.72.104.6 0
+ rule 13 permit source 206.0.92.42 0
+ rule 14 permit source 44.199.55.55 0
+ rule 15 permit source 177.72.104.109 0
+ rule 20 permit source 177.72.104.17 0
+ rule 25 permit source 177.72.104.27 0
+#
+acl name IPV4_NOC_NETPAL basic
+ description REDE_GERENCIA_NETPAL Control
+ rule 10 permit source 177.93.244.165 0
+ rule 11 permit source 177.72.104.19 0
+ rule 18 permit source 206.0.92.42 0
+ rule 20 permit source 177.72.105.215 0
+ rule 30 permit source 177.72.105.216 0
+ rule 40 permit source 177.72.105.217 0
+ rule 50 permit source 177.72.105.210 0
+ rule 70 permit source 177.72.104.0 0.0.0.31
+ rule 80 permit source 192.168.0.0 0.0.0.255
+ rule 90 permit source 1.1.1.0 0.0.0.255
+ rule 100 permit source 177.72.104.52 0.0.0.3
+ rule 666 deny
+#
+acl number 3001
+ description BLOQUEIO-ACESSO-EXTERNO-PORTAS
+ rule 5 deny tcp source-pool IPV4_REDE_NETPAL destination-port eq telnet
+#
+acl name DROPFORWARD advance
+ rule 10 permit tcp source-pool RANGE_LIBERADA_ACESSO_PORTAS
+ rule 11 permit udp source-pool RANGE_LIBERADA_ACESSO_PORTAS
+ rule 12 permit icmp source-pool RANGE_LIBERADA_ACESSO_PORTAS
+ rule 13 permit icmp source-pool RANGE_ACEITA_ICMP
+ rule 14 permit tcp destination-port-pool RANGE_PORTAS_LIBERADA
+ rule 15 permit udp destination-port-pool RANGE_PORTAS_LIBERADA
+ rule 16 permit tcp source-pool RANGE_LIBERADA_ACESSO_PORTAS destination-port-pool PORTAS_BLOQUEADAS
+ rule 17 permit udp source-pool RANGE_LIBERADA_ACESSO_PORTAS destination-port-pool PORTAS_BLOQUEADAS
+ rule 20 permit tcp destination-pool CLIENTE_PORTAS_LIBERADAS destination-port-pool PORTAS_BLOQUEADAS
+ rule 21 permit udp destination-pool CLIENTE_PORTAS_LIBERADAS destination-port-pool PORTAS_BLOQUEADAS
+ rule 22 permit icmp destination-pool CLIENTE_PORTAS_LIBERADAS
+ rule 23 permit icmp destination-pool RANGE_ACEITA_ICMP
+ rule 5999 deny tcp destination-pool DOCKER_NETPAL destination-port-pool PORTAS_BLOQUEADAS_DOCKER
+ rule 6000 deny tcp destination-pool RANGE_GERENCIA_BLOQUEADA destination-port-pool PORTAS_BLOQUEADAS
+ rule 6001 deny udp destination-pool RANGE_GERENCIA_BLOQUEADA destination-port-pool PORTAS_BLOQUEADAS
+ rule 6002 deny icmp destination-pool RANGE_GERENCIA_BLOQUEADA
+#
+traffic classifier C-DROPFORWARD operator or
+ if-match acl name DROPFORWARD
+#
+traffic classifier C-LIBERA-ICMP operator or
+ if-match acl 3001
+#
+traffic behavior B-DROPFORWARD
+#
+traffic policy P-DROPFORWARD
+ undo share-mode
+ statistics enable
+ classifier C-DROPFORWARD behavior B-DROPFORWARD precedence 1
+#
+aaa
+ local-user jdf1010 password irreversible-cipher $1c$~,x8I^()|W$.1P<:Chm*07N6ZUy&KmEO9u_5>XokO>:z$ILRX,<$
+ local-user jdf1010 service-type telnet ssh
+ local-user jdf1010 level 3
+ local-user jdf1010 state block fail-times 3 interval 5
+ local-user jdf1010 ftp-directory cfcard:/VS_BGP_NETPAL/
+ #
+ authentication-scheme default0
+ #
+ authentication-scheme default1
+ #
+ authentication-scheme default
+  authentication-mode local
+ #
+ authorization-scheme default
+ #
+ accounting-scheme default0
+ #
+ accounting-scheme default1
+ #
+ domain default0
+ #
+ domain default1
+ #
+ domain default_admin
+#
+interface Eth-Trunk1.400
+ vlan-type dot1q 400
+ ip address 177.72.104.65 255.255.255.252
+#
+interface Eth-Trunk2.400
+ vlan-type dot1q 400
+ description CGNAT-NETPAL2-OUTSIDE
+ ip address 177.72.104.101 255.255.255.252
+#
+interface Ethernet0/0/0
+ undo shutdown
+#
+interface GigabitEthernet0/1/2
+ description TRUNK_BGP_LUCFIBRA
+ undo shutdown
+ ip netstream inbound
+ ip netstream outbound
+ ipv6 netstream inbound
+ ipv6 netstream outbound
+#
+interface GigabitEthernet0/1/2.198
+ vlan-type dot1q 198
+ description BGP_LUCFIBRA
+ ip address 10.91.91.1 255.255.255.252
+ ip netstream inbound
+ ip netstream outbound
+ ipv6 netstream inbound
+ ipv6 netstream outbound
+#
+interface GigabitEthernet0/1/7
+ description BGP_RL_CDN_NETFLIX_GLOBO
+ undo shutdown
+ ip netstream inbound
+ ip netstream outbound
+ ipv6 netstream inbound
+ ipv6 netstream outbound
+#
+interface GigabitEthernet0/1/7.4053
+ vlan-type dot1q 4053
+ ip address 10.95.95.2 255.255.255.252
+ ip netstream inbound
+ ip netstream outbound
+ ipv6 netstream inbound
+ ipv6 netstream outbound
+#
+interface GigabitEthernet0/1/8
+ undo shutdown
+#
+interface GigabitEthernet0/1/8.2
+#
+interface GigabitEthernet0/1/8.6
+#
+interface GigabitEthernet0/1/8.10
+ vlan-type dot1q 10
+ description GERENCIA_SW6730_JDF_5720CDN
+ ip address 192.168.15.25 255.255.255.252
+ ip address 192.168.15.5 255.255.255.252 sub
+#
+interface GigabitEthernet0/1/8.20
+ vlan-type dot1q 20
+ description SW_5720PWW
+ ip address 192.168.15.33 255.255.255.248
+ ip address 192.168.115.1 255.255.255.252 sub
+#
+interface GigabitEthernet0/1/8.23
+ vlan-type dot1q 23
+ description SERVIDOR_CDN_TV
+ ip address 177.72.104.105 255.255.255.248
+#
+interface GigabitEthernet0/1/8.24
+ vlan-type dot1q 24
+ description VPN_JDF
+ ip address 177.72.104.49 255.255.255.252
+ statistic enable
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.25
+ vlan-type dot1q 25
+ description QINQ_OLT_CPV
+#
+interface GigabitEthernet0/1/8.26
+ vlan-type dot1q 26
+ description QINQ_OLT_FSB
+#
+interface GigabitEthernet0/1/8.28
+ vlan-type dot1q 28
+ description GERENCIA_GW_SERVIDORES_HUAWEI_NE8000
+ ip address 192.168.116.33 255.255.255.252
+ ip address 177.72.104.54 255.255.255.252 sub
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.31
+ vlan-type dot1q 31
+ description GERENCIA_SW_GGV
+ ip address 192.168.115.133 255.255.255.252
+#
+interface GigabitEthernet0/1/8.33
+ vlan-type dot1q 33
+ description GERENCIA_SW_BCP
+ ip address 192.168.15.121 255.255.255.252
+#
+interface GigabitEthernet0/1/8.34
+ description GW_ESCRITORIO_BCP
+ ip address 172.31.254.201 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 34
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p peer-ip-ignore
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.35
+ vlan-type dot1q 35
+ description SW_FSB
+ ip address 192.168.15.57 255.255.255.252
+#
+interface GigabitEthernet0/1/8.36
+ vlan-type dot1q 36
+ description GERENCIA_GOOGLE_GGC
+ ip address 177.72.104.113 255.255.255.240
+ ip netstream inbound
+ ip netstream outbound
+ ipv6 netstream inbound
+ ipv6 netstream outbound
+#
+interface GigabitEthernet0/1/8.38
+ vlan-type dot1q 38
+ description SERVIDOR_SPEEDTEST_CPV
+ ip address 177.93.247.137 255.255.255.252
+#
+interface GigabitEthernet0/1/8.40
+ vlan-type dot1q 40
+ description GERENCIA_SW_OLT_GW_POP_PSLD
+ ip address 172.31.254.217 255.255.255.252
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.41
+ vlan-type dot1q 41
+ description GERENCIA_SW_OLT_CCB
+ ip address 192.168.15.65 255.255.255.252
+#
+interface GigabitEthernet0/1/8.42
+ vlan-type dot1q 42
+ description GERENCIA_SW_OLT_CASCA
+ ip address 192.168.15.69 255.255.255.252
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.43
+ vlan-type dot1q 43
+ description GERENCIA_SW_MST
+ ip address 192.168.15.77 255.255.255.252
+#
+interface GigabitEthernet0/1/8.45
+ vlan-type dot1q 45
+ description SW_OSR
+ ip address 192.168.15.41 255.255.255.252
+ ip address 192.168.115.25 255.255.255.252 sub
+ ip address 192.168.115.57 255.255.255.252 sub
+#
+interface GigabitEthernet0/1/8.46
+#
+interface GigabitEthernet0/1/8.49
+ description CLIENTES_IP_PUBLICO_MST
+ ip address 192.168.115.157 255.255.255.252
+ ip address 177.72.104.73 255.255.255.252 sub
+ ip address 192.168.115.193 255.255.255.252 sub
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 43 ce-vid 49
+#
+interface GigabitEthernet0/1/8.50
+ description JEEP_TRILHA_SEDE
+ ip address 177.72.104.33 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 22 ce-vid 50
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.51
+ description CLIENTES_IP_PUBLICO_CPV
+ ip address 177.72.105.137 255.255.255.248
+ ip address 177.93.247.233 255.255.255.252 sub
+ ip address 177.93.247.241 255.255.255.252 sub
+ ip address 177.93.247.245 255.255.255.252 sub
+ ip address 177.93.247.253 255.255.255.252 sub
+ ip address 192.168.115.49 255.255.255.252 sub
+ ip address 192.168.115.153 255.255.255.252 sub
+ ip address 192.168.115.161 255.255.255.248 sub
+ ip address 192.168.116.13 255.255.255.252 sub
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 51
+ arp broadcast enable
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.52
+ description CLIENTES_IP_PUBLICO_PWW
+ ip address 177.72.104.81 255.255.255.248
+ ip address 177.72.104.89 255.255.255.252 sub
+ ip address 192.168.115.145 255.255.255.252 sub
+ ip address 192.168.115.197 255.255.255.252 sub
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 22 ce-vid 52
+#
+interface GigabitEthernet0/1/8.53
+#
+interface GigabitEthernet0/1/8.55
+ description DANIEL_PSLD
+ ip address 172.31.253.241 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 40 ce-vid 55
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.61
+ description COOPERATIVA_RIZICOLA_PITANGUEIRAS_LTDA_ROTA_1_CTO_351
+ ip address 172.31.253.233 255.255.255.252
+ statistic enable
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 61
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.62
+ description COOPERATIVA_RIZICOLA_PITANGUEIRAS_LTDA_ROTA_2_CTO_352
+ ip address 172.31.253.237 255.255.255.252
+ statistic enable
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 62
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf cost 30
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.63
+ description VL_SUL_ROTA_PWW
+ ip address 172.31.253.229 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 22 ce-vid 63
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf cost 30
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.64
+ description VL_SUL_ROTA_CPV
+ ip address 172.31.253.225 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 64
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.89
+ description RB_CARLOS_MIGUEL_(LEONILDO_COLARES)
+ ip address 172.31.253.245 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 89
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.90
+ description GERENCIA_RB_BRIGADA_MILITAR
+ ip address 172.31.254.249 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 22 ce-vid 90
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.91
+ description RB_CONSEPRO_TRILHOS
+ ip address 172.31.254.253 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 22 ce-vid 91
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p peer-ip-ignore
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.92
+ description RB_CC_PWW_E_BRIDGE_CC_PWW
+ ip address 172.31.254.245 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 22 ce-vid 92
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p peer-ip-ignore
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.93
+ description VL_SUL_MATRIZ
+ ip address 172.31.254.225 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 93
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.94
+ description RB_CARLOS_MIGUEL_(ESCRITORIO)
+ ip address 172.31.254.237 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 94
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.95
+ description RB_CARLOS_MIGUEL_(CASA)
+ ip address 172.31.254.233 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 95
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.96
+ description RB_CARLOS_MIGUEL_(OFICINA)
+ ip address 172.31.254.229 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 96
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.97
+ description RB_HOTSPOT_CAMPING_LAGOA_BCP
+ ip address 172.31.254.221 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 39 ce-vid 97
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.98
+ description RB_CARLOS_MIGUEL_(GUARITA)
+ ip address 172.31.253.253 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 98
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.99
+ description RB_CARLOS_MIGUEL_(QUIOSQUE)
+ ip address 172.31.253.249 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 99
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.195
+ description LITORAL ALARMES E SISTEMAS DE SEGURANCA LTDA
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 45 ce-vid 195
+#
+interface GigabitEthernet0/1/8.196
+ description RB_CARLOS_MIGUEL_(QUIOSQUE)
+ ip address 177.93.247.237 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 196
+#
+interface GigabitEthernet0/1/8.197
+ description GW_SERVIDORES_VPN_BCP
+ ip address 177.72.104.37 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 197
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.211
+ ip address 192.168.15.17 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 31 ce-vid 211
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.300
+ description EDD_TIM_MST
+ ip address 177.72.104.93 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 43 ce-vid 300
+#
+interface GigabitEthernet0/1/8.350
+ vlan-type dot1q 350
+ description DUDE TESTE
+ ip address 192.168.116.125 255.255.255.252
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.701
+ description GW_POP_CASCA
+ ip address 172.31.254.41 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 42 ce-vid 701
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.706
+ vlan-type dot1q 706
+ description MK_POP_TRAVESSA_SANTOS
+ ip address 172.31.254.157 255.255.255.252
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.707
+ description OLGA_MARIA-ROUTER_ESCRITORIO
+ ip address 172.31.254.241 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 35 ce-vid 707
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.708
+ description MK_POP_SERRARIA_CRS_SERRARIA_e_RADIOS_POVOS
+ ip address 172.31.254.53 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 708
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.709
+ description MK_POP_CONDESSA_e_RADIOS
+ ip address 172.31.254.57 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 41 ce-vid 709
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.710
+ description MK_POP_RODRIGO
+ ip address 172.31.254.173 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 44 ce-vid 710
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.711
+ description MK_POP_FORQUILHA
+ ip address 172.31.254.205 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 35 ce-vid 711
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.712
+ description MK_POP_CASCA-RADIOS_M_QUITERIA_e_BARROS
+ ip address 172.31.254.185 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 42 ce-vid 712
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.713
+ description MK_POP_SOLIDAO
+ ip address 172.31.254.165 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 713
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.718
+ description MK_POP_VALIM
+ ip address 172.31.254.89 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 43 ce-vid 718
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.719
+ description MK_POP_PANTANO
+ ip address 172.31.254.93 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 43 ce-vid 719
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.720
+ description MK_POP_POVOS
+ ip address 172.31.254.97 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 43 ce-vid 720
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.721
+ description MK_POP_FAZ_CARDOSO
+ ip address 172.31.254.101 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 35 ce-vid 721
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.723
+ description MK_POP_BUTIAS
+ ip address 172.31.254.9 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 723
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.724
+ description MK_POP_HOTEL_TVR
+ ip address 172.31.254.61 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 724
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.726
+ description MK_POP_BUTIATUVA
+ ip address 172.31.254.81 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 22 ce-vid 726
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.727
+ description MK_POP_FSB_VILA
+ ip address 172.31.254.105 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 35 ce-vid 727
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.729
+ description MK_POP_PANGARE
+ ip address 172.31.254.109 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 729
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.731
+ description MK_POP_CAVALHADA
+ ip address 172.31.254.125 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 731
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.732
+ description MK_POP_OLHOS_D_AGUA
+ ip address 172.31.254.25 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 732
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.733
+ description MK_POP_CAMPO_DA_HONRA
+ ip address 172.31.254.77 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 733
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.735
+ description MK_POP_TAPERA
+ ip address 172.31.254.49 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 735
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.738
+ description MK_POP_JB_SLD_101_e_RADIOS
+ ip address 172.31.254.65 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 738
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.739
+ description MK_POP_ABELHA
+ ip address 172.31.254.153 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 739
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.740
+ description MK_POP_CENTRO_COMERCIAL
+ ip address 172.31.254.1 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 740
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.745
+ description MK_POP_FAZ_NOVA
+ ip address 172.31.254.145 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 745
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.746
+ description MK_POP_LIMOEIRO
+ ip address 172.31.254.149 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 746
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.747
+ description MK_POP_RANCHO_VELHO
+ ip address 177.93.247.77 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 747
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.749
+ description MK_POP_BOA_ESPERANCA
+ ip address 172.31.254.21 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 25 ce-vid 749
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.750
+ description MK_POP_LAGOA_DO_BACUPARI
+ ip address 172.31.254.69 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 39 ce-vid 750
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.753
+ description MK_POP_BACUPARI
+ ip address 172.31.254.73 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 753
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.761
+ description MK_POP_CACIMBAS
+ ip address 172.31.254.13 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 41 ce-vid 761
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.764
+ description MK_POP_MARIA_QUITERIA
+ ip address 172.31.254.189 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 764
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.765
+ description MK_POP_FSB_e_RADIOS
+ ip address 172.31.254.121 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 35 ce-vid 765
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.769
+ description MK_POP_MADEIRA
+ ip address 172.31.254.177 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 37 ce-vid 769
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p peer-ip-ignore
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.772
+ description MK_POP_TIO_JOCA_e_CRS_TJOCA
+ ip address 172.31.254.141 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 43 ce-vid 772
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.775
+ description MK_POP_AGUAPE
+ ip address 172.31.254.161 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 33 ce-vid 775
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.776
+ description MK_POP_TARUMA
+ ip address 172.31.254.133 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 776
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.777
+ description MK_POP_CENTRO_TVR
+ ip address 172.31.254.5 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 777
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.778
+ description MK_POP_JUCA_ANA
+ ip address 172.31.254.117 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 778
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface GigabitEthernet0/1/8.1612
+ description 16123_SJNET_INSTALACOES_DE_REDES_LTDA
+ ip address 192.168.15.97 255.255.255.252
+ encapsulation qinq-termination rt-protocol
+ qinq termination pe-vid 46 ce-vid 1612
+#
+interface GigabitEthernet0/1/8.5162
+ description COOPERATIVA_RIZICOLA_PITANGUEIRAS_LTDA_ROTA_2_352
+ statistic enable
+ encapsulation qinq-termination
+ qinq termination pe-vid 62 ce-vid 51
+ arp broadcast enable
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+#
+interface 100GE0/3/0
+ undo shutdown
+#
+interface 100GE0/3/0.2602
+ vlan-type dot1q 2602
+ description ADYLNET_POA_100GE
+ ip address 172.19.236.6 255.255.255.252
+ statistic enable
+ traffic-policy P-DROPFORWARD inbound
+ traffic-policy P-DROPFORWARD outbound
+ ip netstream inbound
+ ip netstream outbound
+ ipv6 netstream inbound
+ ipv6 netstream outbound
+#
+interface 100GE0/3/0.2706
+ vlan-type dot1q 2706
+ description ADYLNET_TDAI_100GE
+ ip address 172.19.246.22 255.255.255.252
+ statistic enable
+ traffic-policy P-DROPFORWARD inbound
+ traffic-policy P-DROPFORWARD outbound
+ ip netstream inbound
+ ip netstream outbound
+ ipv6 netstream inbound
+ ipv6 netstream outbound
+#
+interface LoopBack0
+ ip address 172.16.200.1 255.255.255.255
+#
+interface Virtual-Ethernet0/2/21.1014
+ vlan-type dot1q 1014
+ description CGNAT-NETPAL
+ ip address 10.200.255.1 255.255.255.252
+ ospf authentication-mode md5 1 plain ntprb1030
+ ospf network-type p2p
+ ospf enable 1 area 0.0.0.1
+ ip netstream inbound
+ ipv6 netstream inbound
+#
+interface NULL0
+#
+bgp 52828
+ router-id 177.72.104.54
+ peer 10.91.91.2 as-number 269184
+ peer 10.91.91.2 description LUCFIBRA_GE0/1/2.198
+ peer 10.91.91.2 connect-interface GigabitEthernet0/1/2.198
+ peer 10.95.95.1 as-number 268671
+ peer 10.95.95.1 connect-interface GigabitEthernet0/1/7.4053
+ peer 172.19.236.5 as-number 28283
+ peer 172.19.236.5 description ADYLNET_POA_100GE
+ peer 172.19.246.21 as-number 28283
+ peer 172.19.246.21 description ADYLNET
+ peer 177.72.104.27 as-number 52828
+ peer 177.72.104.27 description RR_FLOW_IPv4
+ peer 177.72.104.27 timer connect-retry 1
+ peer 177.72.104.27 connect-interface 177.72.104.54
+ peer 177.72.104.126 as-number 11344
+ peer 177.72.104.126 description GGC_NETPAL
+ peer 177.72.104.126 password simple j6vpa0q0
+ peer 189.14.239.255 as-number 28283
+ peer 189.14.239.255 description ADYLNET_DDOS
+ peer 189.14.239.255 ebgp-max-hop 255
+ #
+ ipv4-family unicast
+  undo synchronization
+  network 45.181.132.0 255.255.255.0
+  network 45.181.133.0 255.255.255.0
+  network 45.181.134.0 255.255.255.0
+  network 45.181.135.0 255.255.255.0
+  network 100.64.0.0 255.255.224.0
+  network 100.127.0.0 255.255.240.0
+  network 177.72.104.0 255.255.252.0
+  network 177.72.104.0 255.255.255.0
+  network 177.72.104.112 255.255.255.240
+  network 177.72.105.0 255.255.255.0
+  network 177.72.106.0 255.255.255.0
+  network 177.72.107.0 255.255.255.0
+  network 177.93.240.0 255.255.248.0
+  network 177.93.240.0 255.255.252.0
+  network 177.93.240.0 255.255.255.0
+  network 177.93.241.0 255.255.255.0
+  network 177.93.242.0 255.255.255.0
+  network 177.93.243.0 255.255.255.0
+  network 177.93.244.0 255.255.252.0
+  network 177.93.244.0 255.255.255.0
+  network 177.93.245.0 255.255.255.0
+  network 177.93.246.0 255.255.255.0
+  network 177.93.247.0 255.255.255.0
+  bestroute add-path path-number 8
+  peer 10.91.91.2 enable
+  peer 10.91.91.2 route-policy LUCFIBRA-IN import
+  peer 10.91.91.2 route-policy LUCFIBRA-OUT export
+  peer 10.95.95.1 enable
+  peer 10.95.95.1 route-policy RL-IN import
+  peer 10.95.95.1 route-policy RL-OUT export
+  peer 172.19.236.5 enable
+  peer 172.19.236.5 route-policy ADYLNET_POA_V4-IN import
+  peer 172.19.236.5 route-policy ADYLNET_POA_V4-OUT export
+  peer 172.19.246.21 enable
+  peer 172.19.246.21 route-policy ADYLNET_V4-IN import
+  peer 172.19.246.21 route-policy ADYLNET_V4-OUT export
+  peer 177.72.104.27 enable
+  peer 177.72.104.27 public-as-only
+  peer 177.72.104.27 route-policy RRFLOW_IMPORT_UNICAST_IPV4 import
+  peer 177.72.104.27 route-policy RRFLOW_EXPORT_UNICAST_IPV4 export
+  peer 177.72.104.27 advertise-community
+  peer 177.72.104.27 advertise-large-community
+  peer 177.72.104.27 advertise-ext-community
+  peer 177.72.104.27 capability-advertise add-path send
+  peer 177.72.104.27 advertise add-path path-number 8
+  peer 177.72.104.126 enable
+  peer 177.72.104.126 route-policy GGC_V4-IN import
+  peer 177.72.104.126 route-policy GGC_V4-OUT export
+  peer 177.72.104.126 advertise-community
+  peer 189.14.239.255 enable
+  peer 189.14.239.255 route-policy ADYLNET_BLACKHOLE export
+  peer 189.14.239.255 advertise-community
+  peer 189.14.239.255 advertise-ext-community
+ #
+ ipv4-family flow
+  peer 177.72.104.27 enable
+  peer 177.72.104.27 redirect ip rfc-compatible
+  peer 177.72.104.27 route-policy RRFLOW_IMPORT_FLOWSPEC_IPV4 import
+  peer 177.72.104.27 route-policy RRFLOW_EXPORT_FLOWSPEC_IPV4 export
+  peer 177.72.104.27 advertise-community
+  peer 177.72.104.27 advertise-large-community
+  peer 177.72.104.27 validation-disable
+  route validation-mode include-as
+#
+ospf 1 router-id 172.16.200.1
+ silent-interface all
+ (dezenas de "undo silent-interface" — uma por subinterface QinQ ativa em OSPF, ver lista completa acima)
+ area 0.0.0.1
+  network 10.200.255.0 0.0.0.3
+  network 172.18.255.128 0.0.0.3
+  network 172.31.253.0 0.0.0.255
+  network 172.31.253.224 0.0.0.3
+  network 172.31.253.228 0.0.0.3
+  network 172.31.253.232 0.0.0.3
+  network 172.31.253.236 0.0.0.3
+  network 172.31.254.0 0.0.0.255
+  network 177.72.104.36 0.0.0.3
+  network 177.72.104.44 0.0.0.3
+  network 177.72.104.48 0.0.0.3
+  network 177.72.104.52 0.0.0.3
+  network 177.72.104.60 0.0.0.3
+  network 177.72.104.64 0.0.0.3
+  network 177.72.104.84 0.0.0.3
+  network 177.72.104.88 0.0.0.3
+  network 177.72.105.136 0.0.0.7
+  network 177.93.247.76 0.0.0.3
+  network 177.93.247.80 0.0.0.7
+  network 177.93.247.232 0.0.0.3
+  network 177.93.247.236 0.0.0.3
+  network 177.93.247.244 0.0.0.3
+  network 177.93.247.252 0.0.0.3
+  network 192.168.6.0 0.0.0.255
+  network 192.168.15.4 0.0.0.3
+  network 192.168.15.16 0.0.0.3
+  network 192.168.15.20 0.0.0.3
+  network 192.168.15.24 0.0.0.3
+  network 192.168.15.28 0.0.0.3
+  network 192.168.15.32 0.0.0.7
+  network 192.168.15.104 0.0.0.7
+  network 192.168.15.112 0.0.0.7
+  network 192.168.15.120 0.0.0.3
+  network 192.168.17.16 0.0.0.3
+  network 192.168.17.20 0.0.0.3
+  network 192.168.17.28 0.0.0.3
+  network 192.168.22.0 0.0.0.31
+  network 192.168.30.0 0.0.0.255
+  network 192.168.31.0 0.0.0.255
+  network 192.168.115.4 0.0.0.3
+  network 192.168.115.16 0.0.0.3
+  network 192.168.115.64 0.0.0.3
+  network 192.168.115.84 0.0.0.3
+  network 192.168.115.96 0.0.0.3
+  network 192.168.115.112 0.0.0.3
+  network 192.168.115.124 0.0.0.3
+  network 192.168.115.128 0.0.0.3
+  network 192.168.115.132 0.0.0.3
+  network 192.168.115.136 0.0.0.3
+  network 192.168.115.144 0.0.0.3
+  network 192.168.115.244 0.0.0.3
+  network 192.168.116.4 0.0.0.3
+  network 192.168.116.20 0.0.0.3
+  network 192.168.116.32 0.0.0.3
+  network 192.168.116.72 0.0.0.7
+  network 192.168.116.96 0.0.0.7
+  network 192.168.116.112 0.0.0.7
+  network 192.168.116.124 0.0.0.0
+  network 192.168.116.156 0.0.0.3
+#
+route-policy ADYLNET_BLACKHOLE permit node 100
+ if-match community-filter CM_BLACKHOLE
+ apply community 28283:666
+#
+route-policy ADYLNET_POA_V4-IN permit node 100
+ if-match ip-prefix ROTA-DEFAULT
+#
+route-policy ADYLNET_POA_V4-OUT permit node 110
+ if-match ip-prefix NETPAL-POA-BLOCO-104-240/21
+#
+route-policy ADYLNET_V4-IN permit node 100
+ if-match ip-prefix ROTA-DEFAULT
+ apply local-preference 200
+#
+route-policy ADYLNET_V4-OUT permit node 100
+ if-match ip-prefix NETPAL-BLOCO-104-240/21
+#
+route-policy GGC_V4-IN permit node 100
+#
+route-policy GGC_V4-OUT permit node 150
+ if-match ip-prefix LUCFIBRA-PREFIX
+#
+route-policy GGC_V4-OUT permit node 200
+ if-match ip-prefix GGC-BLOCO-104/21
+#
+route-policy GGC_V4-OUT permit node 220
+ if-match ip-prefix GGC-BLOCO-CGNAT
+ apply community 15169:12100
+#
+route-policy LUCFIBRA-IN deny node 5
+ if-match ip-prefix BLOQ-DEFAULT
+#
+route-policy LUCFIBRA-IN permit node 10
+ if-match ip-prefix LUCFIBRA-IN-PREFIX
+#
+route-policy LUCFIBRA-IN deny node 100
+#
+route-policy LUCFIBRA-OUT permit node 10
+ if-match as-path-filter RL-GLOBO
+#
+route-policy LUCFIBRA-OUT permit node 20
+ if-match ip-prefix RL-RECEBIDAS-PARA-LUC
+#
+route-policy LUCFIBRA-OUT permit node 30
+ if-match as-path-filter GOOGLE-GGC
+#
+route-policy LUCFIBRA-OUT permit node 40
+ if-match ip-prefix GGC-PARA-LUC
+#
+route-policy MADE4FLOW-IN permit node 1000
+ apply ip-address next-hop 192.168.66.66
+#
+route-policy RL-IN deny node 5
+ if-match ip-prefix BLOQ-108
+#
+route-policy RL-IN deny node 10
+ if-match ip-prefix BLOQ-DEFAULT
+#
+route-policy RL-IN permit node 20
+ if-match as-path-filter RL-GLOBO
+ apply local-preference 250
+#
+route-policy RL-IN permit node 100
+ apply local-preference 250
+#
+route-policy RL-OUT deny node 5
+ if-match as-path-filter GOOGLE-GGC
+#
+route-policy RL-OUT permit node 10
+ if-match ip-prefix RL-OUT
+#
+route-policy RL-OUT permit node 20
+ if-match ip-prefix LUCFIBRA-PREFIX
+#
+route-policy RL-OUT deny node 100
+#
+route-policy RRFLOW_EXPORT_FLOWSPEC_IPV4 deny node 9999
+#
+route-policy RRFLOW_EXPORT_UNICAST_IPV4 deny node 5
+ if-match ip-prefix BLOQ-108
+#
+route-policy RRFLOW_EXPORT_UNICAST_IPV4 deny node 7
+ if-match ip-prefix BLOQ-LUC-BLOCO
+#
+route-policy RRFLOW_EXPORT_UNICAST_IPV4 permit node 10
+ if-match ip-prefix RRFLOW_FULL_ROUTING_IPV4
+#
+route-policy RRFLOW_EXPORT_UNICAST_IPV4 deny node 9999
+#
+route-policy RRFLOW_IMPORT_FLOWSPEC_IPV4 permit node 10
+#
+route-policy RRFLOW_IMPORT_UNICAST_IPV4 deny node 5
+ if-match ip-prefix BLOQ-108
+#
+route-policy RRFLOW_IMPORT_UNICAST_IPV4 permit node 10
+#
+route-policy RRFLOW_IMPORT_UNICAST_IPV4 deny node 9999
+#
+ip ip-prefix BLOQ-108 index 10 permit 177.72.108.0 22 greater-equal 22 less-equal 24
+ip ip-prefix BLOQ-DEFAULT index 10 permit 0.0.0.0 0
+ip ip-prefix BLOQ-LUC-BLOCO index 10 permit 45.181.132.0 22 greater-equal 22 less-equal 24
+ip ip-prefix GGC-BLOCO-104/21 index 100 permit 177.72.104.0 22 greater-equal 24 less-equal 24
+ip ip-prefix GGC-BLOCO-104/21 index 110 permit 177.93.240.0 21 greater-equal 22 less-equal 24
+ip ip-prefix GGC-BLOCO-CGNAT index 120 permit 100.64.0.0 19
+ip ip-prefix GGC-BLOCO-CGNAT index 130 permit 100.127.0.0 20
+ip ip-prefix GGC-PARA-LUC index 10 permit 177.72.104.112 28
+ip ip-prefix LUC-GGC-PREFIX index 10 permit 45.181.132.0 22 greater-equal 22 less-equal 24
+ip ip-prefix LUCFIBRA-IN-PREFIX index 10 permit 45.181.132.0 22 greater-equal 22 less-equal 24
+ip ip-prefix LUCFIBRA-PREFIX index 5 permit 45.181.132.0 22
+ip ip-prefix LUCFIBRA-PREFIX index 6 permit 45.181.132.0 23
+ip ip-prefix LUCFIBRA-PREFIX index 7 permit 45.181.134.0 23
+ip ip-prefix LUCFIBRA-PREFIX index 10 permit 45.181.132.0 22 greater-equal 24 less-equal 24
+ip ip-prefix LUCFIBRA-PREFIX index 20 permit 45.181.132.0 24
+ip ip-prefix LUCFIBRA-PREFIX index 21 permit 45.181.133.0 24
+ip ip-prefix LUCFIBRA-PREFIX index 22 permit 45.181.134.0 24
+ip ip-prefix LUCFIBRA-PREFIX index 23 permit 45.181.135.0 24
+ip ip-prefix NETPAL-BLOCO-104-240/21 index 101 permit 177.72.104.0 22
+ip ip-prefix NETPAL-BLOCO-104-240/21 index 110 permit 177.93.240.0 21
+ip ip-prefix NETPAL-BLOCO-104-240/21 index 120 permit 177.93.246.0 24
+ip ip-prefix NETPAL-POA-BLOCO-104-240/21 index 121 permit 177.72.104.0 22
+ip ip-prefix NETPAL-POA-BLOCO-104-240/21 index 122 permit 177.93.240.0 21
+ip ip-prefix RL-OUT index 10 permit 177.72.104.0 22 greater-equal 24 less-equal 24
+ip ip-prefix RL-OUT index 20 permit 177.93.240.0 21 greater-equal 24 less-equal 24
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 10 permit 45.165.84.0 22
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 20 permit 45.165.84.0 23
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 30 permit 45.165.84.0 24
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 40 permit 45.165.85.0 24
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 50 permit 45.165.86.0 23
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 60 permit 45.165.86.0 24
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 70 permit 45.165.87.0 24
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 80 permit 45.165.87.32 29
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 90 permit 128.201.128.0 22
+ip ip-prefix RL-RECEBIDAS-PARA-LUC index 100 permit 168.196.118.0 24
+ip ip-prefix ROTA-DEFAULT index 10 permit 0.0.0.0 0
+ip ip-prefix RRFLOW_FULL_ROUTING_IPV4 index 10 permit 0.0.0.0 0 less-equal 32
+ip as-path-filter GOOGLE-GGC index 10 permit _15169_
+ip as-path-filter GOOGLE-GGC index 20 permit _11344_
+ip as-path-filter RL-GLOBO index 10 permit _28604_
+ip community-filter basic CM_BLACKHOLE index 10 permit 28283:666
+ip community-filter advanced CGNAT_GGC index 10 permit 15169:12100
+#
+ip route-static 10.8.0.0 255.255.248.0 177.72.104.1
+ip route-static 10.254.0.0 255.255.252.0 177.72.104.1
+ip route-static 177.72.104.0 255.255.252.0 NULL0
+ip route-static 177.72.104.0 255.255.255.0 NULL0
+ip route-static 177.72.104.40 255.255.255.252 192.168.115.154
+ip route-static 177.72.104.44 255.255.255.252 192.168.115.146
+ip route-static 177.72.104.76 255.255.255.252 192.168.115.158
+ip route-static 177.72.105.0 255.255.255.0 NULL0
+ip route-static 177.72.105.31 255.255.255.255 192.168.115.58
+ip route-static 177.72.106.0 255.255.255.0 NULL0
+ip route-static 177.72.107.0 255.255.255.0 177.72.104.66
+ip route-static 177.93.240.0 255.255.248.0 NULL0
+ip route-static 177.93.240.0 255.255.252.0 NULL0
+ip route-static 177.93.240.0 255.255.255.0 177.72.104.102 description CGNAT-NETPAL2
+ip route-static 177.93.241.0 255.255.255.0 NULL0
+ip route-static 177.93.242.0 255.255.255.0 177.72.104.66
+ip route-static 177.93.243.0 255.255.255.0 NULL0
+ip route-static 177.93.244.0 255.255.252.0 NULL0
+ip route-static 177.93.244.0 255.255.255.0 NULL0
+ip route-static 177.93.245.0 255.255.255.0 NULL0
+ip route-static 177.93.246.0 255.255.255.0 NULL0
+ip route-static 177.93.247.0 255.255.255.0 NULL0
+ip route-static 177.93.247.80 255.255.255.248 192.168.15.98
+ip route-static 192.0.2.1 255.255.255.255 NULL0 description BLACKHOLE
+ip route-static 192.168.66.66 255.255.255.255 NULL0
+#
+snmp-agent
+snmp-agent acl 2999
+snmp-agent local-engineid 800007DB052102353A3A101B00060402
+snmp-agent community read cipher %^%#Zr`5=08bkEBNUQHwxM2T>Y;~GqI'z%jZ]>=IA3LIlD]K~mO:<Q=K[lKmd7AU._#:G0s4i=<yYYO^@0}:%^%# alias __CommunityAliasName_01_18085
+#
+snmp-agent sys-info contact noc@netpal.com.br
+snmp-agent sys-info location Capivari do Sul
+snmp-agent sys-info version v2c v3
+#
+snmp-agent protocol source-status all-interface
+undo snmp-agent protocol source-status ipv6 all-interface
+#
+undo snmp-agent proxy protocol source-status all-interface
+undo snmp-agent proxy protocol source-status ipv6 all-interface
+#
+stelnet server enable
+snetconf server enable
+ssh user suporte
+ssh server-source all-interface
+undo ssh ipv6 server-source all-interface
+ssh server acl IPV4_NOC_NETPAL
+ssh authorization-type default aaa
+#
+ssh server cipher aes256_gcm aes128_gcm aes256_ctr aes192_ctr aes128_ctr
+ssh server hmac sha2_512 sha2_256
+ssh server key-exchange dh_group_exchange_sha256 dh_group_exchange_sha1 dh_group14_sha1 ecdh_sha2_nistp256 ecdh_sha2_nistp384 ecdh_sha2_nistp521
+#
+ssh server publickey ecc rsa rsa_sha2_256 rsa_sha2_512
+#
+ssh server dh-exchange min-len 3072
+#
+ssh client first-time enable
+ssh client peer 177.72.104.66 assign rsa-key 177.72.104.66
+ssh client peer 192.168.15.35 assign ecc-key 192.168.15.35
+ssh client peer 192.168.233.2 assign ecc-key 192.168.233.2
+sftp client-source -a 177.72.104.61
+#
+ssh client publickey ecc rsa rsa_sha2_256 rsa_sha2_512
+#
+ssh client cipher aes256_gcm aes128_gcm aes256_ctr aes192_ctr aes128_ctr
+ssh client hmac sha2_512 sha2_256
+ssh client key-exchange dh_group_exchange_sha256 dh_group_exchange_sha1 dh_group14_sha1 ecdh_sha2_nistp256 ecdh_sha2_nistp384 ecdh_sha2_nistp521
+#
+user-interface maximum-vty 21
+#
+user-interface vty 0 4
+ authentication-mode aaa
+ idle-timeout 60 0
+#
+local-aaa-server
+#
+return

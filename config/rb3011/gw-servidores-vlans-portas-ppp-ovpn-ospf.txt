@@ -1,0 +1,136 @@
+# Coleta manual 2 na GW Servidores (RB3011, RouterOS 6.49)
+# Comandos: /interface vlan print detail, /ppp profile print, /interface ovpn-server server print,
+#           /routing ospf instance print, /routing ospf area print, /interface eoip print,
+#           /interface print brief
+# (faltou: /interface bridge port print — pedir na próxima)
+
+## /interface vlan print detail (resumido: nome | vlan-id | interface pai)
+
+VLAN - 600 - AP_CENTRO_TVR_REI_DOS_PAMPAS | 600  | VLAN46 - TVR
+VLAN 35 GERENCIA OLT FSB                  | 35   | VLAN26
+VLAN10 (SERVIDOR DNS RECURSIVO)           | 10   | ether8 - SERVIDOR DNS RECURSIVO
+VLAN11_eoip                               | 11   | eoip-tunnel1          (NÃO running)
+VLAN13 - DUDE                             | 13   | sfp1
+VLAN15 - NTP SERVER                       | 15   | sfp1
+VLAN16 - IP PUBLICO                       | 16   | sfp1                  (SLAVE — braço da Bridge IP Publico)
+VLAN17 - MONSTA                           | 17   | sfp1
+VLAN18 - SERVERINO                        | 18   | sfp1
+VLAN21 - GERENCIA - GGV                   | 21   | sfp1
+VLAN21 - OLT ZTE GGV                      | 21   | VLAN31 GGV            (QinQ interno)
+VLAN22 - PWW                              | 22   | sfp1
+VLAN25 - CPV                              | 25   | sfp1
+VLAN26 (FSB)                              | 26   | sfp1
+VLAN27 - SW FO Shopping                   | 27   | VLAN22 - PWW          (QinQ)
+VLAN30 - Gerencia Radios CPV              | 30   | VLAN25 - CPV          (QinQ)
+VLAN31 GGV                                | 31   | sfp1
+VLAN33 - BCP                              | 33   | sfp1
+VLAN35 - FSB                              | 35   | sfp1
+VLAN37 - OLT BCP                          | 37   | sfp1
+VLAN39 - LBCP                             | 39   | sfp1
+VLAN40 - PSLD                             | 40   | sfp1
+VLAN41 - CCB                              | 41   | sfp1
+VLAN42 - CASCA                            | 42   | sfp1
+VLAN43 - MST                              | 43   | sfp1
+VLAN44 - SLD                              | 44   | sfp1
+VLAN46 - TVR                              | 46   | sfp1
+VLAN47 - PRAIA MST                        | 47   | sfp1
+VLAN48 - PRAIA SAO SIMAO                  | 48   | sfp1
+VLAN49 - Clientes IP Publico MST          | 49   | VLAN43 - MST          (QinQ)
+VLAN50 - GERENCIA TVR                     | 50   | VLAN46 - TVR          (QinQ)
+VLAN51 - Cliente IP Publico CPV           | 51   | VLAN25 - CPV          (QinQ)
+VLAN52 - Clientes IP Publico PWW          | 52   | VLAN22 - PWW          (QinQ)
+VLAN53 - Galeria Krupp                    | 53   | VLAN37 - OLT BCP      (QinQ)
+VLAN54 - Marcos Solon                     | 54   | VLAN43 - MST          (QinQ)
+VLAN90 - RB Bridge Consepro PWW           | 90   | VLAN22 - PWW          (QinQ)
+VLAN92 - Bridge CC PWW                    | 92   | VLAN22 - PWW          (QinQ)
+VLAN93 - GERENCIA_POP_JDF_E_ENLACE_RV     | 93   | VLAN25 - CPV          (QinQ)
+VLAN196 - RB Banco do Brasil CPV          | 196  | VLAN25 - CPV          (QinQ)
+VLAN198 - Pantano => Juca Ana             | 198  | VLAN46 - TVR          (QinQ)
+VLAN200 - RB Brigde Predio Maicon         | 200  | VLAN25 - CPV          (QinQ)
+VLAN250 - Gerencia OLT MST                | 250  | VLAN43 - MST          (QinQ)
+VLAN539 (GERENCIA OLT LBCP)               | 539  | VLAN39 - LBCP         (QinQ)
+VLAN708 - MK POP Serraria                 | 708  | VLAN33 - BCP          (QinQ)
+VLAN712 - MK POP Casca                    | 712  | VLAN33 - BCP          (QinQ)
+VLAN713 - GW SOLIDAO                      | 713  | VLAN44 - SLD          (QinQ)
+VLAN718 - MK POP Valim                    | 718  | VLAN43 - MST          (QinQ)
+VLAN719 - MK POP Pantano                  | 719  | VLAN43 - MST          (QinQ)
+VLAN720 - MK POP Povos                    | 720  | VLAN43 - MST          (QinQ)
+VLAN721 - MK POP Faz. Cardoso             | 721  | VLAN35 - FSB          (QinQ)
+VLAN731 - MK POP Cavalhada                | 731  | VLAN35 - FSB          (QinQ)
+VLAN738 - MK POP Solidao 101              | 738  | VLAN33 - BCP          (QinQ)
+VLAN742 - MK POP TAN                      | 742  | VLAN43 - MST          (QinQ)
+VLAN753 - MK POP Bacupari                 | 753  | VLAN33 - BCP          (QinQ)
+VLAN765 - Serraria => BCP                 | 765  | VLAN33 - BCP          (QinQ)
+VLAN770 - MK POP TAN                      | 770  | VLAN43 - MST          (QinQ)
+VLAN772 - MK POP Tio Joca                 | 772  | VLAN43 - MST          (QinQ)
+VLAN775 - MK POP Aguape                   | 775  | VLAN33 - BCP          (QinQ)
+VLAN1066 - GERADOR MST                    | 1066 | sfp1
+VLAN2020 - Gerencia EDD MST               | 2020 | VLAN43 - MST          (QinQ)
+
+## /ppp profile print
+0 * name="default"            use-encryption=no  change-tcp-mss=no
+1 * name="default-encryption" use-encryption=no  change-tcp-mss=yes
+# ATENÇÃO: até o profile "default-encryption" está com use-encryption=NO.
+# A única diferença real entre os dois profiles é o clamp de MSS.
+
+## /interface ovpn-server server print
+enabled: yes
+port: 1194 (ROS6 = TCP apenas)
+mode: ip, netmask: 24
+default-profile: default-encryption
+certificate: server
+require-client-certificate: yes
+auth: sha1
+cipher: aes256
+
+## /routing ospf instance print
+0 * name="default" router-id=172.16.200.5 distribute-default=never
+    redistribute-connected=as-type-1  redistribute-static=as-type-1
+    in-filter=ospf-in out-filter=ospf-out
+
+## /routing ospf area print
+0 * backbone  0.0.0.0
+1   area1     0.0.0.1
+
+## /interface eoip print
+0 name="eoip-tunnel1" local-address=177.72.104.1 remote-address=177.93.244.165
+  tunnel-id=1212 keepalive=10s,10 clamp-tcp-mss=yes
+  (sem flag R no "/interface print brief" — túnel atualmente FORA)
+
+## /interface print brief — portas físicas e estado
+ 0  S  ether1  ;;; ESTRAGADA        (slave; tem IP "REGUA VOLT" 192.168.115.101/30)
+ 1  S  ether2  ;;; ESTRAGADA        (slave)
+ 2     ether3  ;;; ESTRAGADA
+ 3  S  ether4  ;;; ESTRAGADA        (slave)
+ 4     ether5  ;;; ESTRAGADA
+ 5  RS ether6  - PC TS SIX          (slave, running)
+ 6  RS ether7  - Proxmox - DOCKER - CDNTV (slave, running)
+ 7  RS ether8  - SERVIDOR DNS RECURSIVO   (slave, running; VLAN10 por cima)
+ 8  R  ether9  - GERENCIA OLT ZTE   (running, roteada direto)
+ 9  RS ether10 - Callcenter ;;; PROXMOX ZABBIX (slave, running)
+10  R  sfp1    - UPLINK SW TOPO DO RACK (running — ÚNICA via de tudo, 1GE)
+11  R  Bridge IP Publico (bridge)
+12  R  EOIP-NOC (bridge)
+16     VLAN11_eoip                  (NÃO running)
+73     eoip-tunnel1                 (NÃO running)
+74  R  loopNETPAL (bridge, sem IP — vestigial?)
+75  R  loopback  (bridge, 172.16.200.5/32)
+
+## /interface bridge port print
+Flags: X - disabled, I - inactive, D - dynamic, H - hw-offload
+ #     INTERFACE                          BRIDGE             HW  PVID
+ 0 I H ether2                             Bridge IP Publico  yes 1     (ESTRAGADA, inativa)
+ 1   H ether10 - Callcenter               Bridge IP Publico  yes 1
+ 2 I H ether4                             Bridge IP Publico  yes 1     (ESTRAGADA, inativa)
+ 3 I H ether1                             Bridge IP Publico  yes 1     (ESTRAGADA, inativa)
+ 4   H ether7 - Proxmox - DOCKER - CDNTV  Bridge IP Publico  yes 1
+ 5     VLAN16 - IP PUBLICO                Bridge IP Publico  ---  1    (SEM hw-offload → bridging via CPU)
+ 6   H ether8 - SERVIDOR DNS RECURSIVO    Bridge IP Publico  yes 1
+ 7   H ether6 - PC TS SIX                 Bridge IP Publico  yes 1
+
+# Observações:
+# - "Bridge IP Publico" = VLAN16 (via sfp1/SW topo do rack) + ether6/7/8/10 (servidores locais)
+#   + 3 portas queimadas inativas.
+# - As bridges EOIP-NOC e loopNETPAL NÃO têm nenhuma porta → vestigiais.
+# - VLAN11_eoip é roteada direto sobre eoip-tunnel1 (não passa por bridge).
+# - ether9 (OLT ZTE) confirmado fora da bridge — porta roteada direta.

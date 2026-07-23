@@ -1,0 +1,240 @@
+# Coleta manual na GW Servidores (RB3011, RouterOS 6.49) — preenche lacunas do export truncado
+# Comandos: /ip address print, /ip pool print, /ip dhcp-server print, /interface l2tp-server server print
+
+[jdf@GW Servidores] > /ip address print
+Flags: X - disabled, I - invalid, D - dynamic
+ #   ADDRESS            NETWORK         INTERFACE
+ 0   ;;; LOOPBACK
+     172.16.200.5/32    172.16.200.5    loopback
+ 1   ;;; GERENCIA SERVIDOR VOIP CPV
+     192.168.123.13/30  192.168.123.12  ether7 - Proxmox - DOCKER - CDNTV
+ 2   ;;; GERENCIA LOCAL
+     192.168.116.34/30  192.168.116.32  sfp1 - UPLINK SW TOPO DO RACK
+ 3   ;;; IP PUBLICO
+     177.72.104.1/27    177.72.104.0    Bridge IP Publico
+ 4   ;;; GERENCIA THE DUDE
+     192.168.116.29/30  192.168.116.28  Bridge IP Publico
+ 5   ;;; GERENCIA SERVIDOR VOIP BCP BACKUP
+     192.168.123.21/30  192.168.123.20  Bridge IP Publico
+ 6   ;;; GERENCIA SERVIDOR MONSTA
+     192.168.115.61/30  192.168.115.60  Bridge IP Publico
+ 7   ;;; GERENCIA OLT ZTE CPV
+     192.168.115.41/30  192.168.115.40  ether9 - GERENCIA OLT ZTE
+ 8   ;;; GERENCIA HUAWEI
+     177.72.104.53/30   177.72.104.52   sfp1 - UPLINK SW TOPO DO RACK
+ 9   ;;; REGUA VOLT
+     192.168.115.101/30 192.168.115.100 ether1
+10   ;;; GERENCIA NTP SERVE
+     192.168.116.9/30   192.168.116.8   VLAN15 - NTP SERVER
+11   ;;; GERENCIA LIBRENMS
+     192.168.116.17/30  192.168.116.16  Bridge IP Publico
+12   ;;; GERENCIA WIKI 2
+     192.168.116.37/30  192.168.116.36  Bridge IP Publico
+13   ;;; GERENCIA DNS BACKUP
+     192.168.123.1/30   192.168.123.0   Bridge IP Publico
+14   ;;; GERENCIA WIKI
+     192.168.116.45/30  192.168.116.44  Bridge IP Publico
+15   ;;; GERENCIA PROXMOXHUB
+     192.168.115.209/30 192.168.115.208 Bridge IP Publico
+16   ;;; GERENCIA RADIUS HUBSOFT
+     192.168.115.213/30 192.168.115.212 Bridge IP Publico
+17   ;;; GERENCIA SERVIDOR GRAYLOG
+     192.168.123.9/30   192.168.123.8   Bridge IP Publico
+18   ;;; GERENCIA PROXMOX DOCKER - CDNTV
+     192.168.116.121/30 192.168.116.120 Bridge IP Publico
+19   ;;; MONSTA
+     192.168.15.73/30   192.168.15.72   VLAN18 - SERVERINO
+20   ;;; SERVIDOR TS CALLCENTER
+     192.168.115.97/30  192.168.115.96  Bridge IP Publico
+21   ;;; JDF => Rancho Velho
+     192.168.31.49/29   192.168.31.48   VLAN93 - GERENCIA_POP_JDF_E_ENLACE_RANCHO_VELHO
+22   ;;; Aguape  => Bacupari
+     192.168.31.41/29   192.168.31.40   VLAN753 - MK POP Bacupari
+23   ;;; Casca => Bacupari
+     192.168.31.17/29   192.168.31.16   VLAN753 - MK POP Bacupari
+24   ;;; Faz. Nova => Bacupari
+     192.168.31.9/29    192.168.31.8    VLAN753 - MK POP Bacupari
+25   ;;; M Quiteria => Casca
+     192.168.30.201/29  192.168.30.200  VLAN712 - MK POP Casca
+26   ;;; Abelha => Solidao 101
+     192.168.30.193/29  192.168.30.192  VLAN738 - MK POP Solidao 101
+27   ;;; Rodrigo => Solidao
+     192.168.30.177/29  192.168.30.176  VLAN775 - MK POP Aguape
+28   ;;; Serraria => FSB
+     192.168.30.161/29  192.168.30.160  VLAN765 - Serraria => BCP
+29   ;;; Solidao => Aguape
+     192.168.30.153/29  192.168.30.152  VLAN775 - MK POP Aguape
+30   ;;; Faz. Cardoso => Cavalhada
+     192.168.30.113/29  192.168.30.112  VLAN731 - MK POP Cavalhada
+31   ;;; Serraria => Faz. Cardoso
+     192.168.30.81/29   192.168.30.80   VLAN721 - MK POP Faz. Cardoso
+32   ;;; Pantano => Valim
+     192.168.30.73/29   192.168.30.72   VLAN718 - MK POP Valim
+33   ;;; Bacupari => Solidao 101
+     192.168.30.49/29   192.168.30.48   VLAN738 - MK POP Solidao 101
+34   ;;; SW Shopping
+     192.168.15.85/30   192.168.15.84   VLAN52 - Clientes IP Publico PWW
+35   ;;; SW4370 Solidao
+     192.168.15.81/30   192.168.15.80   VLAN44 - SLD
+36   ;;; S4370 Praia Solidao
+     192.168.15.29/30   192.168.15.28   VLAN40 - PSLD
+37   ;;; S5735 Lagoa do Bacupari
+     192.168.15.61/30   192.168.15.60   VLAN39 - LBCP
+38   ;;; CEEE Shopping
+     192.168.15.89/30   192.168.15.88   VLAN52 - Clientes IP Publico PWW
+39   ;;; SW Aguape
+     192.168.17.1/30    192.168.17.0    VLAN775 - MK POP Aguape
+40   ;;; SW Povos
+     192.168.17.5/30    192.168.17.4    VLAN720 - MK POP Povos
+41   ;;; SW Pantano
+     192.168.17.9/30    192.168.17.8    VLAN719 - MK POP Pantano
+42   ;;; SW Serraria
+     192.168.17.17/30   192.168.17.16   VLAN708 - MK POP Serraria
+43   ;;; SW Bacupari
+     192.168.17.21/30   192.168.17.20   VLAN753 - MK POP Bacupari
+44   ;;; SW Bacupari
+     192.168.17.25/30   192.168.17.24   VLAN753 - MK POP Bacupari
+45   ;;; CEEE BCP Fase 1
+     192.168.30.145/29  192.168.30.144  VLAN753 - MK POP Bacupari
+46   ;;; GERENCIA_POP_JDF_E_ENLACE_RANCHO_VELHO
+     192.168.22.1/27    192.168.22.0    VLAN93 - GERENCIA_POP_JDF_E_ENLACE_RANCHO_VELHO
+47   ;;; OLT Solidao
+     192.168.115.105/30 192.168.115.104 VLAN44 - SLD
+48   ;;; Gerencia OLT Praia Solidao
+     192.168.115.233/30 192.168.115.232 VLAN40 - PSLD
+49   ;;; Gerencia OLT Lagoa do Bacupari
+     192.168.115.229/30 192.168.115.228 VLAN39 - LBCP
+50   ;;; RB Bridge Consepro PWW
+     192.168.115.205/30 192.168.115.204 VLAN90 - RB Bridge Consepro PWW
+51   ;;; RB Banco do Brasil PWW
+     192.168.115.65/30  192.168.115.64  VLAN52 - Clientes IP Publico PWW
+52   ;;; CEEE Bridge Predio Maicon 2
+     192.168.116.113/29 192.168.116.112 VLAN200 - RB Brigde Predio Maicon
+53   ;;; RB Banco do Brasil CPV
+     192.168.115.85/30  192.168.115.84  VLAN196 - RB Banco do Brasil CPV
+54   ;;; CRS Escritorio
+     192.168.116.149/30 192.168.116.148 VLAN54 - Marcos Solon
+55   ;;; RB  CASA -  Marcos Solon
+     192.168.116.153/30 192.168.116.152 VLAN54 - Marcos Solon
+56   ;;; RB Brigde Predio Maicon
+     192.168.115.5/30   192.168.115.4   VLAN200 - RB Brigde Predio Maicon
+57   ;;; Gerencia OLT PLSD
+     192.168.115.245/30 192.168.115.244 VLAN40 - PSLD
+58   ;;; CEEE FSB
+     192.168.23.89/29   192.168.23.88   VLAN35 - FSB
+59   ;;; Gerencia OLT BCP
+     192.168.115.225/30 192.168.115.224 VLAN37 - OLT BCP
+60   ;;; OLTGerencia OLT CCB
+     192.168.115.237/30 192.168.115.236 VLAN41 - CCB
+61   ;;; Gerencia EDD TIM MST
+     192.168.116.157/30 192.168.116.156 VLAN2020 - Gerencia EDD MST
+62   ;;; Gerencia OLT CASCA
+     192.168.115.17/30  192.168.115.16  VLAN42 - CASCA
+63   ;;; Gerencia OLT PWW
+     192.168.115.141/30 192.168.115.140 VLAN52 - Clientes IP Publico PWW
+64   ;;; Gerencia OLT GGV
+     192.168.115.125/30 192.168.115.124 VLAN21 - OLT ZTE GGV
+65   ;;; ENLACE JESUELO DA SILVA
+     192.168.30.25/29   192.168.30.24   VLAN93 - GERENCIA_POP_JDF_E_ENLACE_RANCHO_VELHO
+66   ;;; GW POP SOLIDAO
+     172.31.254.33/30   172.31.254.32   VLAN713 - GW SOLIDAO
+67   ;;; GERENCIA_NETPAL_JDF_CYMI
+     192.168.116.177/29 192.168.116.176 VLAN93 - GERENCIA_POP_JDF_E_ENLACE_RANCHO_VELHO
+68   ;;; REDE RODEIO
+     192.168.16.1/27    192.168.16.0    VLAN - 600 - AP_CENTRO_TVR_REI_DOS_PAMPAS
+69   ;;; Gerencia OLT FSB
+     192.168.115.53/30  192.168.115.52  VLAN 35 GERENCIA OLT FSB
+70   ;;; Gerencia OLT MST
+     192.168.115.169/30 192.168.115.168 VLAN43 - MST
+71   ;;; SW FO Shopping
+     192.168.115.241/30 192.168.115.240 VLAN27 - SW FO Shopping
+72   ;;; Gerencia SW Jardim Formoso
+     192.168.15.93/30   192.168.15.92   VLAN30 - Gerencia Radios CPV
+73   ;;; Gerencia Radios CPV CRS JDF
+     192.168.6.1/24     192.168.6.0     VLAN30 - Gerencia Radios CPV
+74   ;;; Gerencia OLT PWW Nova
+     192.168.115.9/30   192.168.115.8   VLAN22 - PWW
+75   ;;; RB Bridge Banco do Brasil MST
+     192.168.115.81/30  192.168.115.80  VLAN49 - Clientes IP Publico MST
+76   ;;; CRS - PWW
+     192.168.116.209/28 192.168.116.208 VLAN52 - Clientes IP Publico PWW
+77   ;;; DUDE VLSUL
+     192.168.17.37/30   192.168.17.36   Bridge IP Publico
+78   ;;; DHCP PC SIX
+     192.168.66.1/28    192.168.66.0    ether6 - PC TS SIX
+79   ;;; GERENCIA PROXMOX PNETLAB
+     192.168.116.5/30   192.168.116.4   Bridge IP Publico
+80   ;;; ROTEADOR PRINCIPAL PNETLAB
+     192.168.116.25/30  192.168.116.24  Bridge IP Publico
+81   ;;; DUDE PMCPV
+     192.168.17.41/30   192.168.17.40   Bridge IP Publico
+82   ;;; Gerencia SW Praia MST
+     192.168.15.45/30   192.168.15.44   VLAN47 - PRAIA MST
+83   ;;; Gerencia OLT Praia MST
+     192.168.115.173/30 192.168.115.172 VLAN47 - PRAIA MST
+84   ;;; GERENCIA SW DATACOM
+     192.168.15.49/30   192.168.15.48   VLAN11_eoip
+85   ;;; GATEWAY LAGOA DO BACUPARI
+     192.168.22.49/28   192.168.22.48   VLAN39 - LBCP
+86   ;;; DUDE PMMST
+     192.168.17.45/30   192.168.17.44   Bridge IP Publico
+87   ;;; GERENCIA SW PRAIA SAO SIMAO
+     192.168.15.53/30   192.168.15.52   VLAN48 - PRAIA SAO SIMAO
+88   ;;; GERENCIA OLT PRAIA SAO SIMAO
+     192.168.115.181/30 192.168.115.180 VLAN48 - PRAIA SAO SIMAO
+89   ;;; GW Praia MST
+     172.31.254.29/30   172.31.254.28   VLAN47 - PRAIA MST
+90   ;;; VLAN 46 GERENCIA TVR
+     192.168.15.253/30  192.168.15.252  VLAN50 - GERENCIA TVR
+91   177.72.104.61/30   177.72.104.60   VLAN198 - Pantano => Juca Ana
+92   ;;; RB BRIDGE SERVIDORES
+     192.168.116.21/30  192.168.116.20  Bridge IP Publico
+93   ;;; GERENCIA PROXMOX VOIP
+     192.168.115.21/30  192.168.115.20  Bridge IP Publico
+94   ;;; GERENCIA PROXMOX DNS
+     192.168.115.137/30 192.168.115.136 Bridge IP Publico
+95   ;;; SERVIDOR DE DNS RECURSIVO
+     10.200.255.253/30  10.200.255.252  VLAN10
+96   192.168.115.177/30 192.168.115.176 VLAN539
+97   ;;; SW TVR
+     192.168.116.197/30 192.168.116.196 VLAN46 - TVR
+98   ;;; Bacupari  => Serraria
+     192.168.31.33/29   192.168.31.32   VLAN753 - MK POP Bacupari
+99   192.168.90.1/24    192.168.90.0    VLAN1066 - GERADOR MST
+100 X ;;; DNS - NOVO
+     10.200.255.249/30  10.200.255.248  Bridge IP Publico
+
+[jdf@GW Servidores] > /ip pool print
+ # NAME                RANGES
+ 0 POOLESCRITORIOBCP   192.168.122.10-192.168.122.39
+ 1 POOLESCRITORIOMST   192.168.122.66-192.168.122.85
+ 2 POOLESCRITORIO PWW  192.168.122.110-192.168.122.120
+ 3 DHCP SUPORTE PWW    192.168.122.142-192.168.122.189
+ 4 ovpn-pool           192.168.77.50-192.168.77.254
+ 5 dhcp_pool5          192.168.25.2-192.168.25.6
+ 6 dhcp_pool6          192.168.66.2-192.168.66.14
+ 7 dhcp_pool7          192.168.66.2-192.168.66.14
+ 8 dhcp_pool8          192.168.90.2-192.168.90.254
+ 9 dhcp_pool9          192.168.66.2-192.168.66.14
+
+[jdf@GW Servidores] > /ip dhcp-server print
+Flags: D - dynamic, X - disabled, I - invalid
+ #    NAME    INTERFACE                    RELAY  ADDRESS-POOL  LEASE-TIME  ADD-ARP
+ 0    dhcp1   VLAN1066 - GERADOR MST              dhcp_pool8    10m
+ 1  I ;;; DHCP server can not run on slave interface!
+      dhcp2   ether6 - PC TS SIX                  dhcp_pool9    10m
+
+[jdf@GW Servidores] > /interface l2tp-server server print
+               enabled: yes
+               max-mtu: 1450
+               max-mru: 1450
+                  mrru: disabled
+        authentication: chap,mschap1,mschap2
+     keepalive-timeout: 30
+          max-sessions: unlimited
+       default-profile: default-encryption
+             use-ipsec: no
+          ipsec-secret: ntp1030
+        caller-id-type: ip-address
+  one-session-per-host: no
+       allow-fast-path: no
