@@ -299,4 +299,15 @@ bloco público, não uma VM. Se confirmado, migrar esse cluster não é só "tro
 [12-mapeamento-proxmox.md](12-mapeamento-proxmox.md) para os detalhes e as duas hipóteses
 levantadas.
 
+🆕 **Recomendação (2026-07-23): VLAN, não troca física.** O Proxmox suporta bridge VLAN-aware
+nativamente — dá pra colocar a gerência nova numa VLAN privada e manter as 8 VMs públicas em
+outra (VLAN 16), na mesma NIC física, bastando o switch de topo de rack tratar essa porta como
+trunk com as duas tags. É o mesmo padrão que os outros 3 clusters (Docker, HubSoft, DNS) já usam
+— só o Zabbix está fora do padrão hoje. Sem cabeamento novo, sem "virada" disruptiva.
+
+**Único risco a checar antes de mexer:** se algum serviço está de fato amarrado no `.5` como IP do
+próprio hypervisor (não de uma VM) — nesse caso precisa atualizar quem aponta pra lá antes de
+trocar. Se `.5` for só o IP que a interface física pegou por acaso, a migração é trivial: criar a
+VLAN de gerência, validar alcance, mover, sem indisponibilidade real.
+
 **Status:** em aberto — pendência de endereçamento, não bloqueia o restante do plano.
