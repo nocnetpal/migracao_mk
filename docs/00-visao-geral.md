@@ -19,7 +19,8 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 
 ## Status
 
-📋 Fase atual: **inventário técnico do RB3011/RB2011 concluído; plano de corte em rascunho v1.**
+📋 Fase atual: **inventário técnico concluído; runbook operacional da janela escrito
+([13](13-rotina-corte.md)), aguardando fechar 6 bloqueadores antes de poder agendar a data.**
 
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)
@@ -57,3 +58,4 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 - [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md) — endereçamento da CCR1036 e dos servidores locais
 - [11-cruzamento-dude-devices.md](11-cruzamento-dude-devices.md) — cruzamento com o monitoramento do Dude (`Devices.csv`): candidato ao switch de topo do rack, nomes de sistema desatualizados, VPNs adicionais
 - [12-mapeamento-proxmox.md](12-mapeamento-proxmox.md) — os 4 clusters Proxmox, hypervisor + VMs (públicas e privadas), com todos os IPs
+- [13-rotina-corte.md](13-rotina-corte.md) — runbook operacional da janela de corte (checklist passo a passo, com rollback)
