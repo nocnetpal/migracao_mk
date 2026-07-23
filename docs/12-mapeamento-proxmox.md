@@ -45,17 +45,18 @@ MAC de fabricante **Dell** no hypervisor — consistente com ser hardware físic
 ⚠️ **Diferente dos outros 3 clusters, não existe nenhum IP de gerência privada para este
 hypervisor no Dude.** O device chamado literalmente `"Proxmox Zabbix"` está no IP **público**
 `177.72.104.5` e tem MAC de fabricante real (**Hewlett Packard**) — evidência de que é hardware
-físico, não uma VM. Duas hipóteses:
-- **(a)** Este hypervisor não tem gerência privada separada — a própria interface física do
-  servidor está no bloco público. Também é o mesmo IP usado pelas regras "Hubsoft"/"CallSys" no
-  firewall do RB3011 (multiplexado por porta) — pode ser coincidência de numeração com outra
-  função, ou o mesmo host acumulando papéis.
-- **(b)** Existe gerência privada, mas não está cadastrada no Dude.
+físico, não uma VM.
 
-O plano da CCR1036 (`ether5`, "mgmt privada nova") já assume que este cluster **vai ganhar** uma
-gerência privada nova — ou seja, se a hipótese (a) for verdadeira, isso não é só "migrar", é
-**redesenhar** esse host pra sair do modelo atual (hypervisor com IP público direto).
-**Confirmar com o usuário antes de seguir.**
+✅ **Confirmado (usuário, 2026-07-23):** hipótese (a) procede — **é standalone** (não faz parte de
+cluster Proxmox, então trocar o IP não exige reconfigurar corosync/quorum) e tem **~10 VMs**
+(bate com a contagem daqui: 8 públicas + 3 privadas = 11, ordem de grandeza consistente).
+Isso confirma que migrar esse host é redesenho (dar a ele gerência privada pela primeira vez), não
+só reapontar gateway — mas também confirma que é a operação **mais simples possível** desse tipo
+(sem cluster pra coordenar).
+
+**Ainda falta confirmar** antes da troca: se algo está amarrado no `.5` como IP do host em si
+(GUI/API do Proxmox porta `8006`, job de backup, allowlist de firewall) — ver checklist de troca
+em [03-decisoes-pendentes.md](03-decisoes-pendentes.md), decisão #12.
 
 ## 3. Proxmox HubSoft
 

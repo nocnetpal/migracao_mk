@@ -310,4 +310,18 @@ próprio hypervisor (não de uma VM) — nesse caso precisa atualizar quem apont
 trocar. Se `.5` for só o IP que a interface física pegou por acaso, a migração é trivial: criar a
 VLAN de gerência, validar alcance, mover, sem indisponibilidade real.
 
-**Status:** em aberto — pendência de endereçamento, não bloqueia o restante do plano.
+✅ **Confirmado (usuário, 2026-07-23): standalone, ~10 VMs.** Não é nó de cluster Proxmox — troca
+de IP não exige reconfigurar corosync/quorum, é a operação mais simples possível desse tipo. A
+contagem de VMs bate com o mapeamento do [12](12-mapeamento-proxmox.md) (8 públicas + 3 privadas).
+
+**Checklist da troca (quando for feita):**
+1. Confirmar se algo aponta pro `.5` como host (GUI/API porta `8006`, backup, allowlist de firewall).
+2. Criar a VLAN/interface de gerência privada nova **em paralelo** (bridge VLAN-aware do Proxmox
+   não exige reboot) — não editar a interface pública existente direto.
+3. Validar alcance pela VLAN nova antes de remover o IP público da interface antiga.
+4. Atualizar o Dude (monitora pelo `.5` hoje) e qualquer allowlist de firewall.
+5. Reportar aqui o IP privado novo para fechar o [12](12-mapeamento-proxmox.md) e a decisão #9
+   (porta/VLAN dedicada na CCR1036, mesmo padrão de `ether7`/`ether8`).
+
+**Status:** standalone confirmado (risco de cluster eliminado); falta rodar o checklist acima e
+definir o IP privado novo.
