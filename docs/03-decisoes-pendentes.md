@@ -288,6 +288,15 @@ IP público) que não cabem no `/30` de gerência do hypervisor — `Radius HubS
 `Servidor Monsta` (`192.168.115.62`). Cada uma está numa sub-rede própria, diferente da do
 hypervisor. Não está definido se saem pela mesma porta física do hypervisor (bridge/VLAN adicional
 dentro do Proxmox) ou por outro caminho — precisa de confirmação antes de fechar o endereçamento
-desses clusters. Detalhe em [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
+desses clusters. Mapeamento completo (todos os IPs, hypervisor + VMs, dos 4 clusters) em
+[12-mapeamento-proxmox.md](12-mapeamento-proxmox.md).
+
+🆕 **Achado mais recente:** o cluster **Zabbix** pode não ter gerência privada nenhuma hoje — o
+device `"Proxmox Zabbix"` no Dude está no IP **público** `177.72.104.5`, com MAC de fabricante
+real (Hewlett Packard), sugerindo que é o próprio hypervisor físico com a interface direto no
+bloco público, não uma VM. Se confirmado, migrar esse cluster não é só "trocar gateway" — é
+**redesenhar** pra ele ganhar gerência privada pela primeira vez. Ver
+[12-mapeamento-proxmox.md](12-mapeamento-proxmox.md) para os detalhes e as duas hipóteses
+levantadas.
 
 **Status:** em aberto — pendência de endereçamento, não bloqueia o restante do plano.
