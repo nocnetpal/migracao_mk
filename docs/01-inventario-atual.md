@@ -7,7 +7,7 @@
 
 | # | Equipamento/Modelo | Identidade (system identity) | Função hoje | Fica ou sai? | Observações |
 |---|---------------------|-------------------------------|-------------|--------------|-------------|
-| 1 | Mikrotik RB3011 | **GW Servidores** | Ver detalhes completos abaixo | Sai | ⚠️ Export **truncado** (falta todo o início: `/interface*`, `/ip address`, `/ip pool`, `/ip dhcp-server`…) — [`config/rb3011/gw-servidores-export.rsc`](../config/rb3011/gw-servidores-export.rsc), ver [07-enderecamento-ip.md](07-enderecamento-ip.md) |
+| 1 | Mikrotik RB3011 | **GW Servidores** | Ver detalhes completos abaixo | Sai | 🆕 **Export COMPLETO obtido 2026-07-24** — [`gw-servidores-export-completo-2026-07-24.rsc`](../config/rb3011/gw-servidores-export-completo-2026-07-24.rsc) (o antigo `gw-servidores-export.rsc` estava truncado). Não há mais lacuna de início |
 | 2 | Mikrotik RB2011UiAS | **RB Bridge Servidores** | Bridge L2 simples (switch burro) — pendura na GW Servidores | Sai | Export completo em [`config/rb2011uias/rb-bridge-servidores-export.rsc`](../config/rb2011uias/rb-bridge-servidores-export.rsc) |
 | 3 | *(a confirmar)* | | | | |
 
@@ -93,7 +93,10 @@ Interfaces originalmente identificadas (subconjunto):
 
 ### Outros serviços rodando neste MK
 - **SNMP** habilitado (contato `noc@netpal.com.br`, local "Capivari do Sul").
-- **NTP client** apontando para `192.168.116.10`.
+- **NTP client** apontando para `192.168.116.10` — ✅ **resolvido (2026-07-24, consulta direta ao
+  Docker):** é o container `NTP_SERVER` (rede macvlan) rodando na VM `docker-netpal` (cluster
+  Proxmox Docker/CDNTV). A hora de referência de toda a rede depende deste container — ver
+  [12](12-mapeamento-proxmox.md).
 - **Backup automático semanal** (scheduler + script `backup_ftp`): gera backup + export e envia
   por FTP para um servidor interno, depois limpa os arquivos locais.
 - **Script de notificação** (`dude`, acionado por netwatch/probes): dispara mensagem via API HTTP

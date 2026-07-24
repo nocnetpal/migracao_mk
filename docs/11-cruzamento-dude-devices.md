@@ -65,6 +65,12 @@ sugere que o **Hubsoft real hoje é `.16`** e `.8` é resíduo de uma regra de f
 não existe mais (ou mudou de IP). **Isso muda o Passo 1 do [05-limpeza-politicas.md](05-limpeza-politicas.md):
 o Dude, não o comentário do firewall, deveria ser a fonte de verdade sobre "o que está vivo".**
 
+✅ **Confirmado por consulta direta ao Docker (2026-07-24):** `.16` = HubSoft real, correto. Mas
+`.8` **não é resíduo morto** — é o **Smokeping**, um sistema vivo que simplesmente nunca foi
+adicionado ao Dude (por isso "não aparecer no Dude" não provava que estava morto, só que não era
+monitorado). Lição: ausência no Dude ≠ sistema morto — só ausência de monitoramento. Ver
+[07](07-enderecamento-ip.md) e [12](12-mapeamento-proxmox.md) para o levantamento completo.
+
 Casos que batem ou são plausivelmente o mesmo serviço (nomes diferentes, mesma família):
 `.13` TIP VOIP = Zeus-TIP-VoIP · `.14` Fusion elaborados ≈ Fusion-VoIP-PM CPV · `.18` Fusion geral ≈
 Fusion-VoIP-0800 NETPAL · `.25` Fusion simples ≈ Fusion-VoIP-Painéis Simples · `.30` OPA Suite = Opa
@@ -81,12 +87,16 @@ IPs accept sem nome":
 | `.22` | sem nome | **Fusion - VoIP - Elaborados - Full** |
 | `.23` | sem nome | **Aplicações /etc/scripts** |
 | `.24` | sem nome | **OLT CLOUD** (Web Server) |
-| `.29` | sem nome | **AUTOMACOES** (Web Server) — provável relação com a decisão #6 (netwatch→API) |
+| `.29` | sem nome | **AUTOMACOES** (Web Server) — ~~provável relação com a decisão #6 (netwatch→API)~~ descartado (2026-07-24): o script `dude` chama direto um SaaS externo (`api.focuschat.com.br`), sem host local envolvido |
 | `.105.217` | sem nome | **GW CC BCP** / GW Escritório BCP |
 
-Ainda sem nome mesmo depois do cruzamento (não aparecem no Dude): `.26`, `.57`, `.59`,
-`.105.221`. Candidatos fortes a **resíduo morto** — nenhuma fonte (firewall antigo ou monitoramento
-atual) os identifica.
+~~Ainda sem nome mesmo depois do cruzamento (não aparecem no Dude): `.26`, `.57`, `.59`,
+`.105.221`.~~ ✅ **`.26` resolvido (2026-07-24, consulta direta ao Docker): é API-ZAP** —
+~~provável destino da notificação da decisão #6~~ descartado (2026-07-24): a notificação vai
+direto pra internet, não pra `.26`; função real de API-ZAP segue desconhecida. Seguem sem identificação em qualquer fonte
+(Dude, firewall antigo, consulta direta aos 4 clusters Proxmox **e** `/ip arp print` no RB3011,
+que não retornou nenhuma entrada para os três): `.57`, `.59`, `.105.221` — indício mais forte
+agora de resíduo morto, mas não definitivo.
 
 ## 🚨 Duas VPNs adicionais, fora do RB3011 — impacto na decisão #5
 

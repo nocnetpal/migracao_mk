@@ -25,22 +25,22 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 
 | Sistema/regra no MK antigo | IP(s) | Nome no Dude hoje | Ainda ativo? |
 |---|---|---|---|
-| Hubsoft (billing/ERP) | `177.72.104.8` | ⚠️ **não aparece no Dude** | Provável **morto** — ver `.16` abaixo |
-| Hubsoft (billing/ERP) | `177.72.104.5` | Proxmox Zabbix | ? — mesmo IP também é "CallSys" |
+| ~~Hubsoft (billing/ERP)~~ | `177.72.104.8` | Smokeping | ✅ **Resolvido (2026-07-24): não é Hubsoft nem morto — é o Smokeping**, vivo, hospedado em `docker-netpal`. Não precisa de regra "Hubsoft"; precisa de regra própria pra Smokeping se ainda fizer sentido no novo firewall |
+| Hubsoft (billing/ERP) | `177.72.104.5` | Proxmox Zabbix | ✅ **confirmado vivo (usuário, 2026-07-24)** — coexiste com o Hubsoft de `.16` (VM `HUBSOFT`), duas instâncias/apontamentos distintos, não é duplicidade a limpar. ⚠️ **Achado de segurança:** a regra que libera essa app (`dst-port=!148`, sem origem restrita) abre **todas as portas** de `.5` pra internet inteira — e `.5` é o próprio hypervisor Proxmox. Não portar 1:1; restringir à porta real do Hubsoft com origem explícita (ver decisão #7/#12 em [03](03-decisoes-pendentes.md)) |
 | Fusion Netpal (clientes elaborados) | `177.72.104.14` | Fusion - VoIP - PM CPV | provável ativo |
 | Fusion Netpal (clientes simples) | `177.72.104.25` | Fusion - VoIP - Painéis Simples | provável ativo |
 | Fusion Netpal (geral) | `177.72.104.18` | Fusion - VoIP - 0800 NETPAL | provável ativo |
-| Servidor Fusion Voip | `177.72.104.7` | ⚠️ **DOCS Cloud** (nome não bate) | confirmar — pode ter mudado de função |
-| Servidor Fusion Voip Multistore | `177.72.104.9` | ⚠️ **Servidor VPN** (nome não bate) | confirmar — pode ter mudado de função |
-| SBC VOIP | `177.72.104.20` | ⚠️ **SFTP - Netpal - OPA** (nome não bate) | confirmar — pode ter mudado de função |
-| TIP VOIP | `177.72.104.13` | Zeus - TIP - VoIP | ativo (bate) |
-| MADE4IT | `177.72.104.17` | ⚠️ **Fusion - VoIP - PM MST** (nome não bate) | confirmar — pode ter mudado de função |
+| Servidor Fusion Voip | `177.72.104.7` | DOCS Cloud | ✅ **confirmado por consulta direta (2026-07-24)** — nome do MK desatualizado, ativo como "Docs" |
+| Servidor Fusion Voip Multistore | `177.72.104.9` | Servidor VPN | ✅ **confirmado por consulta direta (2026-07-24)** — nome do MK desatualizado, ativo como "OVPN" |
+| SBC VOIP | `177.72.104.20` | SFTP - Netpal - OPA | ✅ **confirmado por consulta direta (2026-07-24)** — nome do MK desatualizado, ativo como "SFTP-OPA-CHAT" |
+| TIP VOIP | `177.72.104.13` | Zeus - TIP - VoIP | ✅ ativo (bate) — confirmado por consulta direta (2026-07-24) |
+| MADE4IT | `177.72.104.17` | Fusion - VoIP - PM MST | ✅ **confirmado por consulta direta (2026-07-24)** — nome do MK desatualizado, ativo como "Fusionpbx-PM-MST" |
 | OPA Suite (chat) | `177.72.104.30` | Opa ChatBot | ativo (bate) |
-| CallSys | `177.72.104.5` | Proxmox Zabbix | ? — mesmo IP também é "Hubsoft" acima |
-| Servidor sala | `177.72.104.16` | ⚠️ **HubSoft** (nome não bate) | **Hipótese: este é o Hubsoft real hoje**, não `.8` |
+| CallSys | `177.72.104.5` | Proxmox Zabbix | ❌ **morto (usuário, 2026-07-24) — não existe mais na rede.** Regra `LIBERA CALLSYS` (dst-port `!45345`) não migra |
+| Servidor sala | `177.72.104.16` | HubSoft | ✅ **confirmado por consulta direta (2026-07-24): é o Hubsoft real** — `.8` é sistema não relacionado (Smokeping, ver acima) |
 | The Dude (monitoramento) | `192.168.116.30` | RB DUDE | ✅ confirmado ativo (é a própria fonte do CSV) |
 | TS SIX | `192.168.66.14` | TS SIX | ✅ confirmado ativo (bate) |
-| DNS NetPal (x3, incl. loopbacks) | `177.72.104.28/58/59` | DNS MASTER (só `.58`) | `.28`/`.59` sem confirmação no Dude |
+| DNS NetPal (x3, incl. loopbacks) | `177.72.104.28/58/59` | DNS MASTER (só `.58`) | ✅ **`.28` e `.58` confirmados por consulta direta (2026-07-24): é o mesmo host, VM `NS-UNBOUND`** (não são dois sistemas). `.59` segue sem confirmação em nenhuma fonte |
 | Belluno (parceiro externo) | lista `BELLUNO` (5 IPs/redes) | — | ? |
 | SixTelecom (parceiro externo) | lista `SIXTELECOM` (5 IPs/redes) | — | ? |
 | CGNAT | `177.93.242.0/24` | — | ✅ consistente com CGNAT do NE8000 ([06](06-ne8000-bgp-core.md)) |
@@ -50,7 +50,9 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | 🆕 (sem nome no MK) | `177.72.104.22` | Fusion - VoIP - Elaborados - Full | novo — incluir |
 | 🆕 (sem nome no MK) | `177.72.104.23` | Aplicações /etc/scripts | novo — incluir |
 | 🆕 (sem nome no MK) | `177.72.104.24` | OLT CLOUD | novo — incluir |
-| 🆕 (sem nome no MK) | `177.72.104.29` | AUTOMACOES | novo — pode ser o mesmo sistema da decisão #6 |
+| 🆕 (sem nome no MK) | `177.72.104.29` | AUTOMACOES | ✅ confirmado por consulta direta (2026-07-24) — função exata segue aberta (não é o destino da notificação netwatch, ver decisão #6) |
+| 🆕 (sem nome no MK) | `177.72.104.26` | API-ZAP | ✅ **identidade resolvida (2026-07-24)** — ~~provável destino da notificação HTTP da decisão #6~~ descartado: o script `dude` chama `api.focuschat.com.br` direto, função real segue desconhecida |
+| 🆕 (sem regra no MK) | `177.72.104.2`, `.3`, `.10`, `.11`, `.21` | UniFi Controller, Wiki, PowerDNS master/slave, DNS2 Recursivo | 🆕 achados por consulta direta (2026-07-24) — nunca tiveram regra de firewall própria no MK, mas existem no `/27`. Incluir na lista final de zonas se precisarem de acesso de fora |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.12` | OpenVPN - 2 | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.19` | VPN - WireGuard | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |
 

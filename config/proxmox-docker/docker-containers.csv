@@ -1,0 +1,30 @@
+container,imagem,rede,ip,gateway,portas
+netbox-netbox-1,docker.io/netboxcommunity/netbox:v4.6-5.0.1,netbox_default,172.22.0.5,172.22.0.1,8080/tcp -> 0.0.0.0:8006;8080/tcp -> [::]:8006
+netbox-netbox-worker-1,docker.io/netboxcommunity/netbox:v4.6-5.0.1,netbox_default,172.22.0.6,172.22.0.1,
+netbox-postgres-1,docker.io/postgres:18-alpine,netbox_default,172.22.0.4,172.22.0.1,
+netbox-redis-1,docker.io/valkey/valkey:9.0-alpine,netbox_default,172.22.0.2,172.22.0.1,
+netbox-redis-cache-1,docker.io/valkey/valkey:9.0-alpine,netbox_default,172.22.0.3,172.22.0.1,
+portainer,portainer/portainer-ce:2.39.4,portainer_internal,172.21.0.2,172.21.0.1,8000/tcp -> 127.0.0.1:8000
+Nginx_Netpal,nginx-netpal:latest,bridge,172.17.0.2,172.17.0.1,80/tcp -> 0.0.0.0:80;80/tcp -> [::]:80;443/tcp -> 0.0.0.0:443;443/tcp -> [::]:443
+Nginx_Netpal,nginx-netpal:latest,portainer_internal,172.21.0.3,172.21.0.1,80/tcp -> 0.0.0.0:80;80/tcp -> [::]:80;443/tcp -> 0.0.0.0:443;443/tcp -> [::]:443
+NTP_SERVER,ntp_server_netpal:latest,MACVLAN,192.168.116.10,192.168.116.9,
+smokeping,smokenetpal1:latest,IP-DNS-177.72.104.21,177.72.104.8,177.72.104.1,
+pdns-admin-static,pdns-admin-static-1:latest,pdns_pdns,172.6.0.7,172.6.0.1,80/tcp -> 0.0.0.0:8989;80/tcp -> [::]:8989
+pdns-master1,pdns-master25051:latest,IP-DNS-177.72.104.21,177.72.104.10,177.72.104.1,
+pdns-master1,pdns-master25051:latest,pdns_pdns,172.6.0.8,172.6.0.1,
+unifi-controller,ghcr.io/linuxserver/unifi-controller:latest,IP-DNS-177.72.104.21,177.72.104.2,177.72.104.1,
+webserver,centos/httpd-24-centos7:latest,webserver,172.20.0.2,172.20.0.1,8080/tcp -> 0.0.0.0:9000;8080/tcp -> [::]:9000
+pdns-slave,pdns_slave_1:latest,IP-DNS-177.72.104.21,177.72.104.11,177.72.104.1,
+pdns-slave,pdns_slave_1:latest,pdns_pdns,172.6.0.2,172.6.0.1,
+pdns-adminuwsgi,pschiffe/pdns-admin-uwsgi,pdns_pdns,172.6.0.6,172.6.0.1,
+pdns-phpmyadmin,phpmyadmin/phpmyadmin:5,pdns_pdns,172.6.0.5,172.6.0.1,80/tcp -> 0.0.0.0:8988;80/tcp -> [::]:8988
+pdns-recursor,pschiffe/pdns-recursor:latest,pdns_pdns,172.6.0.3,172.6.0.1,
+pdns-mariadb,mariadb:10.6,pdns_pdns,172.6.0.4,172.6.0.1,
+Wiki,linuxserver/wikijs:latest,IP-DNS-177.72.104.21,177.72.104.3,177.72.104.1,
+DNS2-Recursivo-104.21,dns_recursivo_2:latest,IP-DNS-177.72.104.21,177.72.104.21,177.72.104.1,
+SEVERINO,dokken/debian-11:latest,MACVLAN-18-SEVERINO,192.168.15.74,192.168.15.73,
+SpeedTest,dokken/debian-11:latest,MACVLAN-38-SPEED,177.93.247.138,177.93.247.137,
+DNS2-Recursivo,dns_recursivo_2:latest,,,,
+phpipam-web,phpipam/phpipam-www:latest,phpipam_phpipam,172.19.0.3,172.19.0.1,80/tcp -> 0.0.0.0:8002;80/tcp -> [::]:8002
+phpipam-cron,phpipam/phpipam-cron:latest,phpipam_phpipam,172.19.0.4,172.19.0.1,
+phpipam-mariadb,mariadb:latest,phpipam_phpipam,172.19.0.2,172.19.0.1,3306/tcp -> 0.0.0.0:13306;3306/tcp -> [::]:13306

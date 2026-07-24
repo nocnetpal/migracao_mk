@@ -75,13 +75,15 @@ sfp1 (1 GE, trunk)
 **No fio da `sfp1` trafegam frames com dupla tag 802.1Q** (ex.: POP Bacupari = outer 33 + inner
 753). Os l2mtu confirmam: sfp1=1600 → outer=1596 → inner=1592.
 
-### ⚠️ Risco técnico novo — confirmar com a Datacom ANTES do desenho final
+### ~~⚠️ Risco técnico novo — confirmar com a Datacom ANTES do desenho final~~ ✅ resolvido (decisão #13)
 
 O DM4170 suporta QinQ (datasheet), mas o que o MK faz aqui é mais específico:
-**interface L3 roteada (com IP e OSPF) em cima da tag interna de um QinQ**. Confirmar se o DmOS
-suporta SVI/subinterface roteada com dupla tag. Se não suportar, há duas saídas:
-- o switch de topo de rack passa a "desempacotar" a tag externa e entregar tags simples ao Datacom; ou
-- o DM4170 assume o papel do switch de topo de rack e recebe os links dos sites diretamente.
+**interface L3 roteada (com IP e OSPF) em cima da tag interna de um QinQ**. Seria preciso
+confirmar se o DmOS suporta SVI/subinterface roteada com dupla tag — mas ✅ **essa confirmação
+deixou de ser necessária (usuário, 2026-07-24, decisão #13 em
+[03-decisoes-pendentes.md](03-decisoes-pendentes.md)): o DM4170 fica só em L2**, fazendo apenas
+QinQ termination (feature padrão, sem incerteza de suporte); quem termina a SVI roteada de cada
+VLAN passa a ser o **NE8000**, que já faz exatamente isso hoje para as VLANs de POP em paralelo.
 
 ### Armadilhas de numeração (cuidado ao migrar)
 
@@ -101,7 +103,7 @@ Interfaces VLAN ativas mas **sem IP, sem bridge** — config morta a expurgar no
 
 Também sem IP: bridge `loopNETPAL` (vestigial?) e a citada IP morta na `ether1`.
 
-## Composição da `Bridge IP Publico` — ✅ fechada
+## Composição da `Bridge IP Publico` — ✅ fechada, e revista com dados reais de tráfego
 
 `/interface bridge port print` confirmou os membros:
 
@@ -111,14 +113,34 @@ Também sem IP: bridge `loopNETPAL` (vestigial?) e a citada IP morta na `ether1`
 | `ether6` (PC TS SIX), `ether7` (Proxmox DOCKER/CDNTV), `ether8` (DNS recursivo), `ether10` (Callcenter/Zabbix) | sim | Servidores locais |
 | `ether1`, `ether2`, `ether4` | — | Queimadas, inativas na bridge |
 
+> 🆕 **Confirmado por `/interface bridge host print detail` (2026-07-24, dados brutos em
+> [`config/rb3011/gw-servidores-bridge-host-arp.txt`](../config/rb3011/gw-servidores-bridge-host-arp.txt)):
+> **nenhum host aprendido vem da `VLAN16`** — todas as ~40 entradas dinâmicas (`D E`) estão em
+> `ether6`, `ether7`, `ether8` ou `ether10`. As únicas entradas em `VLAN16` são locais (`DL`, MAC do
+> próprio roteador). **Isso derruba a hipótese anterior** de que boa parte das ~24 sub-redes
+> secundárias chegava via switch de topo do rack pela VLAN16 — não chega. **100% do tráfego da
+> bridge hoje é local a esses 4 servidores.**
+>
+> Cruzando os MACs com os 4 clusters Proxmox mapeados ([12](12-mapeamento-proxmox.md)):
+> `ether7` = cluster Docker/CDNTV (5/5 VMs batem), `ether8` = cluster DNS (4/4 batem), `ether6` =
+> TS SIX (servidor à parte). **`ether10` é compartilhado entre o cluster Zabbix (11/11) e o
+> cluster HubSoft (2/2)** — devem estar atrás do mesmo pequeno switch, não em cabos dedicados
+> separados. Isso explica por que o HubSoft nunca apareceu com porta própria no plano da CCR1036
+> ([10](10-enderecamento-ccr1036.md), decisão #12 em [03](03-decisoes-pendentes.md)).
+
 O que isso fecha:
 
-- **O domínio L2 "público" = VLAN 16.** Todos os servidores com IP do `/27` que não estão nas
-  portas locais (Hubsoft, Fusion, DNS, RB2011 etc.) estão **atrás do SW topo do rack, na VLAN 16**.
-  As ~25 sub-redes da bridge (o `/27` + gerências `/30`) são um único segmento L2 nessa VLAN.
-- **Tradução direta para o Datacom**: VLAN 16 taggeada no trunk + portas de acesso untagged
-  (VLAN 16) para os 4 servidores locais + **uma SVI** com `177.72.104.1/27` e as ~24 sub-redes
-  secundárias. A "Bridge IP Publico" deixa de existir como conceito — vira uma VLAN normal.
+- **O domínio L2 "público" = VLAN 16 + os 4 servidores locais**, mas **hoje só os 4 servidores
+  geram tráfego real** nesse domínio — a VLAN16 está "vazia" de hosts aprendidos, apesar de existir
+  como membro da bridge.
+- 🆕 **Simplifica o desenho da SVI do NE8000 (decisão #9):** as ~24 sub-redes secundárias da antiga
+  `Bridge IP Publico` **não precisam subir em L2 pelo DM4170** — são 100% tráfego dos 4 servidores
+  locais, ou seja, ficam inteiramente do lado da CCR1036 (ou o que substituir `ether6`/`7`/`8`/`10`).
+  A VLAN16/DM4170/NE8000 só precisa mesmo do `/27` público em si, não de todo o multinetting
+  privado que se temia antes.
+- **Tradução direta para o Datacom**: VLAN 16 taggeada no trunk (pro `/27` público) + as sub-redes
+  privadas dos 4 servidores vão para a CCR1036, não para uma SVI secundária no NE8000. A "Bridge IP
+  Publico" deixa de existir como conceito.
 - **Mais um ganho de performance**: o membro `VLAN16` não tem hw-offload, então hoje todo frame
   bridgeado entre os servidores locais e o resto do segmento público passa pela **CPU** do RB3011.
   No DM4170 isso é switching em hardware.
@@ -161,8 +183,24 @@ redistribute-connected=as-type-1   redistribute-static=as-type-1
 
 - [x] ~~`/interface bridge port print`~~ — ✅ coletado, ver seção "Composição da Bridge IP Publico".
 - [ ] Identificar o **switch de topo de rack** (modelo/função — possivelmente mais um Mikrotik).
-- [ ] Confirmar com a Datacom: **SVI roteada sobre QinQ interno** e limite de IPs secundários por SVI.
-- [ ] Possível sobreposição no `177.72.104.60/30`: o MK tem `.61/30` na VLAN198 (QinQ p/ Juca Ana)
-      e o NE8000 também anuncia `network 177.72.104.60 0.0.0.3` na OSPF — entender quem é quem
-      nesse /30 antes do corte.
-- [ ] Estado real do EoIP do NOC (down agora — abandonado ou incidente?).
+- [x] ~~Confirmar com a Datacom: SVI roteada sobre QinQ interno e limite de IPs secundários por
+      SVI~~ → ✅ **caiu (decisão #13, 2026-07-24):** DM4170 fica só L2, quem termina a SVI é o
+      NE8000.
+- [x] ~~Possível sobreposição no `177.72.104.60/30`~~ → 🆕 **investigado (2026-07-24):** o NE8000
+      **não tem nenhuma interface configurada** nesse /30 — o `network 177.72.104.60 0.0.0.3` na
+      OSPF é uma statement inerte (não ativa hello em nenhuma interface local, já que nenhuma bate
+      com o range). O dono real e único hoje é o MK (`.61/30` na `VLAN198 - Pantano => Juca Ana`).
+      **Achado à parte, digno de nota:** o NE8000 tem `FTP client-source -a 177.72.104.61` e
+      `sftp client-source -a 177.72.104.61` configurados globalmente — ou seja, o NE8000 tenta
+      originar suas próprias sessões de FTP/SFTP client com um IP que **não é dele** (é do MK).
+      Não é o conflito de rota temido, mas ou é config órfã/quebrada, ou sinaliza que o NE8000 já
+      foi preparado para um dia assumir esse /30 diretamente. → 🆕 **Confirmado pela decisão do
+      usuário (2026-07-24): o `177.72.104.60/30` sai do RB3011 e passa a ser interface do NE8000**
+      (o `.61`), o que torna o `FTP/sftp client-source -a .61` consistente (aponta pro próprio IP).
+      A hipótese "NE8000 já foi preparado pra assumir" estava certa. A VLAN198 não é "replicada"
+      no caminho — o `/30` público nasce direto no NE8000 (decisão #10/#13).
+- [x] ~~Estado real do EoIP do NOC~~ → segue **fora do ar**, mas o próprio NE8000 já libera
+      `177.93.244.165` diretamente na ACL `IPV4_NOC_NETPAL` (linha acima) — ou seja, o NOC já tem
+      um caminho de gerência que **não depende do túnel nem do RB3011**. Reforça que o túnel é
+      dispensável; falta só confirmar com o usuário se algum serviço específico ainda usa o túnel
+      em si (não só o acesso do NOC).

@@ -12,33 +12,40 @@
 | IP | Serviço | Fonte |
 |---|---|---|
 | `.1` | IP público geral da GW Servidores — masquerade (SRC-NAT) e alvo dos DST-NAT (Dude `:18291`, TS SIX `:15389`) | NAT rules |
-| `.5` | **Compartilhado**: Hubsoft (`dst-port=!148`) e CallSys (`dst-port=!45345`) — mesmo IP, portas diferentes | firewall filter |
+| `.2` | 🆕 **Novo (2026-07-24, consulta direta):** UniFi Controller (`unifi-controller`, `docker-netpal`) — sem regra de firewall própria conhecida, nunca esteve no `07` original | consulta direta ao Docker |
+| `.3` | 🆕 **Novo (2026-07-24):** Wiki (`Wiki`, `docker-netpal`) — já citado genericamente na seção "escala real" abaixo, agora com IP | consulta direta ao Docker |
+| `.5` | **`.5` = IP do próprio hypervisor Proxmox Zabbix** (não uma VM, confirmado — ver [12](12-mapeamento-proxmox.md)). Compartilhado: ✅ Hubsoft (`dst-port=!148`) — **confirmado vivo (usuário, 2026-07-24)**, coexiste com o Hubsoft de `.16` — e ~~CallSys (`dst-port=!45345`)~~ ❌ **confirmado morto, não existe mais na rede**. ⚠️ **Achado de segurança:** a regra Hubsoft não tem origem restrita (a `BRASIL` no nome é órfã, nunca referenciada — decisão #7) e libera **todas as portas exceto 148** direto no hypervisor, da internet inteira — inclui a `8006` (GUI) por abrangência, não por regra dedicada | firewall filter |
 | `.6` | Accept `dst-port=80,443` — ✅ **Zabbix** (Dude, [11](11-cruzamento-dude-devices.md)) | firewall filter |
-| `.7` | Servidor Fusion Voip (`80,45345,443,3478`) — ⚠️ Dude mostra "DOCS Cloud", nome não bate, confirmar | firewall filter |
-| `.8` | Hubsoft (billing/ERP) — ⚠️ **não aparece no Dude**, provável morto/substituído por `.16` | firewall filter, FORA_DO_NAT |
-| `.9` | Servidor Fusion Voip Multistore; também gateway da rota `10.8.0.0/21` — ⚠️ Dude mostra "Servidor VPN", nome não bate, confirmar | firewall filter, /ip route |
+| `.7` | Servidor Fusion Voip (`80,45345,443,3478`) — ✅ **confirmado por consulta direta (2026-07-24): é "Docs"/DOCS Cloud** — nome do firewall estava desatualizado | firewall filter |
+| `.8` | ✅ **Resolvido (2026-07-24, consulta direta ao Docker):** é o **Smokeping** (`docker-netpal`, rede macvlan `IP-DNS-177.72.104.21`) — monitoramento de latência, sem relação com Hubsoft. Não aparecer no Dude não significa morto: o Hubsoft real é `.16` (ver [12](12-mapeamento-proxmox.md)) | firewall filter, FORA_DO_NAT |
+| `.9` | Servidor Fusion Voip Multistore; também gateway da rota `10.8.0.0/21` — ✅ **confirmado por consulta direta (2026-07-24): é "OVPN"/Servidor VPN** — nome do firewall estava desatualizado | firewall filter, /ip route |
+| `.10` | 🆕 **Novo (2026-07-24):** PowerDNS master (`pdns-master1`, `docker-netpal`) — infra de DNS separada da "DNS NetPal" (`.28`/`.58`, ver abaixo), nunca esteve no `07` original | consulta direta ao Docker |
+| `.11` | 🆕 **Novo (2026-07-24):** PowerDNS slave (`pdns-slave`, `docker-netpal`) — idem `.10` | consulta direta ao Docker |
 | `.12` | Regra de **drop** restringindo `443,22` a quem não é RANGENETPAL; também gateway da rota `10.254.0.0/22` — ✅ **"OpenVPN - 2"** (Dude) — VPN à parte, não do RB3011, ver [11](11-cruzamento-dude-devices.md) | firewall filter, /ip route |
 | `.13` | TIP VOIP — ✅ confirmado ("Zeus - TIP - VoIP" no Dude) | firewall filter |
 | `.14` | Fusion Netpal — clientes elaborados — ✅ plausível ("Fusion - VoIP - PM CPV" no Dude) | firewall filter |
-| `.16` | Servidor sala — ⚠️ Dude mostra **"HubSoft"**; hipótese: é o Hubsoft real hoje, não `.8` | firewall filter |
-| `.17` | MADE4IT — ⚠️ Dude mostra "Fusion - VoIP - PM MST", nome não bate, confirmar | firewall filter |
+| `.16` | Servidor sala — ✅ **confirmado por consulta direta (2026-07-24): é o HubSoft real** (VM `HUBSOFT` no cluster Proxmox HubSoft) — hipótese anterior confirmada, `.8` não tem relação | firewall filter |
+| `.17` | MADE4IT — ✅ **confirmado por consulta direta (2026-07-24): é "Fusionpbx-PM-MST"** — nome do firewall estava desatualizado | firewall filter |
 | `.18` | Fusion Netpal (geral) — ✅ plausível ("Fusion - VoIP - 0800 NETPAL" no Dude) | firewall filter |
 | `.19` | FORA_DO_NAT; gateway das rotas `10.30.0.0/30` e `10.150.150.0/24` — ✅ **"VPN - WireGuard"** (Dude) — VPN à parte, não do RB3011, ver [11](11-cruzamento-dude-devices.md) | FORA_DO_NAT, /ip route |
-| `.20` | SBC VOIP — ⚠️ Dude mostra "SFTP - Netpal - OPA", nome não bate, confirmar | firewall filter |
+| `.20` | SBC VOIP — ✅ **confirmado por consulta direta (2026-07-24): é "SFTP-OPA-CHAT"** — nome do firewall estava desatualizado | firewall filter |
 | `.22` | Accept sem nome — ✅ **"Fusion - VoIP - Elaborados - Full"** (Dude) | firewall filter |
 | `.23` | Accept sem nome — ✅ **"Aplicações /etc/scripts"** (Dude) | firewall filter |
-| `.26`, `.57` | Accept sem nome — ainda **não identificado** (também ausente do Dude) | firewall filter |
+| `.26` | ✅ **Identidade resolvida (2026-07-24):** **API-ZAP** (`proxmox-dns`). ~~Forte candidato ao destino da API HTTP estilo WhatsApp usada pelo script `dude`/netwatch~~ → ❌ **descartado (2026-07-24):** o script `dude` chama `api.focuschat.com.br` (SaaS externo), não `.26`. Função real de API-ZAP segue **não identificada** (ver decisão #6, [03](03-decisoes-pendentes.md)) | firewall filter |
+| `.57` | Accept sem nome — ainda **não identificado**; `/ip arp print` no RB3011 (2026-07-24) não retornou nenhuma entrada — forte indício de residual/morto, mas não é prova definitiva | firewall filter |
 | `.24` | Accept `443,80,45345,21` — ✅ **"OLT CLOUD"** (Dude, Web Server) | firewall filter |
 | `.25` | Fusion Netpal — clientes simples — ✅ plausível ("Fusion - VoIP - Painéis Simples" no Dude) | firewall filter |
 | `.27` | Accept sem nome — **mesmo IP usado pelo NE8000 como Route-Reflector interno** (`177.72.104.27`, AS 52828) e destino do NetStream export; ✅ confirmado no Dude como **"RRFlow"** — não é coincidência, é o mesmo host/função. Ver decisão #8/#9 em [03](03-decisoes-pendentes.md). | firewall filter, [06-ne8000-bgp-core.md](06-ne8000-bgp-core.md), [11](11-cruzamento-dude-devices.md) |
-| `.28` | DNS NetPal; gateway das rotas `.56/30`, `.58/32`, `.59/32` | DNS_AUT, /ip route |
-| `.29` | ✅ **"AUTOMACOES"** (Dude, Web Server) — possível relação com a decisão #6 | firewall filter |
-| `.30` | OPA Suite (chat) — porta `45345` restrita à lista `REDE LIBERADA_OPA_SUITE` — ✅ confirmado ("Opa ChatBot" no Dude) | firewall filter |
-| `.58`, `.59` | DNS NetPal — loopbacks — `.58` ✅ confirmado ("DNS MASTER" no Dude); `.59` ainda sem confirmação | DNS_AUT |
+| `.21` | 🆕 **Novo (2026-07-24):** DNS2 Recursivo (`DNS2-Recursivo-104.21`, `docker-netpal`) — dá nome à própria rede macvlan (`IP-DNS-177.72.104.21`) onde vive boa parte dos containers deste host | consulta direta ao Docker |
+| `.28` | DNS NetPal; gateway das rotas `.56/30`, `.58/32`, `.59/32` — ✅ **confirmado por consulta direta (2026-07-24): é a VM `NS-UNBOUND` (`proxmox-dns`)** | DNS_AUT, /ip route |
+| `.29` | ✅ **"AUTOMACOES"** (Dude, Web Server) — ✅ **confirmado por consulta direta (2026-07-24)**. ~~Possível relação com a decisão #6~~ → a notificação netwatch/`dude` na verdade não usa nenhum host local (vai direto pra `api.focuschat.com.br`); relação com `.26`/API-ZAP não confirmada, função exata de `AUTOMACOES` segue aberta | firewall filter |
+| `.30` | OPA Suite (chat) — porta `45345` restrita à lista `REDE LIBERADA_OPA_SUITE` — ✅ confirmado ("Opa ChatBot" no Dude); ✅ **confirmado por consulta direta (2026-07-24)** | firewall filter |
+| `.58` | DNS NetPal — loopback — ✅ confirmado ("DNS MASTER" no Dude) **e por consulta direta: é o mesmo host `NS-UNBOUND` que responde por `.28`** — não são dois sistemas, é um só com dois IPs | DNS_AUT |
+| `.59` | DNS NetPal — loopback — ainda sem confirmação (nem Dude, nem nos 4 clusters Proxmox consultados); `/ip arp print` no RB3011 (2026-07-24) também não retornou entrada — indício de residual/morto | DNS_AUT |
 | `.52/30`, `.60/30` | Enlaces ponto-a-ponto anunciados na OSPF area1 | /routing ospf network |
 | `.56/30` | Rota de DNS (regra desabilitada); único prefixo aceito pelo filtro de rota OSPF de saída | /ip route, /routing filter |
 | `.105.217` | Accept sem nome — ✅ **"GW CC BCP" / "GW Escritório BCP"** (Dude) | firewall filter |
-| `.105.221` | Accept sem nome — ainda **não identificado** (também ausente do Dude) | firewall filter |
+| `.105.221` | Accept sem nome — ainda **não identificado**; `/ip arp print` no RB3011 (2026-07-24) não retornou nenhuma entrada — forte indício de residual/morto, mas não é prova definitiva | firewall filter |
 | `.131` | Servidor de backup FTP — **mesmo servidor usado pelo NE8000** para backup de config — ✅ confirmado ("Storage BCP" no Dude) | RANGENETPAL, script `backup_ftp` |
 
 > 🆕 **Cruzamento completo com o monitoramento ao vivo (Dude) em
@@ -46,6 +53,30 @@
 > nome" acima, mas também revela que vários nomes do firewall (⚠️) **não batem** com o que está
 > rodando hoje — sinal de que o RB3011 tem regras desatualizadas. Usar o Dude como fonte de
 > verdade no Passo 1 do [05-limpeza-politicas.md](05-limpeza-politicas.md).
+>
+> 🆕 **Confirmação por consulta direta aos 4 clusters Proxmox (2026-07-24)** — via
+> [`scripts/proxmox-mapear-vms.sh`](../scripts/proxmox-mapear-vms.sh) e
+> [`scripts/docker-mapear-containers.sh`](../scripts/docker-mapear-containers.sh), dados brutos em
+> `config/proxmox-*/`. Todas as identidades ⚠️ (nome do firewall não batia com o Dude) foram
+> confirmadas como sendo o nome do Dude, não o do firewall — o RB3011 nunca foi atualizado. Além
+> disso, apareceram **8 sistemas dentro do `/27` que nunca tinham regra de firewall própria** (`.2`,
+> `.3`, `.8` recorrigido, `.10`, `.11`, `.21`, `.26` recorrigido) — o `07` original só enxergava o
+> que tinha regra de firewall, e esses ficaram de fora por nunca precisarem de uma.
+
+### Sistemas fora do `/27`, mas no mesmo bloco público maior (achados 2026-07-24)
+
+Consulta direta ao cluster Proxmox Docker revelou hosts com IP público **fora** do `177.72.104.0/27`
+(que vai só até `.31`), mas dentro do `/21` mais amplo ou do segundo bloco público:
+
+| IP | Serviço | Observação |
+|---|---|---|
+| `177.72.104.107` | CdnTV-Origin (`docker-netpal` cluster) | Fora do `/27`; caminho de rede até aqui **não é o mesmo** da "Bridge IP Publico" do RB3011 — a confirmar como chega na rede hoje |
+| `177.72.104.108` | CdnTV-Edge | Idem |
+| `177.72.104.109` | Uma das interfaces da própria VM `Docker-Netpal` | Idem |
+| `177.93.247.138` | SpeedTest (rede macvlan `MACVLAN-38-SPEED`) | Está no **segundo bloco público** (`177.93.240.0/21`), não no `/27` |
+
+Esses hosts não fazem parte do escopo da migração do RB3011 (não estão na `Bridge IP Publico`), mas
+valem registro por estarem no mesmo cluster físico que outros sistemas relevantes.
 
 ### Blocos maiores
 
@@ -99,8 +130,11 @@ isolado o suficiente para não importar.
   `RANGENETPAL`). `182.168.0.0/16` é um bloco público real de terceiros. Se portado 1:1 pro NE8000,
   a regra viraria um "bypass de NAT" para endereços públicos de outra empresa — **não portar sem
   confirmar antes**.
-- **`.5` compartilhado por dois sistemas** (Hubsoft e CallSys, diferenciados só por porta) reforça que
-  o NAT atual não é puramente 1:1 por servidor — há multiplexação por porta em pelo menos um IP.
+- ~~**`.5` compartilhado por dois sistemas** (Hubsoft e CallSys, diferenciados só por porta) reforça
+  que o NAT atual não é puramente 1:1 por servidor~~ → 🆕 **CallSys confirmado morto (usuário,
+  2026-07-24)** — a multiplexação por porta em `.5` era, pelo menos em parte, regra órfã. Reforça a
+  suspeita de que "Hubsoft" em `.5` também fosse resíduo — ❌ **descartada (usuário, 2026-07-24):
+  Hubsoft em `.5` está confirmado vivo**, coexiste com o de `.16` (duas instâncias distintas).
   Relevante para o desenho de zonas do [05-limpeza-politicas.md](05-limpeza-politicas.md).
 - ~~**`.27` coincide com o Route-Reflector do NE8000**~~ — ✅ **resolvido, e não era coincidência.**
   `177.72.104.27` é um host real dentro do `/27` que fica na `Bridge IP Publico` da GW Servidores, e

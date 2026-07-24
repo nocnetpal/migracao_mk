@@ -32,21 +32,75 @@ para uma VLAN cabe sem esforço em qualquer das opções.
 "NE8000"). NE8000 fica só com `/27` + firewall. DHCP é um único escopo — colocar onde for mais
 conveniente operacionalmente. Detalhes em [07-enderecamento-ip.md](07-enderecamento-ip.md).
 
-## 2. Lista de equipamentos Mikrotik a remover
+## 2. ~~Lista de equipamentos Mikrotik a remover~~ — ✅ não precisa de coleta extra
 
-Usuário confirmou que **todo o parque desse trecho é Mikrotik**, não só o gateway. Falta:
+Usuário confirmou que **todo o parque desse trecho é Mikrotik**, não só o gateway. A ideia inicial
+era pedir uma lista manual completa + função de cada um — **descartada** (correção do usuário,
+2026-07-24): o sinal certo não é uma lista solta, é olhar **por VLAN/interface** se o gateway hoje
+é o **NE8000** (já migrado/independente, fora de escopo) ou a **RB3011** (dependente, dentro do
+escopo do corte).
 
-- Lista completa dos equipamentos.
-- Função de cada um hoje.
-- Se algum precisa de substituto funcional além do Datacom/NE8000 (ex.: um MK fazendo hotspot não tem equivalente natural em switch L3).
+**Aplicando esse critério com o que já foi coletado:**
+- Com o escopo fechado em "só o trecho da GW Servidores" (decisão já registrada na seção 4), os
+  equipamentos MK **de POP remoto** (VLAN713 GW_SOLIDAO, VLAN198 Pantano=>Juca Ana, e as ~50
+  dezenas de `MK_POP_*` do QinQ) **não entram nessa decisão** — o `display current-configuration
+  interface` do NE8000 (confirmado ao vivo 2026-07-24, bate com
+  [`config/ne8000/bgp_netpal-export.txt`](../config/ne8000/bgp_netpal-export.txt)) mostra que cada
+  um já tem subinterface própria (`Gi0/1/8.7xx` etc.) com `ospf enable` **direto no NE8000** — o
+  gateway já é o NE8000, não dependem do RB3011. Nenhum substituto a planejar aqui.
+- ~~O único outro MK **dentro do trecho** (não remoto) já está inventariado: RB2011UiAS~~ → ❌
+  **ERRADO (corrigido pelo usuário, 2026-07-24): são TRÊS Mikrotiks no trecho, não dois.** A
+  topologia física do rack ([`config/topologia-fisica-rack.md`](../config/topologia-fisica-rack.md))
+  revelou um **terceiro MK antes não inventariado: RB BRIDGE 750 (RB750)** — bridge L2 no `ether10`
+  do RB3011 que agrega **gerência do NE8000 + Proxmox Zabbix + Proxmox HubSoft**. Os servidores não
+  plugam direto no RB3011: passam por **2 bridges intermediárias** — RB2011 no `ether6` (TS SIX,
+  CGNAT-1 mgmt, Régua Volt, Dude, RRFlow) e RB750 no `ether10`. Isso **explica** o achado da
+  decisão #12 (MACs de HubSoft/Zabbix no mesmo `ether10` — ambos atrás do RB750).
 
-**Status:** aguardando envio do usuário.
+**Status:** ✅ **decidida (usuário, 2026-07-24): os 3 MKs saem, o DM4170 absorve tudo.** RB3011,
+RB2011 **e RB750** são todos eliminados — **cada servidor pluga direto numa porta GE do DM4170**,
+sem bridge intermediária (um único domínio L2 de servidores no DM4170). Isso simplifica o desenho
+(fim das 2 bridges em cascata) mas **cresce a contagem de portas físicas do DM4170** — ver
+"Contagem de portas" abaixo e o material de transceiver SFP-RJ45. Os MKs remotos de POP seguem
+fora de escopo (independentes do RB3011, falam OSPF direto com o NE8000).
 
-## 3. Redundância / HA
+**Contagem de portas do DM4170 (servidores diretos):** cruzando a topologia
+([`config/topologia-fisica-rack.md`](../config/topologia-fisica-rack.md)), os servidores/gerências
+que hoje penduram nos 3 MKs e passam a plugar direto:
+
+| # | Equipamento | Hoje pendura em | Meio |
+|---|---|---|---|
+| 1 | Proxmox Docker/CDNTV | RB3011 ether7 | cobre (SFP-RJ45) |
+| 2 | Proxmox DNS | RB3011 ether8 | cobre |
+| 3 | Proxmox Zabbix/Zeus | RB750 p3 | cobre |
+| 4 | Proxmox HubSoft | RB750 p4 | cobre |
+| 5 | TS SIX | RB2011 p2 | cobre |
+| 6 | Servidor Dude | RB2011 p5 | cobre |
+| 7 | Servidor RRFlow | RB2011 p6 | cobre |
+| 8 | MGNT CGNAT-1 (Hillstone) | RB2011 p3 | confirmar (cobre/fibra) |
+| 9 | Gerência NE8000 | RB750 p2 | confirmar |
+| 10 | Gerência OLT CPV | RB3011 ether9 | cobre |
+
++ **Régua Volt** (RB2011 p4) — ESTRAGADA, **não migra** (dropar). ~10 portas de servidor +
+uplinks (QinQ de acesso, trunk NE8000, trunk CCR1036). Cabe folgado no DM4170 24GX+12XS (24 GE +
+12 10GE). ⚠️ **Material: ~8 transceivers SFP-RJ45 (1000BASE-T)** pros servidores em cobre — item de
+compra a confirmar (ver [02](02-arquitetura-alvo.md), questão física). CGNAT-1 e gerência NE8000
+podem já ser fibra — confirmar antes de fechar a lista de transceivers.
+
+**Ainda útil (não bloqueia):** export do RB750 (`/export`) só pra confirmar que ele é bridge L2
+burro mesmo (como o RB2011) e não faz nada de L3/roteamento antes de descartar. Baixo risco — a
+topologia já indica que é só agregação L2.
+
+## 3. ~~Redundância / HA~~ — ✅ decidido: sem redundância
 
 Ainda não discutido se o desenho alvo (Datacom + NE8000) deve ter redundância, ou se aceita ponto único de falha como hoje (só que trocando o equipamento).
 
-**Status:** não discutido.
+**✅ Decidido (usuário, 2026-07-24): sem redundância.** Aceita o SPOF do desenho atual — a
+migração troca o equipamento (RB3011/RB2011 → DM4170/NE8000), não a topologia de
+disponibilidade. Reforça a importância de não introduzir *novos* riscos durante a janela de corte
+(ver achados da decisão #13 sobre concentração de função no NE8000).
+
+**Status:** ✅ **fechada (2026-07-24)** — sem redundância, mesmo modelo de disponibilidade de hoje.
 
 ## 4. Roteamento dinâmico (OSPF) — ✅ esclarecido pelo export do NE8000
 
@@ -67,12 +121,20 @@ rack. E o segmento carrega **duas sub-redes**, não uma:
 O Datacom terá de reproduzir isso como uma SVI na VLAN 28 com IP primário **e** secundário.
 
 O que ainda falta decidir:
-- O Datacom assume essa adjacência OSPF no lugar da GW Servidores (mesma VLAN/subrede,
-  reautenticando com o NE8000), ou o link muda de desenho?
+- ~~O Datacom assume essa adjacência OSPF no lugar da GW Servidores (mesma VLAN/subrede,
+  reautenticando com o NE8000), ou o link muda de desenho?~~ → ✅ **resolvido pela decisão #13
+  (2026-07-24), reafirmado pelo usuário hoje: o princípio é "IP por VLAN, não por roteador" — cada
+  VLAN só atravessa o DM4170 (L2 puro) e é terminada como SVI no NE8000, o mesmo padrão que já vale
+  pra `MK_POP_*`. O Datacom **não assume** nenhuma adjacência OSPF — quem reautentica com os POPs é
+  o NE8000, o DM4170 só entrega a VLAN.
 - Os outros enlaces ponto a ponto hoje nomeados como VLANs no MK (`VLAN713 - GW SOLIDAO`,
-  `VLAN198 - Pantano => Juca Ana`, `VLAN11_eoip`) — o NE8000 já tem subinterfaces equivalentes
-  (`.713 MK_POP_SOLIDAO`, `.719 MK_POP_PANTANO`, `.778 MK_POP_JUCA_ANA`), mas a correspondência
-  exata porta-a-porta ainda precisa ser confirmada fisicamente antes do corte.
+  `VLAN198 - Pantano => Juca Ana`) — ✅ **mesmo tratamento confirmado**: são VLANs QinQ como as
+  demais, passam pelo DM4170 e terminam no NE8000 (que já tem as subinterfaces equivalentes,
+  `.713 MK_POP_SOLIDAO`, `.719 MK_POP_PANTANO`, `.778 MK_POP_JUCA_ANA`). Só falta a confirmação
+  física porta-a-porta (fact-check pré-corte, não é mais decisão de desenho). **`VLAN11_eoip` é
+  diferente** — não é VLAN QinQ passthrough, é túnel EoIP (proprietário Mikrotik, já morto/fora do
+  ar) — não se aplica esse padrão, precisa de caminho novo próprio (ver achado em
+  [08](08-vlans-e-portas.md) e [09](09-l2-mapeamento-vlans.md)).
 - ~~**Novo:** o escopo cresceu muito... falta `/interface vlan print`~~ → ✅ **mapeado pela coleta 2**
   ([08-vlans-e-portas.md](08-vlans-e-portas.md)): todas as VLANs entram por **uma única porta**
   (`sfp1`, 1 GE) em estrutura QinQ (tag externa = site, interna = serviço). Fisicamente o corte é
@@ -80,9 +142,13 @@ O que ainda falta decidir:
 - **Novo (técnico):** confirmar com a Datacom se o DmOS faz **SVI roteada sobre a tag interna de
   QinQ** e quantos IPs secundários aceita por SVI. Se não fizer, ou o switch de topo de rack
   desempacota a tag externa, ou o DM4170 assume o lugar dele.
-- **Novo (técnico):** confirmar também **MTU/baby giants no DmOS** — hoje a `sfp1` roda l2mtu 1600
-  (outer 1596 / inner 1592) por causa do QinQ; o trunk novo precisa comportar o mesmo, e o
-  MSS-clamp do mangle precisa de equivalente no novo desenho.
+- ~~**Novo (técnico):** confirmar também **MTU/baby giants no DmOS** — hoje a `sfp1` roda l2mtu 1600
+  (outer 1596 / inner 1592) por causa do QinQ; o trunk novo precisa comportar o mesmo~~ → ✅
+  **decidido (usuário, 2026-07-24): usar o jumbo frame máximo suportado por cada equipamento** nos
+  dois trechos novos (rede de acesso↔DM4170 e DM4170↔NE8000), em vez de replicar o valor exato
+  1600/1596/1592 do RB3011 — estratégia fechada, só falta o número concreto de cada equipamento na
+  hora de configurar (DmOS/VRP, não é bloqueio de decisão). MSS-clamp equivalente ainda precisa de
+  desenho no novo firewall.
 - ~~**Novo (arquitetura):** decidir se o DM4170 substitui só o RB3011 ou **também o switch de topo de
   rack** (equipamento ainda não inventariado, por onde passa 100% do tráfego).~~ ✅ **Resolvido por
   escopo (2026-07-23):** o usuário decidiu que a **rede de acesso não será tocada** — fica
@@ -95,11 +161,19 @@ O que ainda falta decidir:
   não bloqueante.
 
 **Status:** adjacência principal detalhada (VLAN 28, duas sub-redes, via rede de acesso);
-mapa VLAN→porta completo ([09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md)). 🆕 Com o
-escopo fechado em "só a GW Servidores" (2026-07-23), a confirmação de **SVI roteada sobre tag
-interna de QinQ no DmOS volta a ser o bloqueio técnico nº 1** — é o DM4170 quem herda as SVIs
-QinQ do RB3011. ~~Plano B: o switch de agregação desempacota a tag externa~~ — **inválido**: a
-rede de acesso não será mexida; a confirmação do DmOS é praticamente obrigatória.
+mapa VLAN→porta completo ([09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md)). ~~🆕 Com o
+escopo fechado em "só a GW Servidores" (2026-07-23), a confirmação de SVI roteada sobre tag
+interna de QinQ no DmOS volta a ser o bloqueio técnico nº 1 — é o DM4170 quem herda as SVIs
+QinQ do RB3011.~~ → ✅ **superado pela decisão #13 (2026-07-24):** o DM4170 fica só em L2: quem
+herda as SVIs QinQ do RB3011 é o **NE8000**, não o DM4170. A confirmação do DmOS deixou de ser
+necessária.
+
+🆕 **Achado que simplifica o escopo (2026-07-24):** `/interface bridge host print detail` na
+`Bridge IP Publico` ([08](08-vlans-e-portas.md)) mostrou que **nenhum host aprendido vem da
+VLAN16** — as ~24 sub-redes secundárias da bridge são 100% tráfego local dos 4 servidores
+(`ether6`/`7`/`8`/`10`), não algo que "sobe" pela VLAN16/switch de topo do rack. Ou seja, o que a
+SVI do NE8000 precisa carregar de secundárias é bem menor do que se temia — praticamente só o
+`/27` público em si. Detalhes e cruzamento com os clusters Proxmox em [08](08-vlans-e-portas.md).
 
 ## 5. VPN de equipe (L2TP/IPSec + PPP secrets)
 
@@ -118,7 +192,14 @@ stack IPSec. Pode inclusive ser um serviço em servidor Linux existente, sem dep
 de appliance.
 
 ✅ **Confirmado (coleta 2): há um segundo serviço — OpenVPN habilitado** (TCP 1194, certificado de
-cliente obrigatório, AES-256/SHA1), usando os mesmos 4 usuários. A decisão cobre **duas VPNs**.
+cliente obrigatório, AES-256/SHA1), usando os mesmos 4 usuários.
+
+🆕 **Terceiro serviço no export completo (2026-07-24): PPTP-server também HABILITADO** (`enabled=yes`,
+`mschap1`, MTU/MRU 1480) — não tinha aparecido antes (estava no início truncado do export). Então
+o RB3011 termina **três VPNs de usuário**: L2TP (sem cripto), OpenVPN (com cert) **e PPTP** (o mais
+inseguro dos três — PPTP/mschap1 é quebrável). No redesenho da CCR1036, **PPTP não deve ser
+recriado** — descontinuar. Confirmar com o usuário se algum usuário ainda depende de PPTP antes de
+simplesmente cortar.
 
 ⚠️ Achados de segurança a corrigir ao recriar (não replicar): `use-ipsec: no`, `mschap1` habilitado,
 senhas em texto claro — e, pior, **ambos os profiles PPP têm `use-encryption=no`** (até o
@@ -147,16 +228,63 @@ Nenhum desses recursos existe nativamente em um switch Datacom ou, provavelmente
 mesma forma. Precisa decidir onde essas automações passam a rodar (ex.: servidor de gerência
 existente, Zabbix/Dude/outro NMS já em uso).
 
-**Status:** em aberto. 🆕 A **CCR1036** nova do desenho alvo (ver decisão #5) é a candidata
-natural a rodar essas automações — RouterOS roda os mesmos scripts de hoje com ajuste mínimo.
+**Status:** ✅ **fechada (2026-07-24) — as duas rotinas descartadas.**
 
-## 7. Geo-allowlist (address-list `BRASIL`)
+**Rotina 1 — Backup semanal FTP:** ✅ **descartada (usuário, 2026-07-24) — não migra.** Mesmo
+tratamento da rotina 2: não recriar no desenho novo (nem na CCR1036, nem em outro lugar).
+**Nota operacional (registro, não bloqueio):** isso deixa o backup de configuração do DM4170/NE8000
+**sem automação equivalente** no dia a dia — se for necessário no futuro, é uma automação nova,
+não uma migração desta. Credenciais FTP de backup (`mkbkp`/`hwbkp`) só precisam ser **revogadas**
+na fase 4, não rotacionadas (mesmo caso do token FocusChat).
+
+**Rotina 2 — Notificação netwatch → script `dude` → FocusChat:** ✅ **descartada (usuário,
+2026-07-24) — não migra.** O usuário nem sabia que essa automação existia; decisão é **remover**,
+não recriar no desenho novo. Contexto técnico (por registro): o script na verdade não é disparado
+pelo netwatch local do RB3011 (o único netwatch configurado está `disabled=yes` e mexe numa rota,
+não chama o script) — os placeholders `[Device.Name]`, `[Probe.Name]`, `[Service.Status]` etc. no
+corpo do script são macros do **The Dude** (NMS Mikrotik), então quem dispara essa automação é o
+**Dude** (rodando numa VM do cluster Proxmox Zabbix — `Dude-VLSul` ou `Dude-PM-CPV`, ver
+[12](12-mapeamento-proxmox.md)) chamando o script remotamente via API do RouterOS no RB3011, que
+por sua vez chama `api.focuschat.com.br`. Com o RB3011 saindo, essa cadeia quebra sozinha — e por
+decisão do usuário, **não será recriada** (nem no Dude apontando direto pra FocusChat, nem em
+outro lugar).
+
+~~🆕 **Achado (2026-07-24, consulta direta ao cluster Proxmox DNS):** o IP `177.72.104.26` é a VM
+**API-ZAP** — forte candidato a ser o destino real da API HTTP estilo WhatsApp que o netwatch/script
+`dude` usa para notificar.~~ → ❌ **descartado (2026-07-24, releitura do export do RB3011):** o
+`/system script` chamado `dude` (o que o netwatch dispara) faz
+`/tool fetch url="https://api.focuschat.com.br/core/v2/api/chats/send-text?..."` —
+**é uma chamada HTTPS direta pra internet, pra um SaaS de terceiros (FocusChat)**, sem nenhuma
+dependência de IP interno. **`API-ZAP` (`.26`) não tem relação com esse script** — o nome e a
+coincidência de cluster com `AUTOMACOES` (`.29`) induziram a uma hipótese errada; a identidade
+real de `.26`/API-ZAP continua sem explicação conhecida (mistério à parte, não bloqueia nada).
+Token de acesso da FocusChat está em texto claro no export — **não copiar o valor pros docs**
+(regra de [01](01-inventario-atual.md)), só rotacionar na fase 4 (já listado em
+[04](04-plano-migracao.md) e [13](13-rotina-corte.md)).
+
+## 7. ~~Geo-allowlist (address-list `BRASIL`)~~ — ✅ decidido: descartar
 
 O MK mantém uma lista enorme de faixas de IP nacionais, usada em pelo menos uma regra de firewall
 ("LIBERA HUBSOFT PARA O BRASIL"). Confirmar o propósito exato (parece anti-fraude/allowlist para
 o sistema de billing Hubsoft) e se precisa ser recriada no NE8000.
 
-**Status:** em aberto.
+**✅ Decidido (usuário, 2026-07-24): descartar.** Não recriar a geo-allowlist BRASIL no NE8000 —
+coerente com o princípio de redesenho limpo do firewall ([05-limpeza-politicas.md](05-limpeza-politicas.md)),
+sem portar regra 1:1. Se o bloqueio anti-fraude do Hubsoft ainda for necessário, deve ser resolvido
+no próprio sistema de billing, não replicado no firewall de borda.
+
+🆕 **Achado que reforça a decisão (2026-07-24, releitura do export):** a lista `BRASIL` **nunca é
+referenciada** como `src-address-list` em nenhuma regra `chain=forward` do RB3011 — as três regras
+"LIBERA HUBSOFT PARA O BRASIL" (`.8` e `.5`) **não têm restrição de origem nenhuma**, aceitam de
+qualquer lugar da internet. O nome sugere geo-restrição, mas na prática **não existe** — a lista é
+puramente órfã hoje. Achado de segurança à parte: a regra pro `.5` (TCP+UDP, `dst-port=!148` — ou
+seja, todas as portas exceto a 148) libera acesso amplo direto ao **IP do próprio hypervisor
+Proxmox Zabbix** (confirmado, ver decisão #12) — bem mais exposto do que o nome "Hubsoft" sugere.
+**Não portar essa regra como está** — no redesenho, restringir só à porta/serviço real do Hubsoft
+em `.5`, com origem explícita (não "aceita tudo").
+
+**Status:** ✅ **fechada (2026-07-24)** — não migra. Achado de segurança sobre `.5` registrado
+também na decisão #12.
 
 ## 8. 🚨 Dependências do NE8000 na GW Servidores (NOVO — bloqueia o plano de corte)
 
@@ -234,19 +362,48 @@ outro IP do `/27`, e (b) a rota específica desse IP até a CCR1036. Ver
 `177.72.104.0/27`; a VLAN 16 sobe em L2 pelo DM4170. `.1` continua sendo o IP de NAT e os
 port-forwards não mudam. Resolve também a decisão #8.
 
-## 10. Possível sobreposição no `177.72.104.60/30` (enlace Juca Ana)
+## 10. ~~Possível sobreposição no `177.72.104.60/30`~~ (enlace Juca Ana) — ✅ resolvido
 
 Cruzamento pendente apontado em [08-vlans-e-portas.md](08-vlans-e-portas.md): o MK tem
 `177.72.104.61/30` na `VLAN198 - Pantano => Juca Ana` (QinQ) e o NE8000 **também anuncia**
 `network 177.72.104.60 0.0.0.3` na OSPF. Se os dois anunciam o mesmo /30, há risco de conflito
 de rota — e de loop — no momento do corte, quando a origem do anúncio mudar.
 
-**O que falta:** identificar em qual interface do NE8000 esse /30 existe (subinterface
-`.719 MK_POP_PANTANO` ou equivalente) e quem é o dono legítimo do segmento.
+**✅ Investigado (2026-07-24):** `display current-configuration interface` no NE8000 (ao vivo,
+confirma o export estático em [`config/ne8000/bgp_netpal-export.txt`](../config/ne8000/bgp_netpal-export.txt))
+mostra que **nenhuma das ~90 subinterfaces de `Gi0/1/8` tem IP no `177.72.104.60/30`** — o
+`network 177.72.104.60 0.0.0.3` é uma *statement* OSPF inerte (não ativa hello em nenhuma
+interface local, já que nenhuma bate com o range). O dono real e único do segmento hoje é o MK
+(`.61/30` na `VLAN198 - Pantano => Juca Ana`) — não há conflito. Já propagado em
+[04-plano-migracao.md](04-plano-migracao.md) e [08-vlans-e-portas.md](08-vlans-e-portas.md); só
+faltava fechar aqui.
 
-**Status:** em aberto — virou pré-requisito do [04-plano-migracao.md](04-plano-migracao.md).
+**Achado à parte, digno de nota:** o NE8000 tem `FTP client-source -a 177.72.104.61` e
+`sftp client-source -a 177.72.104.61` configurados globalmente — tenta originar sessões de
+FTP/SFTP client com um IP que **não é dele**, é do MK. A confirmar se isso é usado de fato antes
+do corte (se for, quebra no dia da troca).
 
-## 11. Estratégia da chave OSPF MD5 (`ntprb1030`) no corte
+🆕 **Decisão do usuário (2026-07-24): mover o `177.72.104.60/30` do RB3011 para o NE8000.** A
+`VLAN198 - Pantano => Juca Ana` deixa de ter o `.61/30` no MK — o NE8000 assume o segmento como
+interface própria (SVI/subinterface, coerente com a decisão #13: toda VLAN QinQ termina no NE8000).
+Efeitos:
+- O `network 177.72.104.60 0.0.0.3` da OSPF **deixa de ser inerte** e passa a ter interface local
+  de verdade — vira anúncio legítimo.
+- **Resolve o achado do FTP/sftp client-source:** com o NE8000 dono do `.61`, o
+  `FTP client-source -a 177.72.104.61` passa a apontar pro **próprio IP** dele — deixa de ser
+  anomalia e vira consistente. É forte indício de que a migração desse `/30` pro NE8000 **já estava
+  planejada** (o client-source foi pré-configurado pra isso). Não quebra no corte — pelo contrário,
+  conserta.
+- **Efeito no corte:** este `/30` sai da lista de coisas a replicar no caminho do DM4170 — não é
+  VLAN de gerência de servidor local nem passthrough comum; é um P2P público que nasce direto como
+  interface do NE8000. Propagar em [09](09-l2-mapeamento-vlans.md), [08](08-vlans-e-portas.md) e
+  [`config/rb3011/relacao-vlan-ip.md`](../config/rb3011/relacao-vlan-ip.md).
+
+**Status:** ✅ **resolvido (2026-07-24)** — sem conflito real; `.60/30` **migra pro NE8000** (não
+só "sem conflito", agora com dono definido). O achado do FTP/SFTP client-source fica resolvido pela
+mesma mudança (NE8000 vira dono do `.61`).
+
+## 11. ~~Estratégia da chave OSPF MD5 (`ntprb1030`) no corte~~ — ✅ decidido: Opção A
 
 A chave MD5 da area1 é a **mesma em toda a rede** (dezenas de interfaces no NE8000 e nos MKs de
 POP). O plano joga a rotação para a fase 4 ("rede toda, coordenar!"), mas o
@@ -262,7 +419,62 @@ válido (MD5 é por-interface), mas precisa ser decisão explícita, não aciden
 **Recomendação preliminar: Opção A** — a janela do núcleo já tem variáveis demais; a chave não é
 uma vulnerabilidade urgente.
 
-**Status:** em aberto (recomendação: A).
+**✅ Decidido (usuário, 2026-07-24): Opção A.** Mantém `ntprb1030` na adjacência DM4170↔NE8000
+durante o corte; rotação da chave fica pra fase 4 ("rede toda, coordenar!"), interface por
+interface ou com rollover de key-id.
+
+**Status:** ✅ **fechada (2026-07-24) — Opção A.**
+
+## 13. 🆕 DM4170 faz L3 (SVI sobre QinQ) ou fica só L2, empurrando o roteamento pro NE8000?
+
+O desenho em [02-arquitetura-alvo.md](02-arquitetura-alvo.md) hoje assume que o DM4170 termina
+**SVI roteada sobre a tag interna do QinQ** para as ~50 VLANs de site (OSPF area1 incluso) — e essa
+é exatamente a origem do **bloqueio técnico nº 1** (confirmar com a Datacom se o DmOS suporta isso
+e quantos IPs secundários aceita por SVI). Levantada uma alternativa: e se o DM4170 fizer **só L2**
+(QinQ termination — traduzir outer+inner tag em VLANs simples) e o **NE8000 assumir o roteamento**
+(SVIs + OSPF area1 dos POPs) dessas VLANs, exatamente como já faz hoje para as VLANs de POP que já
+tem em paralelo (`Gi0/1/8.719 MK_POP_PANTANO`, `.778 MK_POP_JUCA_ANA` etc.)?
+
+- **Opção A — DM4170 faz L3 (desenho atual do [02](02-arquitetura-alvo.md)):** DM4170 termina as
+  SVIs QinQ e fala OSPF area1 com os POPs; sobe pro NE8000 só por um link de núcleo dedicado.
+  - Risco: depende 100% da confirmação do DmOS (bloqueio nº1) — se o DmOS não suportar SVI sobre
+    tag interna, o plano inteiro trava.
+  - Ganho: distribui a função de roteamento entre dois equipamentos (não concentra tudo no NE8000).
+- **Opção B — DM4170 só L2:** DM4170 faz apenas QinQ termination (função L2, suporte muito mais
+  garantido em qualquer switch); as ~50 VLANs sobem como trunk 802.1q simples até o NE8000, que
+  termina cada uma como subinterface roteada (SVI/OSPF) — **padrão que o NE8000 já usa hoje** para
+  dezenas de VLANs de POP.
+  - Ganho: **elimina o bloqueio técnico nº1** — QinQ termination em L2 é feature padrão, não
+    depende de confirmação especial da Datacom. Reaproveita capacidade já comprovada do NE8000.
+  - Risco: concentra ainda mais função crítica no NE8000 (já é o core BGP/OSPF/FlowSpec/firewall
+    da ISP inteira) — SPOF maior, reforça a urgência da decisão #3 (redundância/HA). Qualquer
+    tráfego VLAN-a-VLAN (se existir) passaria a dar hairpin DM4170→NE8000→DM4170 — mas como a
+    topologia é essencialmente router-on-a-stick (cada VLAN é um p2p de POP até o core, sem
+    tráfego lateral entre POPs), esse custo é provavelmente desprezível na prática.
+
+**✅ Decidido (usuário, 2026-07-24): Opção B — DM4170 fica só em L2.** Nenhuma SVI no DM4170:
+ele faz apenas QinQ termination (traduz outer+inner tag em VLANs simples) e entrega tudo — as ~50
+VLANs de acesso **e** as VLANs simples de serviço (15 NTP, 18 SERVERINO, 1066 GERADOR MST) — como
+trunk 802.1q pro NE8000, que passa a terminar **todas** como subinterface roteada (SVI + OSPF
+area1 onde aplicável). Isso **elimina o bloqueio técnico nº1** (SVI sobre tag interna QinQ no
+DmOS) — deixa de ser pré-requisito do corte.
+
+**Efeitos em cascata (a propagar):**
+- [02-arquitetura-alvo.md](02-arquitetura-alvo.md) seções 2/3 e a tabela de equipamentos —
+  reescrever para refletir DM4170 = só L2.
+- [04-plano-migracao.md](04-plano-migracao.md) — remover confirmação DmOS da lista de
+  pré-requisitos; mapa função→destino muda "Roteamento inter-VLAN" pro NE8000.
+- [09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md) — toda a coluna "Destino L3" das VLANs
+  QinQ e das VLANs de serviço simples muda de DM4170 para NE8000.
+- [08-vlans-e-portas.md](08-vlans-e-portas.md) — a pendência "confirmar com a Datacom" deixa de
+  bloquear.
+- ~~Cresce a lista de subinterfaces/adjacências OSPF do NE8000 (de ~dezenas hoje para +27 QinQ + 3
+  simples) — dimensionar se o NE8000 tem capacidade de subinterfaces/OSPF neighbors de sobra.~~ →
+  ✅ **confirmado (usuário, 2026-07-24): capacidade livre**, sem restrição de licença/hardware
+  pras +30 subinterfaces novas. Deixa de ser bloqueio do plano de corte.
+- Decisão #3 (redundância/HA) fica mais urgente — o NE8000 concentra ainda mais função crítica.
+
+**Status:** ✅ **fechada — Opção B (2026-07-24).**
 
 ## 12. 🆕 Clusters Proxmox sem gerência prevista na CCR1036
 
@@ -278,9 +490,15 @@ plano de portas da CCR1036 ([10](10-enderecamento-ccr1036.md)), **2 de 4 cluster
 | Proxmox DNS | `192.168.115.138/30` | ❌ não |
 | Proxmox Zabbix | não identificado no Dude | (coberto pela "mgmt privada nova" já prevista em `ether5`) |
 
-**O que falta:** confirmar se `192.168.115.210` e `192.168.115.138` são mesmo os IPs de gerência
-dos hypervisors (mesmo padrão do Docker) e reservar porta/VLAN/subinterface no NE8000 pra cada um
-— provisoriamente `ether7` e `ether8` da CCR1036 (cabe na variante 12G-4S recomendada).
+**O que falta:** ✅ **Os dois confirmados (2026-07-24)** — `ip -4 -o addr show` rodado direto nos
+hosts físicos `px-hubsoft` e `proxmox-dns` mostra `vmbr0` com `192.168.115.210` e `192.168.115.138`
+respectivamente, mesmo padrão do Docker (é a gerência do hypervisor, não de uma VM). Falta agora
+só reservar VLAN/subinterface no NE8000 pra cada um (decisão de portas/VLAN, não mais incerteza de
+IP). 🆕
+**Nota (2026-07-24):** as referências a `ether3`/`ether5`/`ether7`/`ether8` **abaixo** eram do
+plano de portas físicas antigo da CCR1036 — com a correção do usuário (servidores agora plugam no
+**DM4170**, que entrega VLANs por trunk pra CCR1036), essas passam a ser **VLANs no trunk**, não
+portas físicas dedicadas. Ver [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md) atualizado.
 
 🆕 **Achado adicional (mesma investigação):** dentro dos clusters há também **VMs privadas** (sem
 IP público) que não cabem no `/30` de gerência do hypervisor — `Radius HubSoft`
@@ -310,6 +528,28 @@ próprio hypervisor (não de uma VM) — nesse caso precisa atualizar quem apont
 trocar. Se `.5` for só o IP que a interface física pegou por acaso, a migração é trivial: criar a
 VLAN de gerência, validar alcance, mover, sem indisponibilidade real.
 
+✅ **Checklist item 1 investigado (2026-07-24, releitura do export do RB3011)** — achado
+**revisto** depois de confirmar que `.5` é literalmente o IP do hypervisor Proxmox:
+- As duas regras de firewall pra `.5`: `LIBERA CALLSYS` (dst-port `!45345`) — 🆕 **confirmado
+  morto (usuário)**, não migra. `LIBERA HUBSOFT PARA O BRASIL` (`dst-port=!148`, TCP+UDP) — 🆕
+  **confirmado vivo (usuário)**, mas a regra em si é **mais aberta do que parecia**: não tem
+  `src-address-list` nenhum (a lista `BRASIL` no nome é órfã, nunca é referenciada em regra
+  `chain=forward` — ver decisão #7) e libera **todas as portas exceto a 148**, de qualquer origem
+  na internet, direto no IP do hypervisor. Isso inclui a porta `8006` (GUI/API do Proxmox) — não
+  por regra dedicada, mas porque a regra "Hubsoft" é ampla demais e não exclui ela.
+- O backup FTP semanal (`script backup_ftp`) aponta pro host `177.72.104.131` ("Storage BCP") —
+  **não tem relação com `.5`**.
+- No Dude, `.5` é monitorado só como *up/down* genérico ("Proxmox Zabbix") — sem probe específico
+  de porta/serviço.
+
+**Risco revisado pra médio:** não é mais "nada aponta pro host", é "o host está mais exposto do
+que o esperado, mas por uma regra genérica aberta, não por uma dependência específica de app na
+gerência". Pra migração, isso não trava a troca de IP em si (a regra pode simplesmente não ser
+portada — reforça a decisão #7 de redesenho limpo), mas é achado de segurança a resolver
+**independente da migração**: hoje o Proxmox Zabbix está com a GUI de gerência (e quase tudo mais)
+alcançável da internet inteira. Vale considerar tratar isso **antes** da janela de corte, não só
+depois.
+
 ✅ **Confirmado (usuário, 2026-07-23): standalone, ~10 VMs.** Não é nó de cluster Proxmox — troca
 de IP não exige reconfigurar corosync/quorum, é a operação mais simples possível desse tipo. A
 contagem de VMs bate com o mapeamento do [12](12-mapeamento-proxmox.md) (8 públicas + 3 privadas).
@@ -325,3 +565,70 @@ contagem de VMs bate com o mapeamento do [12](12-mapeamento-proxmox.md) (8 públ
 
 **Status:** standalone confirmado (risco de cluster eliminado); falta rodar o checklist acima e
 definir o IP privado novo.
+
+🆕 **Confirmação direta 2026-07-24** ([`scripts/proxmox-mapear-vms.sh`](../scripts/proxmox-mapear-vms.sh)
+e [`scripts/docker-mapear-containers.sh`](../scripts/docker-mapear-containers.sh), rodados nos
+**4 clusters** — dados brutos em `config/proxmox-*/`): **os 4 clusters foram consultados
+diretamente, não só inferidos pelo Dude.**
+
+- **HubSoft e Zabbix** (13 VMs): bateram exatamente com o Dude, incluindo as 4 VMs privadas órfãs
+  (Radius HubSoft `192.168.115.214`, Dude VLSUL `192.168.17.38`, Dude PM CPV `192.168.17.42`,
+  Servidor Monsta `192.168.115.62`). **Nenhuma VLAN tag em nenhuma VM** — público e privado
+  dividem o mesmo `vmbr0` sem separação.
+- **Docker/CDNTV**: os 5 sistemas já esperados bateram, **mais 2 novos** (`CdnTV-Origin`
+  `177.72.104.107`, `CdnTV-Edge` `177.72.104.108`, fora do `/27`). A VM "Docker-Netpal" em si roda
+  dezenas de containers (NetBox, phpIPAM, Portainer, stack PowerDNS completo, Smokeping, NTP
+  server da rede toda, UniFi Controller, Wiki) em **redes macvlan com VLAN tag** (`18`, `38`) —
+  diferente do padrão achatado do HubSoft/Zabbix. Ver [12](12-mapeamento-proxmox.md) para o
+  inventário completo.
+- **DNS**: 4 VMs confirmadas, incluindo a resolução de `.26` (API-ZAP, ver decisão #6 acima) e a
+  descoberta de que `.28`+`.58` (antes tratados como possivelmente 2 sistemas) são o mesmo host
+  (`NS-UNBOUND`).
+
+**Conclusão sobre a hipótese "VLAN, não troca física" (generalização):** ✅ correto pra
+HubSoft/Zabbix (achatado, sem VLAN nenhuma) — ❌ **não generaliza** pro Docker/CDNTV, que já usa
+VLAN tag em parte das interfaces. Cada cluster precisa ser tratado caso a caso, não como um
+padrão único da casa.
+
+**Status:** ✅ **os 4 clusters Proxmox têm endereçamento 100% confirmado por consulta direta.**
+Resta decidir porta/VLAN definitiva na CCR1036 pra HubSoft e DNS (ainda sem posição no plano de
+portas do [10](10-enderecamento-ccr1036.md)) e o caminho de rede das VMs privadas órfãs.
+
+🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
+no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do
+cluster Zabbix** — ou seja, HubSoft nunca teve cabo dedicado, compartilha o segmento físico com o
+Zabbix. ✅ **Switch intermediário identificado (topologia física do usuário, 2026-07-24): é o
+RB BRIDGE 750 (RB750)** — o `ether10` do RB3011 vai pro RB750, que agrega Zabbix (p3), HubSoft (p4)
+e a gerência do NE8000 (p2). Ver [`config/topologia-fisica-rack.md`](../config/topologia-fisica-rack.md).
+Não precisa reservar porta nova dedicada pro HubSoft na CCR1036 — só garantir que a VLAN de
+gerência dele viaje junto com a do Zabbix. ✅ Sobre o **DNS** (`ether8`): a topologia mostra que ele
+**pluga direto** no RB3011 (não compartilha com ninguém, é o host Proxmox DNS / HP 360 G7).
+
+## 14. 🆕 Firewall dos servidores locais: subir sem regra dedicada, endurecer depois
+
+**✅ Decidido (usuário, 2026-07-24): servidores locais sobem sem firewall dedicado inicialmente.**
+Em vez de pré-montar e ativar as zonas/regras por servidor na janela de corte (como o
+[04-plano-migracao.md](04-plano-migracao.md) assumia — "pré-criar zonas de firewall... desativado
+até a janela"), a estratégia agora é: os servidores atrás do DM4170/CCR1036/NE8000 voltam a
+funcionar primeiro (conectividade), e as regras de firewall por zona/serviço (diretriz 3/4 do
+[05-limpeza-politicas.md](05-limpeza-politicas.md)) são construídas e aplicadas **depois**,
+incrementalmente — não é pré-requisito da janela de corte.
+
+**Motivação (contexto do achado da decisão #7/#12):** reduz o risco da janela — menos coisa nova
+pra validar no mesmo momento do corte físico. Também é coerente com o estado atual real: o achado
+de hoje mostrou que o RB3011 já tem pelo menos uma regra ("Hubsoft" em `.5`) que na prática está
+totalmente aberta (sem origem restrita) — subir sem firewall dedicado não é uma regressão de
+segurança tão grande quanto pareceria à primeira vista, já que o baseline de hoje já não é
+fechado.
+
+**Efeitos em cascata (a propagar):**
+- [04-plano-migracao.md](04-plano-migracao.md) — Fase 0, item 3: não é mais "pré-criar zonas
+  desativadas para ativar na janela"; firewall dos servidores vira trabalho **pós-corte**.
+- [05-limpeza-politicas.md](05-limpeza-politicas.md) — Passo 1 (confirmar sistemas vivos) deixa de
+  ser pré-requisito do corte (já estava sendo tratado como adiado) — agora fica formalmente
+  desacoplado: é insumo pro endurecimento pós-corte, não bloqueia agendar a data.
+- **Atenção:** isso não se aplica ao firewall de **gerência** (ACL `IPV4_NOC_NETPAL`/`RANGENETPAL`
+  equivalente) nem ao NAT/DST-NAT essenciais (Dude, TS SIX) — esses continuam no escopo da janela,
+  só as regras específicas por servidor/sistema é que ficam pra depois.
+
+**Status:** ✅ **fechada (2026-07-24).**

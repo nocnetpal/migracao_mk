@@ -1,0 +1,3 @@
+node,tipo,id,nome,status,bridge,vlan,mac,ip_metodo,ips
+px-hubsoft,qemu,101,HUBSOFT-RADIUS,running,vmbr0,,96:4F:38:AB:86:21,tcpdump-tap,192.168.115.214
+px-hubsoft,qemu,102,HUBSOFT,running,vmbr0,,72:56:05:A7:29:E9,tcpdump-tap,177.72.104.16

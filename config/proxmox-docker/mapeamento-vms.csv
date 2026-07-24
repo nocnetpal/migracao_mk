@@ -1,0 +1,15 @@
+node,tipo,id,nome,status,bridge,vlan,mac,ip_metodo,ips
+proxmoxDockerCDNTV,qemu,100,Docker-Netpal,running,vmbr1,,F6:EF:DA:C8:5B:0B,nao-encontrado,
+proxmoxDockerCDNTV,qemu,100,Docker-Netpal,running,vmbr2,,C6:8F:DA:94:E0:6D,tcpdump-tap,177.72.104.109
+proxmoxDockerCDNTV,qemu,100,Docker-Netpal,running,vmbr3,,1A:D7:AB:37:73:F6,nao-encontrado,
+proxmoxDockerCDNTV,qemu,100,Docker-Netpal,running,vmbr15,,5A:D9:BF:85:6A:44,nao-encontrado,
+proxmoxDockerCDNTV,qemu,100,Docker-Netpal,running,vmbr15,,62:57:F1:9B:D5:58,nao-encontrado,
+proxmoxDockerCDNTV,qemu,100,Docker-Netpal,running,vmbr3,38,36:56:3A:7B:40:A9,nao-encontrado,
+proxmoxDockerCDNTV,qemu,100,Docker-Netpal,running,vmbr3,18,C2:BB:BB:23:3A:B3,nao-encontrado,
+proxmoxDockerCDNTV,qemu,101,CdnTV-Origin,running,vmbr1,,2A:B7:2D:D8:6E:A2,tcpdump-tap,177.72.104.107
+proxmoxDockerCDNTV,qemu,102,CdnTV-Edge,running,vmbr2,,5E:68:F6:70:6E:0D,tcpdump-tap,177.72.104.108
+proxmoxDockerCDNTV,qemu,103,OPA.SUIT,running,vmbr1,,F6:C7:5C:8A:4A:A3,tcpdump-tap,177.72.104.30
+proxmoxDockerCDNTV,qemu,104,Fusion-Painel-Elaborados,running,vmbr1,,6E:26:1A:C9:19:CE,tcpdump-tap,177.72.104.22
+proxmoxDockerCDNTV,qemu,105,OpenVPN2,running,vmbr1,,62:B2:A1:0A:B1:AE,tcpdump-tap,10.254.0.30;177.72.104.12
+proxmoxDockerCDNTV,qemu,106,Fusion-Painel-Simples,running,vmbr1,,0E:C8:34:76:59:4E,tcpdump-tap,177.72.104.25
+proxmoxDockerCDNTV,qemu,107,APP-ETC-SCRIPTS,running,vmbr1,,36:DC:89:9D:DA:5A,tcpdump-tap,177.72.104.23

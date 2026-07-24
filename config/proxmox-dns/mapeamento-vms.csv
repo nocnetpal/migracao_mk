@@ -1,0 +1,5 @@
+node,tipo,id,nome,status,bridge,vlan,mac,ip_metodo,ips
+proxmox-dns,qemu,101,OLT-CLOUD,running,vmbr0,,BC:24:11:89:AD:23,tcpdump-tap,177.72.104.24
+proxmox-dns,qemu,102,API-ZAP,running,vmbr0,,BC:24:11:50:14:F9,tcpdump-tap,177.72.104.26
+proxmox-dns,qemu,103,AUTOMACOES,running,vmbr0,,BC:24:11:BF:0B:B5,tcpdump-tap,177.72.104.29
+proxmox-dns,qemu,105,NS-UNBOUND,running,vmbr0,,BC:24:11:E7:B0:75,arp-neigh,177.72.104.28;177.72.104.58

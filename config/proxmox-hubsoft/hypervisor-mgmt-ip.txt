@@ -1,0 +1,3 @@
+root@px-hubsoft:~# ip -4 -o addr show
+1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+8: vmbr0    inet 192.168.115.210/30 scope global vmbr0\       valid_lft forever preferred_lft forever

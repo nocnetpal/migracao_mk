@@ -1,0 +1,95 @@
+[jdf@GW Servidores] > /interface bridge host print detail where bridge="Bridge IP Publico"
+Flags: X - disabled, I - invalid, D - dynamic, L - local, E - external
+ 0   D E mac-address=00:E0:4C:BE:02:36 interface=ether6 - PC TS SIX bridge=Bridge IP Publico on-interface=ether6 - PC TS SIX
+
+ 1   D E mac-address=00:E0:4C:DA:00:C3 interface=ether6 - PC TS SIX bridge=Bridge IP Publico on-interface=ether6 - PC TS SIX
+
+ 2   D E mac-address=0E:C8:34:76:59:4E interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+ 3   D E mac-address=16:8C:EF:D4:03:FD interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+ 4   D E mac-address=1A:97:C3:E0:DC:D3 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+ 5   D E mac-address=22:38:44:18:63:5E interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+ 6   D E mac-address=22:C6:6C:11:AB:E3 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+ 7   D E mac-address=36:DC:89:9D:DA:5A interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+ 8   D E mac-address=3C:4A:92:EA:EC:0C interface=ether8 - SERVIDOR DNS RECURSIVO bridge=Bridge IP Publico on-interface=ether8 - SERVIDOR DNS RECURSIVO
+
+ 9   D E mac-address=44:1E:A1:48:2F:00 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+10   D E mac-address=4E:01:6C:C9:F0:78 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+11   D E mac-address=54:10:EC:25:87:A7 interface=ether6 - PC TS SIX bridge=Bridge IP Publico on-interface=ether6 - PC TS SIX
+
+12   D E mac-address=56:EC:57:EB:68:14 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+13   D E mac-address=62:88:83:5C:E1:F0 interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+14   D E mac-address=62:B2:A1:0A:B1:AE interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+15   D E mac-address=64:D1:54:2F:B9:5F interface=ether6 - PC TS SIX bridge=Bridge IP Publico on-interface=ether6 - PC TS SIX
+
+16   D E mac-address=6E:26:1A:C9:19:CE interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+17   D E mac-address=70:85:C2:D1:F9:41 interface=ether6 - PC TS SIX bridge=Bridge IP Publico on-interface=ether6 - PC TS SIX
+
+18   D E mac-address=72:56:05:A7:29:E9 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+19   D E mac-address=84:2B:2B:5A:45:55 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+20   D E mac-address=86:73:93:C6:27:4F interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+21   D E mac-address=8A:26:35:E8:3A:BF interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+22   D E mac-address=8E:08:5C:02:C1:4A interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+23   D E mac-address=90:B1:1C:3D:02:C3 interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+24   D E mac-address=96:4F:38:AB:86:21 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+25   D E mac-address=B2:0B:ED:2F:90:05 interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+26   D E mac-address=B2:63:2D:95:56:FD interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+27   D E mac-address=BC:24:11:50:14:F9 interface=ether8 - SERVIDOR DNS RECURSIVO bridge=Bridge IP Publico on-interface=ether8 - SERVIDOR DNS RECURSIVO
+
+28   D E mac-address=BC:24:11:89:AD:23 interface=ether8 - SERVIDOR DNS RECURSIVO bridge=Bridge IP Publico on-interface=ether8 - SERVIDOR DNS RECURSIVO
+
+29   D E mac-address=BC:24:11:BF:0B:B5 interface=ether8 - SERVIDOR DNS RECURSIVO bridge=Bridge IP Publico on-interface=ether8 - SERVIDOR DNS RECURSIVO
+
+30   D E mac-address=BC:24:11:E7:B0:75 interface=ether8 - SERVIDOR DNS RECURSIVO bridge=Bridge IP Publico on-interface=ether8 - SERVIDOR DNS RECURSIVO
+
+31   DL  mac-address=C4:AD:34:F9:F1:70 interface=Bridge IP Publico bridge=Bridge IP Publico on-interface=Bridge IP Publico
+
+32   DL  mac-address=C4:AD:34:F9:F1:75 interface=VLAN16 - IP PUBLICO bridge=Bridge IP Publico on-interface=VLAN16 - IP PUBLICO
+
+33   DL  mac-address=C4:AD:34:F9:F1:76 interface=ether6 - PC TS SIX bridge=Bridge IP Publico on-interface=ether6 - PC TS SIX
+
+34   DL  mac-address=C4:AD:34:F9:F1:77 interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+35   DL  mac-address=C4:AD:34:F9:F1:78 interface=ether8 - SERVIDOR DNS RECURSIVO bridge=Bridge IP Publico on-interface=ether8 - SERVIDOR DNS RECURSIVO
+
+36   DL  mac-address=C4:AD:34:F9:F1:7A interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+37   D E mac-address=DC:2C:6E:ED:23:18 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+38   D E mac-address=DC:2C:6E:ED:23:1C interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+39   D E mac-address=DE:5F:56:B1:1A:14 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+40   D E mac-address=E2:E9:C9:DC:BA:BF interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+41   D E mac-address=EE:2A:8A:5A:EE:E0 interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+42   D E mac-address=F2:19:E1:4A:8C:8A interface=ether10 - Callcenter bridge=Bridge IP Publico on-interface=ether10 - Callcenter
+
+43   D E mac-address=F6:C7:5C:8A:4A:A3 interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+44   D E mac-address=FA:CE:E8:D3:DC:AC interface=ether7 - Proxmox - DOCKER - CDNTV bridge=Bridge IP Publico on-interface=ether7 - Proxmox - DOCKER - CDNTV
+
+[jdf@GW Servidores] > /ip arp print detail where address in (177.72.104.57,177.72.104.59,177.72.104.105.221)
+Flags: X - disabled, I - invalid, H - DHCP, D - dynamic, P - published, C - complete
+(sem resultados — nenhuma entrada ARP para .57, .59, .105.221)

@@ -1,0 +1,12 @@
+node,tipo,id,nome,status,bridge,vlan,mac,ip_metodo,ips
+proxmox3,qemu,100,Dude-VLSul,running,vmbr0,,DE:5F:56:B1:1A:14,tcpdump-tap,100.6.6.4;192.168.17.38
+proxmox3,qemu,101,Monsta,running,vmbr0,,E2:E9:C9:DC:BA:BF,tcpdump-tap,192.168.115.62
+proxmox3,qemu,102,SFTP-OPA-CHAT,running,vmbr0,,F2:19:E1:4A:8C:8A,arp-neigh,177.72.104.20
+proxmox3,qemu,103,Docs,running,vmbr0,,B2:63:2D:95:56:FD,tcpdump-tap,177.72.104.7
+proxmox3,qemu,104,Fusionpbx-PM-CPV,running,vmbr0,,EE:2A:8A:5A:EE:E0,tcpdump-tap,177.72.104.14
+proxmox3,qemu,105,TIP-VOIP,running,vmbr0,,8A:26:35:E8:3A:BF,tcpdump-tap,177.72.104.13
+proxmox3,qemu,106,Fusionpbx-PM-MST,running,vmbr0,,1A:97:C3:E0:DC:D3,tcpdump-tap,177.72.104.17
+proxmox3,qemu,107,OVPN,running,vmbr0,,56:EC:57:EB:68:14,tcpdump-tap,177.72.104.9
+proxmox3,qemu,108,Fusion-0800-Netpal,running,vmbr0,,16:8C:EF:D4:03:FD,arp-neigh,177.72.104.18
+proxmox3,qemu,109,Dude-PM-CPV,running,vmbr0,,22:C6:6C:11:AB:E3,tcpdump-tap,192.168.17.42
+proxmox3,qemu,110,Zabbix,running,vmbr0,,4E:01:6C:C9:F0:78,arp-neigh,177.72.104.6
