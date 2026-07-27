@@ -1,0 +1,11 @@
+# Coleta ao vivo 2026-07-27 — px-hubsoft (consultivo)
+hostname: px-hubsoft
+vmbr0: 192.168.115.210/30 gateway 192.168.115.209
+bridge-ports: eno1
+bridge-vlan-aware: yes
+vlan_filtering: 1
+unused: eno2 eno3 eno4 enp7s0f0 enp7s0f1
+
+VM 101 HUBSOFT-RADIUS: virtio mac 96:4F:38:AB:86:21 bridge=vmbr0 firewall=1 tag=none
+VM 102 HUBSOFT: virtio mac 72:56:05:A7:29:E9 bridge=vmbr0 firewall=off tag=none
+# Nota: tag=16 testado e revertido — cai no caminho RB750 (untagged)

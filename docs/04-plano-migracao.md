@@ -3,6 +3,16 @@
 > **Status: rascunho v1** — escrito após o fechamento do inventário técnico do RB3011
 > ([07](07-enderecamento-ip.md), [08](08-vlans-e-portas.md)). Ainda há bloqueios externos
 > (lista abaixo), mas a estrutura do plano já está definida.
+>
+> ## 🆕 Ordem atual (2026-07-27): Etapa 1 Proxmox/Datacom **antes** da virada `/27`
+>
+> 1. **Etapa 1** — VLANs nos Proxmox + portas trunk no DM4170 ([16](16-etapa1-proxmox-vlans-datacom.md))
+> 2. **Etapa A** — instalar DM4170 + CCR ligados ao NE8000 (pode sobrepor a 1)
+> 3. **Etapa B** — virada `/27`/NAT + demais servidores
+> 4. **Janela futura** — QinQ `sfp1`
+>
+> Detalhe Etapa 1: **[16-etapa1-proxmox-vlans-datacom.md](16-etapa1-proxmox-vlans-datacom.md)**.
+> Etapa A/B geral: abaixo e [15](15-plano-migracao-servidores-177.md) se o link antigo apontar.
 
 ## Pré-requisitos — status
 

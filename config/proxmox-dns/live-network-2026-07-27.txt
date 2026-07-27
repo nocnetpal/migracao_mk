@@ -1,0 +1,11 @@
+# Coleta ao vivo 2026-07-27 — proxmox-dns (consultivo)
+hostname: proxmox-dns
+vmbr0: 192.168.115.138/30 gateway 192.168.115.137
+bridge-ports: enp3s0f0 (UP) enp3s0f1 (NO-CARRIER)
+bridge-vlan-aware: NÃO
+vlan_filtering: 0
+
+VM 101 OLT-CLOUD: e1000e mac BC:24:11:89:AD:23 bridge=vmbr0 firewall=1 tag=none
+VM 102 API-ZAP: virtio mac BC:24:11:50:14:F9 bridge=vmbr0 firewall=1 tag=none
+VM 103 AUTOMACOES: virtio mac BC:24:11:BF:0B:B5 bridge=vmbr0 firewall=1 tag=none (nameserver 9.9.9.9 no qm)
+VM 105 NS-UNBOUND: virtio mac BC:24:11:E7:B0:75 bridge=vmbr0 firewall=1 tag=none

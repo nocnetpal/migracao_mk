@@ -1,0 +1,26 @@
+# Coleta ao vivo 2026-07-27 — proxmox3 / Zabbix (consultivo)
+hostname: proxmox3
+vmbr0: 177.72.104.5/27 gateway 177.72.104.1
+bridge-ports: enp3s0f0
+bridge-vlan-aware: NÃO
+vlan_filtering: 0 (vmbr0 e derivados)
+
+# NOVO: interface fora do vmbr0
+enp3s0f1: 10.1.1.2/24 (não é master do vmbr0)
+
+# Já existem subifs VLAN no fio (não nas VMs):
+enp3s0f0.50 → vmbr0v50
+enp3s0f0.1  → vmbr0v1
+
+VMs todas em vmbr0, sem tag:
+100 Dude-VLSul virtio DE:5F:56:B1:1A:14 firewall=1
+101 Monsta virtio E2:E9:C9:DC:BA:BF firewall=1
+102 SFTP-OPA-CHAT virtio F2:19:E1:4A:8C:8A firewall=1
+103 Docs virtio B2:63:2D:95:56:FD firewall=1
+104 Fusionpbx-PM-CPV virtio EE:2A:8A:5A:EE:E0 firewall=1
+105 TIP-VOIP virtio 8A:26:35:E8:3A:BF firewall=1
+106 Fusionpbx-PM-MST virtio 1A:97:C3:E0:DC:D3 firewall=1
+107 OVPN virtio 56:EC:57:EB:68:14 firewall=1
+108 Fusion-0800-Netpal virtio 16:8C:EF:D4:03:FD firewall=1
+109 Dude-PM-CPV virtio 22:C6:6C:11:AB:E3 firewall=off
+110 Zabbix virtio 4E:01:6C:C9:F0:78 firewall=1

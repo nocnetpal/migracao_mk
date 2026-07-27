@@ -6,9 +6,16 @@
 > [03-decisoes-pendentes.md](03-decisoes-pendentes.md) (decisões). Este documento **consome** os
 > dois — não repete o raciocínio, só a sequência de execução.
 >
-> 🚨 **Ainda não está pronto pra agendar.** Tem bloqueador real em aberto (lista abaixo). Os
-> passos que dependem de um bloqueador estão marcados `⛔ BLOQUEADO`, com placeholder pro dado que
-> falta. Conforme cada decisão fechar, volto aqui e preencho.
+> ## 🆕 Duas janelas distintas (2026-07-24)
+>
+> | Janela | O quê | Doc |
+> |---|---|---|
+> | **Etapa A** | Instalar DM4170 + CCR no NE8000 — **sem** corte de produção | [15 § Etapa A](15-plano-migracao-servidores-177.md) — checklist lá; não precisa madrugada |
+> | **Etapa B** | Migrar só servidores `177.*` + virada `/27`/NAT; QinQ fica no RB3011 | [15 § Etapa B](15-plano-migracao-servidores-177.md) + seção **Etapa B** abaixo |
+> | **Futura** | Troca QinQ `sfp1` + SVIs POP + desliga RB3011 | Restante deste runbook (T-14 / janela QinQ) |
+>
+> 🚨 **Etapa B ainda não está pronta pra agendar** enquanto os bloqueadores #3 (rota NAT `.4`) e
+> #8 (HubSoft/DNS) abaixo estiverem abertos. Os passos `⛔ BLOQUEADO` continuam válidos.
 
 ## 🚦 Bloqueadores — precisam fechar antes de marcar a data
 
@@ -16,12 +23,12 @@
 |---|---|---|---|
 | 1 | ~~SVI roteada sobre tag interna de QinQ no DmOS~~ | [03 #13](03-decisoes-pendentes.md) | ✅ **caiu (2026-07-24)** — decisão #13: DM4170 fica só L2, quem termina a SVI é o NE8000 |
 | 2 | ~~MTU/baby giants nos dois trechos novos~~ | [03 #4](03-decisoes-pendentes.md) | ✅ **estratégia fechada (2026-07-24)** — jumbo frame máximo de cada equipamento; número concreto na hora de configurar |
-| 3 | Mecanismo de NAT na CCR1036 — como rotear o IP público até ela | [03 #9](03-decisoes-pendentes.md) | 🟡 IP definido (`177.72.104.4`, 2026-07-24) — falta só desenhar a rota |
+| 3 | Mecanismo de NAT na CCR1036 — como o IP público chega nela | [03 #9](03-decisoes-pendentes.md) | ✅ **CCR dentro do `/27`** (`.4` VLAN 16, 2026-07-27); ~~`/32` P2P~~ descartado; falta testar + DST-NAT `.1` vs `.4` |
 | 4 | ~~Sobreposição `177.72.104.60/30`~~ | [03 #10](03-decisoes-pendentes.md) | ✅ **investigado e resolvido (2026-07-24)** — não é conflito real, NE8000 não tem interface nesse /30 |
 | 5 | ~~Estratégia da chave OSPF MD5 `ntprb1030` no corte~~ | [03 #11](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — Opção A: mantém `ntprb1030` no corte, rotaciona na fase 4 |
 | 6 | ~~Variante da CCR1036~~ | [02](02-arquitetura-alvo.md) | ✅ **decidido (2026-07-24): 8G-2S+** |
 | 7 | Passo 1 da limpeza — quais sistemas do firewall antigo ainda estão vivos | [05](05-limpeza-politicas.md) | 🟡 conscientemente adiado (2026-07-24) — voltar depois de fechar o resto |
-| 8 | Portas/VLANs da CCR1036 para os clusters Proxmox HubSoft e DNS | [03 #12](03-decisoes-pendentes.md) | ⛔ em aberto |
+| 8 | Portas/VLANs Proxmox HubSoft e DNS | [03 #12](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-27):** HubSoft=210, DNS=138 — ver [16](16-etapa1-proxmox-vlans-datacom.md) |
 | 9 | ~~Destino final das automações (backup FTP, netwatch→API)~~ | [03 #6](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — as duas descartadas, não migram, nada a implementar aqui |
 | 10 | VPN nova (L2TP+OpenVPN) implementada e testada na CCR1036 | [03 #5](03-decisoes-pendentes.md) | 🟡 destino definido, falta implementar/testar |
 | 11 | Solução de acesso do NOC (EoIP morre com o MK) | [03 #8](03-decisoes-pendentes.md) | 🟡 NE8000 já libera `177.93.244.165` direto na ACL de gerência — provavelmente já resolvido, falta confirmar |
@@ -31,7 +38,61 @@
 item 8 (portas/VLANs Proxmox HubSoft/DNS)** — mudam a config que vai ser montada. Os itens 7, 10,
 11 podem correr em paralelo até a véspera; o 7 foi conscientemente deixado pro final.
 
-## T-14 dias: preparação (sem tocar em produção)
+---
+
+## Etapa B — runbook servidores 177 (QinQ permanece no RB3011)
+
+> Pré-condição: **Etapa A pronta** ([15 § A.7](15-plano-migracao-servidores-177.md)). Lista de
+> hosts: [14](14-ips-servidores-e-17772.md). Detalhe de escopo: [15](15-plano-migracao-servidores-177.md).
+
+### Pré-corte Etapa B
+
+- [ ] Critério de pronto da Etapa A OK (pings mgmt; FlowSpec/NetStream intactos via caminho antigo)
+- [ ] Rota `177.72.104.4` → CCR testada no NE8000 (bloqueador #3) — ⛔ se aberto
+- [ ] SFP-RJ45 instalados nas portas do mapa [15 § A.5](15-plano-migracao-servidores-177.md)
+- [ ] Script de rollback escrito: repor `177.72.104.1/27` no RB3011 + `shutdown` SVI no NE8000 +
+      religar cabo na porta antiga (RB2011/RB750/RB3011)
+- [ ] NAT na CCR ainda **desabilitado** até o corte L3 do `/27`
+
+### Ordem de hosts (um a um)
+
+| # | Host | Validar após plugar |
+|---|---|---|
+| 1 | RRFlow `.27` | Sessão FlowSpec + NetStream `:3055` no **novo** caminho |
+| 2 | Proxmox Docker/CDNTV + containers 177 | Ping GW; HTTP/serviços públicos |
+| 3 | Proxmox Zabbix `.5` + VMs 177 | Ping GW; Zabbix/OVPN |
+| 4 | Proxmox HubSoft `.16` | ⛔ decisão #12 se VLAN/porta aberta |
+| 5 | Proxmox DNS (`.24` `.26` `.28`/`.58` `.29`) | ⛔ decisão #12; resolver DNS |
+| 6 | Demais 177 (WireGuard `.19`, CGNAT `.66`, …) | Conforme [14](14-ips-servidores-e-17772.md) |
+
+Por host:
+
+- [ ] Plugar na porta GE do DM4170 (SFP-RJ45); segunda NIC / bridge VLAN 16 se tiver IP público
+- [ ] Gateway do host: RB3011 `.1` → NE8000 (quando o `/27` já tiver virado) **ou** manter `.1` no
+      RB3011 até o corte L3 único abaixo
+- [ ] Ping gateway, DNS, serviço público, ARP no DM4170
+
+### Corte L3 do `/27` (momento único)
+
+- [ ] Remover `177.72.104.1/27` (e anúncio OSPF do `/27`) do RB3011
+- [ ] Ativar SVI/anúncio do `/27` no NE8000
+- [ ] Ativar NAT na CCR (`.4`) + DST-NAT Dude/TS SIX se esses hosts já migraram
+- [ ] RB2011/RB750: só o que for bridge de servidor — **não** mexer no `sfp1` QinQ
+
+### Rollback Etapa B
+
+Religar servidor na porta antiga; se o `/27` já virou, rodar o script da véspera (`.1` de volta no
+RB3011, SVI NE8000 down, NAT CCR off).
+
+---
+
+## Janela futura — QinQ / descomissionamento RB3011
+
+> O que segue (T-14, T-1, janela) é o corte do trunk QinQ + núcleo completo. **Não executar** na
+> mesma noite da Etapa B. Etapa A cobre a parte “montar DM4170+CCR sem produção”; não duplicar
+> aqui o checklist da A.
+
+## T-14 dias: preparação QinQ (sem tocar em produção)
 
 - [ ] Fechar os bloqueadores restantes acima (2, 3, 5, 6, 12)
 - [ ] 🆕 Montar a config do **DM4170** em bancada — **só L2** (decisão #13): QinQ termination de

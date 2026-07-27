@@ -11,12 +11,8 @@
 > roda aqui, o que exige que ao menos um IP público do `177.72.104.0/27` seja **roteado até a
 > CCR1036** através do link privado com o NE8000.
 >
-> ✅ **IP definido (usuário, 2026-07-24): `177.72.104.4`.** Cruzando a tabela completa de
-> [07-enderecamento-ip.md](07-enderecamento-ip.md) (firewall filter, Dude, consulta direta aos 4
-> clusters Proxmox, ARP do RB3011) contra o export bruto do RB3011/NE8000, `.4` e `.15` eram os
-> únicos dois endereços do `/27` sem nenhuma referência em qualquer fonte — `.4` foi o escolhido.
-> Falta só desenhar o mecanismo de roteamento exato (rota estática no NE8000 pro link com a
-> CCR1036, ou subinterface dedicada) — não é mais "qual IP", é "como rotear".
+> ✅ **IP definido (usuário, 2026-07-24): `177.72.104.4`.** ✅ **Modelo (2026-07-27): CCR
+> dentro do `/27`** (VLAN 16), igual aos servidores — sem rota `/32` por P2P privado.
 >
 > 🆕 **Correção do usuário (2026-07-24): os servidores locais não plugam mais direto na CCR1036.**
 > Toda a agregação física de servidores passa a ser no **DM4170** (que tem 24 portas GE ópticas
@@ -65,42 +61,35 @@ endereçamento da CCR1036/NE8000 para esses clusters.**
 > entram fisicamente no **DM4170**, que entrega as VLANs de gerência num trunk único.
 
 ```
-                         NE8000
-                           │ 10GE — 🆕 só pra CCR1036 ganhar IP público (NAT usa `177.72.104.4`,
-                           │ rota até lá ainda a definir)
+                         NE8000 ── GW do /27 (.1) na VLAN 16
                            │
-                        CCR1036 ── 🆕 NAT (SRC-NAT geral, DST-NAT Dude/TS SIX)
+                        DM4170 ── L2 (VLAN 16 + VLANs de gerência)
                            │
-                           │ 🆕 trunk 802.1q novo (era porta-a-porta antes de 2026-07-24)
-                           │
-                        DM4170 ── switching (só L2, decisão #13)
-         ┌────────┬───────┼───────┬────────┬─────────┬─────────┐
-      vlan66   vlan116  vlan10  vlan999   vlan109    vlan?      vlan?
-         │       │       │       │         │          │         │
-      TS SIX  Proxmox  DNS    Zabbix/   OLT CPV   Proxmox    Proxmox
-              Docker   rec.   Callcenter          HubSoft⚠️   DNS⚠️
-              CDNTV          (mgmt nova)          (novo)      (novo)
-                                 │
-                    segunda NIC → VLAN 16 / 177.72.104.5 (tráfego público direto, sem NAT,
-                                  direto na rede de acesso — não passa pelo DM4170/CCR1036)
+              ┌────────────┼──────────────┐
+              │            │              │
+           CCR1036     servidores      trunk gerência
+           (.4 NAT     (Proxmox etc.   (vlan66/116/…)
+            na VLAN16)  na VLAN16)
 ```
+
+> ✅ **2026-07-27:** CCR **dentro do `/27`** — `177.72.104.4` na VLAN 16 (mesmo broadcast dos
+> servidores). Sem rota `/32` por P2P privado.
 
 ## Alocação de portas e VLANs (reais)
 
-> 🆕 A CCR1036 agora usa só **2 portas físicas**: uma pro trunk com o DM4170 (carrega todas as
-> VLANs de gerência abaixo) e uma pro NE8000 (só IP público do NAT, sem VLAN de servidor). As
-> VLANs continuam as mesmas de antes — só o meio físico até cada servidor mudou (era porta
-> dedicada na CCR1036, agora é porta dedicada no **DM4170**, tagged até a CCR1036).
+> 🆕 A CCR1036: trunk com o DM4170 (VLANs de gerência **+ VLAN 16** com `177.72.104.4`) e,
+> opcionalmente, link direto com o NE8000 se ainda for útil pra VPN/outro — **não** é mais o
+> caminho do IP de NAT (NAT está na VLAN 16). As VLANs de gerência seguem tagged no trunk.
 
 | VLAN (no trunk DM4170↔CCR1036) | Dispositivo (Dude) | IP / rede hoje | Porta no DM4170 | Gateway no alvo | Observação |
 |---|---|---|---|---|---|
 | `vlan66` | **TS SIX** | `192.168.66.14/28` | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.66.1/28` | DST-NAT `:15389` continua apontando pra cá |
-| `vlan116` | **Proxmox Docker - CDNTV** | `192.168.116.122/30` | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.116.121/30` | Gerência privada; tráfego público dos serviços CDNTV vai por segunda NIC |
+| `vlan116` | **Proxmox Docker - CDNTV** | `192.168.116.122/30` | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.116.121/30` | Gerência em **vmbr1**; tráfego público tag 16 (Etapa 1) |
 | `vlan10` | **DNS recursivo** | `10.200.255.254/30` | porta GE dedicada (SFP-RJ45) | NE8000 `10.200.255.253/30` | Nome não consta no Dude; IP vem do `/ip address` do RB3011 |
-| `vlan999` | **Proxmox Zabbix** (hoje) / **Callcenter** (a implantar) | mgmt privada nova | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.254.1/24` | O IP público `177.72.104.5/6` vai para a **segunda NIC** (VLAN16) |
+| `vlan999` | **Proxmox Zabbix** / **Callcenter** | mgmt privada nova | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.254.1/24` | IP público `.5` sai da gerência; VMs 177 tag 16 |
 | `vlan109` | **OLT CPV** | `192.168.115.42/30` | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.115.41/30` | Gerência da OLT |
-| 🆕 VLAN a criar | **Proxmox HubSoft** | `192.168.115.210/30` | porta GE dedicada (SFP-RJ45) | NE8000, endereço a definir | Faltava no plano — achado ao cruzar clusters Proxmox no Dude |
-| 🆕 VLAN a criar | **Proxmox DNS** | `192.168.115.138/30` | porta GE dedicada (SFP-RJ45) | NE8000, endereço a definir | Faltava no plano — idem |
+| ✅ `vlan210` | ~~Proxmox HubSoft~~ | — | — | — | ~~substituído~~ → modelo 2 VLANs: **100**+**16** ([16](16-etapa1-proxmox-vlans-datacom.md), 2026-07-27) |
+| ✅ `vlan138` | ~~Proxmox DNS~~ | — | — | — | idem — gerência na **100**, público na **16** |
 
 > ⚠️ **Assumindo transceiver SFP-RJ45 (1000BASE-T) nas portas ópticas do DM4170** pra receber os
 > servidores em cobre — o DM4170 24GX+12XS é 100% óptico. Vale confirmar com o usuário antes de
@@ -142,31 +131,31 @@ O que precisa migrar do RB3011 para cá (ver [01-inventario-atual.md](01-inventa
 - **DST-NAT** (port-forward): `.1:18291` → Dude (`192.168.116.30:8291`), `.1:15389` → TS SIX
   (`192.168.66.14:15389`).
 
-⚠️ **Pendência de desenho, não só de config:**
+✅ **Mecanismo fechado (usuário, 2026-07-27):** a CCR **fica dentro do `/27`** (VLAN 16),
+igual aos servidores — IP `177.72.104.4`. ~~`/32` via P2P~~ e ~~`10.254.254.x`~~ descartados.
 
-1. **Qual IP público usar.** Manter `.1` mantém os port-forwards sem precisar avisar ninguém que
-   acessa de fora; usar outro IP do `/27` é mais simples de rotear mas exige atualizar quem
-   depende do `.1` hoje.
-2. **Como esse IP chega até a CCR1036.** O NE8000 é quem termina o `/27` (decisão #9). O padrão
-   mais consistente com o que a própria rede já faz hoje (ver decisão #8: `.9`/`.12`/`.19`
-   roteados para hosts específicos dentro do `/27`) é uma **rota estática no NE8000** apontando o
-   IP de NAT para o link privado NE8000↔CCR1036 (`10.254.254.254`, ver abaixo).
-3. **Alcance do DST-NAT do Dude.** O alvo do port-forward é `192.168.116.30` (RB DUDE) — esse host
-   **não está entre as VLANs da CCR1036** listadas acima. Precisa confirmar como a CCR1036 alcança
-   `192.168.116.30/24`: nova VLAN de gerência dedicada (chegando pelo trunk do DM4170, como as
-   demais), ou rota via NE8000 até essa sub-rede (que hoje é servida pela `Bridge IP Publico` do
-   RB3011 — ver [08-vlans-e-portas.md](08-vlans-e-portas.md)).
+1. **IP de NAT:** `177.72.104.4` na VLAN 16.
+2. **Como chega:** L2 no broadcast do `/27` (DM4170 entrega VLAN 16 à CCR; NE8000 é o GW `.1`).
+   Sem rota host especial — ARP resolve `.4` como qualquer outro servidor do bloco.
+3. **DST-NAT Dude/TS SIX:** ainda aberto — portas hoje no `.1`; migrar pra `.4`?
+   Alcance até Dude/TS SIX via VLANs de gerência no trunk DM4170 — ver [08](08-vlans-e-portas.md).
 
-**Status:** correção de arquitetura registrada; mecanismo exato ainda em aberto — ver decisão #9
-em [03-decisoes-pendentes.md](03-decisoes-pendentes.md).
+```
+Internet → NE8000 (GW .1 do 177.72.104.0/27, VLAN16)
+              │
+              └─ VLAN16 (L2 via DM4170) → servidores (.5 .12 .16 …) + CCR (.4 NAT)
+```
+
+**Status:** CCR no `/27` ✅; DST-NAT `.1` vs `.4` aberto — decisão #9 em
+[03](03-decisoes-pendentes.md).
 
 ## Endereços da própria CCR1036
 
 | Uso | Endereço |
 |---|---|
-| Link ponto a ponto NE8000 ↔ CCR1036 (`vlan2000`) | `10.254.254.254/30` — NE8000 = `.253` |
-| Gateway default | `10.254.254.253` |
-| Gerência da CCR1036 | `10.254.254.254` (acesso restrito à origem do NOC) |
+| IP público / NAT | `177.72.104.4` na **VLAN 16** (dentro do `/27`) |
+| Gateway | NE8000 `177.72.104.1` (dono do `/27`) |
+| Link adicional NE8000↔CCR (se existir) | ⛔ só se precisar de algo além da VLAN 16 — **não** usar ~~`10.254.254.x`~~ |
 | Pool VPN (OpenVPN) | `10.7.0.0/24` (mesma faixa usada hoje) |
 
 ## Config RouterOS de exemplo (com IPs reais)
@@ -175,29 +164,19 @@ em [03-decisoes-pendentes.md](03-decisoes-pendentes.md).
 > VLANs de gerência chegam **já tagged**, num trunk único vindo do DM4170.
 
 ```rsc
-# Portas renomeadas — só 2 em uso agora
-/interface ethernet set [ find default-name=ether1 ] name=ether1-uplink-ne8000
-/interface ethernet set [ find default-name=ether2 ] name=ether2-trunk-dm4170
+# Trunk DM4170: gerência + VLAN 16 (CCR dentro do /27)
+/interface ethernet set [ find default-name=ether1 ] name=ether1-trunk-dm4170
 
-# VLAN p2p com o NE8000 — única finalidade: dar à CCR1036 um IP público pro NAT
-/interface vlan add name=vlan2000-p2p-ne8000 vlan-id=2000 interface=ether1-uplink-ne8000
+/interface vlan add name=vlan16-ip-publico      vlan-id=16  interface=ether1-trunk-dm4170
+/interface vlan add name=vlan10-dns-recursivo   vlan-id=10  interface=ether1-trunk-dm4170
+/interface vlan add name=vlan66-ts-six          vlan-id=66  interface=ether1-trunk-dm4170
+/interface vlan add name=vlan109-gerencia-olt   vlan-id=109 interface=ether1-trunk-dm4170
+/interface vlan add name=vlan116-proxmox-docker vlan-id=116 interface=ether1-trunk-dm4170
+/interface vlan add name=vlan999-mgmt-local     vlan-id=999 interface=ether1-trunk-dm4170
 
-# 🆕 VLANs de gerência dos servidores, recebidas tagged no trunk do DM4170
-# (antes eram portas físicas dedicadas ether2–ether6; os servidores agora plugam no DM4170)
-/interface vlan add name=vlan10-dns-recursivo   vlan-id=10  interface=ether2-trunk-dm4170
-/interface vlan add name=vlan66-ts-six          vlan-id=66  interface=ether2-trunk-dm4170
-/interface vlan add name=vlan109-gerencia-olt   vlan-id=109 interface=ether2-trunk-dm4170
-/interface vlan add name=vlan116-proxmox-docker vlan-id=116 interface=ether2-trunk-dm4170
-/interface vlan add name=vlan999-mgmt-local     vlan-id=999 interface=ether2-trunk-dm4170
-
-# A CCR1036 não roteia essas VLANs de gerência (o gateway real é o NE8000, ver tabela acima) —
-# ela só precisa entregá-las ao uplink; exemplo simplificado, detalhar o bridging exato na config real
-
-# IP da CCR1036 (somente p2p privado)
-/ip address add address=10.254.254.254/30 interface=vlan2000-p2p-ne8000 comment="P2P NE8000"
-
-# Rota default
-/ip route add dst-address=0.0.0.0/0 gateway=10.254.254.253
+# IP público NAT — dentro do /27 (VLAN 16), GW = NE8000 .1
+/ip address add address=177.72.104.4/27 interface=vlan16-ip-publico comment="NAT CCR"
+/ip route add dst-address=0.0.0.0/0 gateway=177.72.104.1
 
 # OpenVPN (exemplo — certs precisam ser gerados/emitidos)
 /interface ovpn-server server set enabled=yes port=1194 mode=ip require-client-certificate=yes cipher=aes256 auth=sha512
@@ -211,18 +190,15 @@ em [03-decisoes-pendentes.md](03-decisoes-pendentes.md).
 # Firewall mínimo
 /ip firewall filter
 add chain=input action=accept connection-state=established,related,untracked comment="ESTABLISHED"
-add chain=input action=accept in-interface=vlan2000-p2p-ne8000 src-address=177.93.244.165 comment="GERENCIA NOC"
+add chain=input action=accept src-address=177.93.244.165 comment="GERENCIA NOC"
 add chain=input action=accept protocol=tcp dst-port=1194 comment="OpenVPN"
 add chain=input action=accept protocol=udp dst-port=1194 comment="OpenVPN"
 add chain=input action=drop comment="DROP ALL"
 
-# 🆕 NAT (esqueleto — IP público e VLAN ainda a definir, ver seção acima)
-# /interface vlan add name=vlanXXX-nat-publico vlan-id=XXX interface=ether1-uplink-ne8000
-# /ip address add address=177.72.104.1/32 interface=vlanXXX-nat-publico comment="a confirmar"
 /ip firewall nat
-add chain=srcnat action=src-nat to-addresses=177.72.104.1 comment="NAT GERAL — endereço a confirmar" src-address-list=NAT
+add chain=srcnat action=src-nat to-addresses=177.72.104.4 comment="NAT GERAL" src-address-list=NAT
 add chain=dstnat action=dst-nat to-addresses=192.168.66.14 to-ports=15389 dst-port=15389 protocol=tcp comment="TS SIX"
-add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-port=18291 protocol=tcp comment="DUDE — alcance de 192.168.116.30 a confirmar"
+add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-port=18291 protocol=tcp comment="DUDE — alcance a confirmar"
 ```
 
 ## O que não muda nos servidores (gerência)
@@ -246,11 +222,11 @@ interface GigabitEthernet0/1/X.66   -> 192.168.66.1/28      (TS SIX)
 interface GigabitEthernet0/1/X.109  -> 192.168.115.41/30    (OLT CPV)
 interface GigabitEthernet0/1/X.116  -> 192.168.116.121/30   (Proxmox Docker/CDNTV)
 interface GigabitEthernet0/1/X.999  -> 192.168.254.1/24     (gerência Zabbix/Callcenter)
-interface GigabitEthernet0/1/X.2000 -> 10.254.254.253/30    (p2p CCR1036)
+interface GigabitEthernet0/1/X.2000 -> <NE8000-P2P>/<mask>  (p2p CCR1036 — IPs a definir)
 interface GigabitEthernet0/1/X.???  -> a definir            (🆕 gerência Proxmox HubSoft, 192.168.115.210/30)
 interface GigabitEthernet0/1/X.???  -> a definir            (🆕 gerência Proxmox DNS, 192.168.115.138/30)
 ```
 
-A VLAN 16 (pública) **não** aparece no link CCR1036↔NE8000 — ela chega ao NE8000 pelo DM4170
-(vinda da rede de acesso) e os servidores que precisarem a acessam por uma segunda NIC fora da
-CCR1036.
+A VLAN 16 (pública) sobe pelo DM4170 até o NE8000 **e** até a CCR (`177.72.104.4` no mesmo
+broadcast). Servidores com IP público próprio também usam VLAN 16; gerência privada segue nas
+outras VLANs do trunk.

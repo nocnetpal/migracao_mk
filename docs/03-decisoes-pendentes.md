@@ -348,19 +348,27 @@ decisão #8 e simplifica a janela do núcleo (fase 3 do [04-plano-migracao.md](0
 🆕 **Correção (usuário, 2026-07-23): o NE8000 termina o `/27`, mas não faz o NAT.** A afirmação
 original desta decisão ("`.1` continua sendo o IP de NAT, port-forwards não mudam **no NE8000**")
 foi substituída pela decisão #1: o NAT roda na **CCR1036**. Continua válido que o NE8000 é dono do
-`/27` — ele só não é mais quem traduz endereço. Mecanismo provável (a confirmar, mesmo padrão já
-usado hoje pelo MK para `.9`/`.12`/`.19` na decisão #8): o NE8000 mantém o `/27` conectado, e o IP
-público específico usado para NAT (`.1`, se for mantido) fica **roteado via next-hop para a
-CCR1036** através do link privado novo NE8000↔CCR1036 — a CCR1036 faz a tradução de fato. Os
-port-forwards (Dude, TS SIX) só "não mudam de endereço" se essa mesma lógica for aplicada a eles.
+`/27` — ele só não é mais quem traduz endereço.
 
-**Pendência nova:** confirmar (a) se `.1` continua sendo o IP usado para NAT ou se a CCR1036 recebe
-outro IP do `/27`, e (b) a rota específica desse IP até a CCR1036. Ver
+✅ **Mecanismo de NAT fechado (usuário, 2026-07-27):** a CCR **fica dentro do `/27`** —
+mesmo modelo dos servidores (VLAN 16), com IP `177.72.104.4`. **Não** é host-route `/32`
+por link privado separado.
+
+- NE8000: dono/gateway do `177.72.104.0/27` (SVI VLAN 16)
+- CCR: `177.72.104.4` na VLAN 16 (via DM4170 ou link que carregue a VLAN 16) — SRC-NAT/DST-NAT
+  usam `.4`
+- ~~rota `/32` via P2P `10.254.254.x`~~ → ❌ **descartado** (usuário 2026-07-27): primeiro
+  rejeitou o `10.254.254.x`, depois definiu CCR **dentro** do `/27` (não `/32` isolado)
+
+Mesmo padrão L2 dos hosts `.9`/`.12`/`.27` no broadcast do bloco — o NE8000 alcança `.4` por ARP
+na VLAN 16.
+
+**Ainda aberto (DST-NAT):** port-forwards Dude/TS SIX hoje no `.1` — passam pro `.4` (quem acessa
+de fora atualiza) ou o NE8000 também roteia `.1/32` pra CCR? A confirmar. Ver
 [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
 
-**Status:** ✅ **Decidido: Opção B** (usuário, 2026-07-23) — o NE8000 termina o
-`177.72.104.0/27`; a VLAN 16 sobe em L2 pelo DM4170. `.1` continua sendo o IP de NAT e os
-port-forwards não mudam. Resolve também a decisão #8.
+**Status:** ✅ **Opção B** (NE8000 dono do `/27`) + ✅ **CCR dentro do `/27` com `.4` na
+VLAN 16** (2026-07-27). Pendência restante: DST-NAT Dude/TS SIX no `.1` vs `.4`.
 
 ## 10. ~~Possível sobreposição no `177.72.104.60/30`~~ (enlace Juca Ana) — ✅ resolvido
 
@@ -591,8 +599,9 @@ VLAN tag em parte das interfaces. Cada cluster precisa ser tratado caso a caso, 
 padrão único da casa.
 
 **Status:** ✅ **os 4 clusters Proxmox têm endereçamento 100% confirmado por consulta direta.**
-Resta decidir porta/VLAN definitiva na CCR1036 pra HubSoft e DNS (ainda sem posição no plano de
-portas do [10](10-enderecamento-ccr1036.md)) e o caminho de rede das VMs privadas órfãs.
+🆕 **VLANs servidores fechadas (usuário, 2026-07-27) — modelo 2 VLANs:** privada=**100**,
+pública=**16** (confirmado livre/existente no SW_JDF). Substitui a ideia de 210/138/116/999
+por cluster. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
 
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do

@@ -1,0 +1,29 @@
+# Coleta ao vivo 2026-07-27 — proxmoxDockerCDNTV (consultivo)
+hostname: proxmoxDockerCDNTV
+
+# Gerência NÃO está no vmbr0 — está no vmbr1
+vmbr1: 192.168.116.122/30 + 10.250.104.1/24 + 10.250.102.1/24
+       gateway 192.168.116.121
+       bridge-ports eno1
+       vlan-aware: NÃO (filtering 0)
+
+vmbr2: bridge-ports enp8s0f0 — vlan-aware NÃO
+vmbr3: bridge-ports enp8s0f1 — vlan-aware YES vids 1 15 16 17 18 38 (filtering 1)
+vmbr15: bridge-ports enp8s0f1.15 — vlan-aware NÃO
+
+VM 100 Docker-Netpal:
+  net0 vmbr1 no tag
+  net1 vmbr2 no tag (.109 path)
+  net2 vmbr3 no tag
+  net3 vmbr15 no tag
+  net4 vmbr15 no tag
+  net5 vmbr3 tag=38
+  net6 vmbr3 tag=18
+
+VM 101 CdnTV-Origin: vmbr1 firewall=1 queues=8
+VM 102 CdnTV-Edge: vmbr2 firewall=0 queues=8
+VM 103 OPA.SUIT: e1000 mac F6:C7:5C:8A:4A:A3 vmbr1 firewall=1
+VM 104 Fusion-Elaborados: virtio vmbr1
+VM 105 OpenVPN2: virtio vmbr1 firewall=1
+VM 106 Fusion-Simples: virtio vmbr1 firewall=1
+VM 107 APP-ETC-SCRIPTS: virtio vmbr1 firewall=1

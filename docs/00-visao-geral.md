@@ -22,27 +22,25 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 
 ## Status
 
-📋 Fase atual: **inventário técnico concluído; runbook operacional da janela escrito
-([13](13-rotina-corte.md)); a maioria dos bloqueadores fechou numa rodada de decisões em
-2026-07-24 — restam só 2 itens de verdade antes de agendar a data:** o mecanismo de rota do IP de
-NAT até a CCR1036 (o IP em si já foi definido, `177.72.104.4`) e a decisão #12 (portas/VLANs da
-CCR1036 pros clusters Proxmox HubSoft e DNS). Passo 1 da limpeza (sistemas vivos) foi
-conscientemente adiado pra depois desses dois.
+📋 Fase atual: **Etapa 1** — 2 VLANs servidores: **100** (privada) + **16** (pública),
+ainda nos Mikrotiks; depois Datacom/CCR; depois virar GW ([16](16-etapa1-proxmox-vlans-datacom.md)).
+SW_JDF: 100 livre · 16 = IP_PUBLICO.
 
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)
 - ✅ Decisões fechadas: DHCP trivial (1 escopo); natureza das VPNs (L2TP sem criptografia +
-  OpenVPN); **dono do `/27` → NE8000, mas NAT → CCR1036** (decisões #1/#9/#8, corrigidas
-  2026-07-23 — mecanismo exato de roteamento do IP de NAT até a CCR1036 ainda em aberto)
+  OpenVPN); **dono do `/27` → NE8000, NAT → CCR1036** — ✅ **CCR dentro do `/27`** com
+  `177.72.104.4` na VLAN 16 (2026-07-27); ~~`/32` via P2P~~ e ~~`10.254.254.x`~~ descartados.
+  Pendência: DST-NAT Dude/TS SIX (`.1` vs `.4`)
 - 🆕 **Desenho alvo definido pelo usuário (2026-07-23):** saem RB3011 + RB2011; entram **DM4170**
   (no lugar do RB3011) e **CCR1036** (VPN + automações + cobre dos servidores, ligada direto ao
   NE8000); a **rede de acesso não é tocada**. Firewall redesenhado enxuto (sem
   geo-allowlist BRASIL). Trabalho na ordem: físico → L2 → L3 — ver [02](02-arquitetura-alvo.md)
-- 📝 Plano de corte rascunhado ([04](04-plano-migracao.md)): estratégia fatiada por VLAN + janela
-  única para o núcleo
-- ⏳ Principais bloqueios restantes: mecanismo de rota do NAT até a CCR1036 (IP `.4` já definido);
-  decisão #12 (portas/VLANs Proxmox HubSoft/DNS). Sistemas vivos ([05](05-limpeza-politicas.md),
-  passo 1) conscientemente adiado.
+- 📝 Plano de corte ([04](04-plano-migracao.md)): QinQ em janela futura; **agora** prioridade =
+  servidores 177 ([15](15-plano-migracao-servidores-177.md)) — Etapa A em andamento/documentada
+- ⏳ Principais bloqueios restantes: NAT ✅ CCR no `/27` (`.4` VLAN 16); DST-NAT Dude/TS SIX
+  (`.1` vs `.4`); decisão #12 (portas/VLANs Proxmox HubSoft/DNS). Sistemas vivos
+  ([05](05-limpeza-politicas.md), passo 1) conscientemente adiado.
   ~~Confirmações DmOS (SVI sobre QinQ)~~ ✅ **caiu (decisão #13, 2026-07-24)** — DM4170 fica só L2.
   ~~MTU nos dois trechos~~ ✅ **estratégia fechada (2026-07-24)**: jumbo frame máximo de cada
   equipamento. ~~Dimensionamento do NE8000~~ ✅ **confirmado (2026-07-24): capacidade livre.**
@@ -104,4 +102,7 @@ conscientemente adiado pra depois desses dois.
 - [11-cruzamento-dude-devices.md](11-cruzamento-dude-devices.md) — cruzamento com o monitoramento do Dude (`Devices.csv`): candidato ao switch de topo do rack, nomes de sistema desatualizados, VPNs adicionais
 - [12-mapeamento-proxmox.md](12-mapeamento-proxmox.md) — os 4 clusters Proxmox, hypervisor + VMs (públicas e privadas), com todos os IPs
 - [13-rotina-corte.md](13-rotina-corte.md) — runbook operacional da janela de corte (checklist passo a passo, com rollback)
+- [14-ips-servidores-e-17772.md](14-ips-servidores-e-17772.md) — lista consolidada de IPs dos servidores físicos/VMs + mapa do `177.72.104.0/27` para a virada
+- [15-plano-migracao-servidores-177.md](15-plano-migracao-servidores-177.md) — **Etapa A** (DM4170+CCR no NE8000) e **Etapa B** (só servidores 177); QinQ fora desta fase
+- [16-etapa1-proxmox-vlans-datacom.md](16-etapa1-proxmox-vlans-datacom.md) — 🆕 **primeira etapa:** VLANs Proxmox + portas Datacom (native gerência + tag 16)
 - [arquitetura-alvo.drawio](arquitetura-alvo.drawio) — diagrama esquemático da arquitetura alvo (abrir no draw.io desktop ou app.diagrams.net)
