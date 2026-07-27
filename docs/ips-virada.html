@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IPs NetPal — virada / POP / OLT / gerência</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0c1222;
+      --ink-soft: #3d4a63;
+      --muted: #6b7a94;
+      --line: rgba(12, 18, 34, 0.08);
+      --line-strong: rgba(12, 18, 34, 0.14);
+      --paper: #f6f3ee;
+      --paper-2: #efeae2;
+      --card: #ffffff;
+      --teal: #0d6e6e;
+      --teal-deep: #0a5555;
+      --teal-soft: #e4f4f3;
+      --amber: #c47a12;
+      --amber-soft: #f8edd9;
+      --blue: #2558a8;
+      --blue-soft: #e8eef8;
+      --slate: #5a6578;
+      --slate-soft: #eef0f4;
+      --danger: #a33b2a;
+      --danger-soft: #f7e8e5;
+      --radius: 14px;
+      --shadow: 0 1px 0 rgba(12, 18, 34, 0.04);
+      --font: "DM Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+      --pad: clamp(1rem, 3vw, 1.75rem);
+      --max: 1080px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #d9ebea 0%, transparent 55%),
+        radial-gradient(900px 400px at 100% 0%, #f0e6d4 0%, transparent 50%),
+        var(--paper);
+      line-height: 1.5;
+      font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.02rem);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+
+    /* —— Shell —— */
+    .shell {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: var(--pad);
+      padding-bottom: 4rem;
+    }
+
+    /* —— Hero —— */
+    .hero {
+      display: grid;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+      padding: 1.5rem 0 0.25rem;
+    }
+    @media (min-width: 768px) {
+      .hero {
+        grid-template-columns: 1.4fr 1fr;
+        align-items: end;
+        gap: 2rem;
+      }
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal-deep);
+      margin-bottom: 0.55rem;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 1.1rem;
+      height: 2px;
+      background: var(--teal);
+      border-radius: 1px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.65rem, 1.2rem + 1.8vw, 2.35rem);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.12;
+      color: var(--ink);
+    }
+    .lede {
+      margin: 0.7rem 0 0;
+      color: var(--ink-soft);
+      max-width: 36ch;
+      font-size: 1.02rem;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-start;
+    }
+    @media (min-width: 768px) {
+      .hero-meta { justify-content: flex-end; }
+    }
+    .chip {
+      display: inline-flex;
+      flex-direction: column;
+      min-width: 5.5rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    .chip b {
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .chip span {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 0.15rem;
+    }
+
+    /* —— Sticky nav —— */
+    .nav-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      margin: 0 calc(var(--pad) * -1) 1.25rem;
+      padding: 0.65rem var(--pad);
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1px;
+    }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav a {
+      flex: 0 0 auto;
+      text-decoration: none;
+      padding: 0.55rem 0.95rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      border: 1px solid transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .nav a:hover {
+      background: var(--card);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+    .nav a:focus-visible {
+      outline: 2px solid var(--teal);
+      outline-offset: 2px;
+    }
+    .nav a.is-active {
+      background: var(--ink);
+      color: #f8f6f2;
+      border-color: var(--ink);
+    }
+
+    /* —— Sections —— */
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      scroll-margin-top: 5.5rem;
+    }
+    .sec-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem 1rem;
+      padding: 1rem 1.15rem;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fcfbf9 0%, #fff 100%);
+    }
+    .sec-head h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sec-head p {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    /* —— Tables —— */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.7rem 1.15rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+    th {
+      font-size: 0.7rem;
+      font-weight: 650;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: #faf9f7;
+      position: sticky;
+      top: 0;
+    }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: #faf9f6; }
+    td:first-child, th:first-child { padding-left: 1.15rem; }
+
+    code, .ip {
+      font-family: var(--mono);
+      font-size: 0.86em;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+    .ip {
+      display: inline-block;
+      background: var(--slate-soft);
+      color: var(--ink);
+      padding: 0.18rem 0.45rem;
+      border-radius: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.5rem;
+      border-radius: 6px;
+      white-space:nowrap;
+    }
+    .tag::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.85;
+    }
+    .tag-ok { background: var(--teal-soft); color: var(--teal-deep); }
+    .tag-info { background: var(--blue-soft); color: var(--blue); }
+    .tag-warn { background: var(--amber-soft); color: var(--amber); }
+    .tag-muted { background: var(--slate-soft); color: var(--slate); }
+    .tag-gw { background: #ece7ff; color: #4c3d99; }
+    .tag-pop { background: #e8f0e4; color: #3d6b2f; }
+    .tag-olt { background: #e5f0f7; color: #1f5f8a; }
+    .tag-ger { background: #f3ebe0; color: #8a5a1f; }
+    .tag-site { background: #ebe8f5; color: #4a3d7a; }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      padding: 0.75rem 1.15rem;
+      border-bottom: 1px solid var(--line);
+      background: #faf9f7;
+    }
+    .filters button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink-soft);
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.45rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 40px;
+    }
+    .filters button[aria-pressed="true"] {
+      background: var(--ink);
+      color: #f8f6f2;
+      border-color: var(--ink);
+    }
+    tr.is-hidden { display: none; }
+
+    .foot-note {
+      margin: 0;
+      padding: 0.85rem 1.15rem;
+      font-size: 0.84rem;
+      color: var(--ink-soft);
+      background: #faf9f7;
+      border-top: 1px solid var(--line);
+    }
+    .foot-note code {
+      background: var(--slate-soft);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+    }
+
+    footer.page-foot {
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.25rem;
+      justify-content: space-between;
+    }
+    footer.page-foot a {
+      color: var(--teal-deep);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    footer.page-foot a:hover { text-decoration: underline; }
+
+    @media print {
+      body { background: #fff; }
+      .nav-wrap { position: static; backdrop-filter: none; }
+      .nav { display: none; }
+      section { break-inside: avoid; box-shadow: none; }
+      .hero-meta { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">NetPal · Capivari do Sul</div>
+        <h1>IPs da virada</h1>
+        <p class="lede">Servidores, bloco 177.*, e inventário QinQ de POP / OLT / gerência do RB3011.</p>
+      </div>
+      <div class="hero-meta" aria-label="Resumo">
+        <div class="chip"><b>10</b><span>físicos</span></div>
+        <div class="chip"><b>28</b><span>ocupados /27</span></div>
+        <div class="chip"><b>.4 · .15</b><span>livres</span></div>
+        <div class="chip"><b>.1 → NE</b><span>gateway</span></div>
+      </div>
+    </header>
+  </div>
+
+  <div class="nav-wrap">
+    <nav class="nav" aria-label="Seções">
+      <a href="#fisicos">Físicos</a>
+      <a href="#bloco27">Todos /27</a>
+      <a href="#outros72">Outros 177.72</a>
+      <a href="#bloco93">177.93</a>
+      <a href="#pop-olt">POP / OLT / Gerência</a>
+      <a href="#privados">Privados</a>
+    </nav>
+  </div>
+
+  <div class="shell" style="padding-top: 0;">
+    <section id="fisicos">
+      <div class="sec-head">
+        <h2>Servidores físicos → DM4170</h2>
+        <p>Régua Volt não migra</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Equipamento</th><th>IP</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Proxmox Docker/CDNTV</td><td><span class="ip">192.168.116.122</span></td><td><span class="tag tag-muted">gerência</span></td></tr>
+            <tr><td>Proxmox DNS</td><td><span class="ip">192.168.115.138</span></td><td><span class="tag tag-muted">gerência</span></td></tr>
+            <tr><td>Proxmox Zabbix/Zeus</td><td><span class="ip">177.72.104.5</span></td><td><span class="tag tag-info">público</span></td></tr>
+            <tr><td>Proxmox HubSoft</td><td><span class="ip">192.168.115.210</span></td><td><span class="tag tag-muted">gerência</span></td></tr>
+            <tr><td>TS SIX</td><td><span class="ip">192.168.66.14</span></td><td><span class="tag tag-muted">DST-NAT :15389</span></td></tr>
+            <tr><td>Servidor Dude</td><td><span class="ip">192.168.116.30</span></td><td><span class="tag tag-muted">DST-NAT :18291</span></td></tr>
+            <tr><td>Servidor RRFlow</td><td><span class="ip">177.72.104.27</span></td><td><span class="tag tag-info">público</span></td></tr>
+            <tr><td>MGNT CGNAT-1</td><td><span class="ip">177.72.104.66</span></td><td><span class="tag tag-info">público</span></td></tr>
+            <tr><td>Gerência NE8000</td><td>—</td><td><span class="tag tag-warn">a confirmar</span></td></tr>
+            <tr><td>Gerência OLT CPV</td><td><span class="ip">192.168.115.42</span></td><td><span class="tag tag-muted">gerência</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="bloco27">
+      <div class="sec-head">
+        <h2>Todos os públicos — 177.72.104.0/27</h2>
+        <p>Gateway hoje .1 · NAT CCR .4</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>IP</th><th>Status</th><th>Uso</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="ip">177.72.104.0</span></td><td><span class="tag tag-muted">rede</span></td><td>prefixo /27</td></tr>
+            <tr><td><span class="ip">177.72.104.1</span></td><td><span class="tag tag-gw">gateway/NAT</span></td><td>GW Servidores → NE8000</td></tr>
+            <tr><td><span class="ip">177.72.104.2</span></td><td><span class="tag tag-info">ocupado</span></td><td>UniFi Controller</td></tr>
+            <tr><td><span class="ip">177.72.104.3</span></td><td><span class="tag tag-info">ocupado</span></td><td>Wiki</td></tr>
+            <tr><td><span class="ip">177.72.104.4</span></td><td><span class="tag tag-ok">livre → reservado</span></td><td>NAT CCR1036</td></tr>
+            <tr><td><span class="ip">177.72.104.5</span></td><td><span class="tag tag-info">ocupado</span></td><td>Proxmox Zabbix (hypervisor)</td></tr>
+            <tr><td><span class="ip">177.72.104.6</span></td><td><span class="tag tag-info">ocupado</span></td><td>Zabbix</td></tr>
+            <tr><td><span class="ip">177.72.104.7</span></td><td><span class="tag tag-info">ocupado</span></td><td>Docs</td></tr>
+            <tr><td><span class="ip">177.72.104.8</span></td><td><span class="tag tag-info">ocupado</span></td><td>Smokeping</td></tr>
+            <tr><td><span class="ip">177.72.104.9</span></td><td><span class="tag tag-info">ocupado</span></td><td>OVPN</td></tr>
+            <tr><td><span class="ip">177.72.104.10</span></td><td><span class="tag tag-info">ocupado</span></td><td>PowerDNS master</td></tr>
+            <tr><td><span class="ip">177.72.104.11</span></td><td><span class="tag tag-info">ocupado</span></td><td>PowerDNS slave</td></tr>
+            <tr><td><span class="ip">177.72.104.12</span></td><td><span class="tag tag-info">ocupado</span></td><td>OpenVPN-2</td></tr>
+            <tr><td><span class="ip">177.72.104.13</span></td><td><span class="tag tag-info">ocupado</span></td><td>TIP-VOIP</td></tr>
+            <tr><td><span class="ip">177.72.104.14</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusionpbx-PM-CPV</td></tr>
+            <tr><td><span class="ip">177.72.104.15</span></td><td><span class="tag tag-ok">livre</span></td><td>—</td></tr>
+            <tr><td><span class="ip">177.72.104.16</span></td><td><span class="tag tag-info">ocupado</span></td><td>HubSoft</td></tr>
+            <tr><td><span class="ip">177.72.104.17</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusionpbx-PM-MST</td></tr>
+            <tr><td><span class="ip">177.72.104.18</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusion-0800</td></tr>
+            <tr><td><span class="ip">177.72.104.19</span></td><td><span class="tag tag-info">ocupado</span></td><td>WireGuard</td></tr>
+            <tr><td><span class="ip">177.72.104.20</span></td><td><span class="tag tag-info">ocupado</span></td><td>SFTP-OPA</td></tr>
+            <tr><td><span class="ip">177.72.104.21</span></td><td><span class="tag tag-info">ocupado</span></td><td>DNS2 Recursivo</td></tr>
+            <tr><td><span class="ip">177.72.104.22</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusion Elaborados</td></tr>
+            <tr><td><span class="ip">177.72.104.23</span></td><td><span class="tag tag-info">ocupado</span></td><td>APP scripts</td></tr>
+            <tr><td><span class="ip">177.72.104.24</span></td><td><span class="tag tag-info">ocupado</span></td><td>OLT-CLOUD</td></tr>
+            <tr><td><span class="ip">177.72.104.25</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusion Simples</td></tr>
+            <tr><td><span class="ip">177.72.104.26</span></td><td><span class="tag tag-info">ocupado</span></td><td>API-ZAP</td></tr>
+            <tr><td><span class="ip">177.72.104.27</span></td><td><span class="tag tag-info">ocupado</span></td><td>RRFlow</td></tr>
+            <tr><td><span class="ip">177.72.104.28</span></td><td><span class="tag tag-info">ocupado</span></td><td>NS-UNBOUND (= .58)</td></tr>
+            <tr><td><span class="ip">177.72.104.29</span></td><td><span class="tag tag-info">ocupado</span></td><td>AUTOMACOES</td></tr>
+            <tr><td><span class="ip">177.72.104.30</span></td><td><span class="tag tag-info">ocupado</span></td><td>OPA</td></tr>
+            <tr><td><span class="ip">177.72.104.31</span></td><td><span class="tag tag-muted">broadcast</span></td><td>prefixo /27</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="foot-note">Livres: <code>.4</code> (NAT CCR) e <code>.15</code>. Pós-corte o /27 fica no NE8000.</p>
+    </section>
+
+    <section id="outros72">
+      <div class="sec-head">
+        <h2>Outros públicos 177.72</h2>
+        <p>Fora do /27 · trecho do rack</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>IP</th><th>Uso</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="ip">177.72.104.52/30</span></td><td>P2P GW ↔ NE8000 (.53 / .54)</td></tr>
+            <tr><td><span class="ip">177.72.104.53</span></td><td>RB3011 sfp1</td></tr>
+            <tr><td><span class="ip">177.72.104.54</span></td><td>NE8000 (router-id / NetStream)</td></tr>
+            <tr><td><span class="ip">177.72.104.56/30</span></td><td>Prefixo DNS</td></tr>
+            <tr><td><span class="ip">177.72.104.57</span></td><td><span class="tag tag-warn">residual (sem ARP)</span></td></tr>
+            <tr><td><span class="ip">177.72.104.58</span></td><td>NS-UNBOUND (mesmo host que .28)</td></tr>
+            <tr><td><span class="ip">177.72.104.59</span></td><td><span class="tag tag-warn">residual (sem ARP)</span></td></tr>
+            <tr><td><span class="ip">177.72.104.60/30</span></td><td>Juca Ana → NE8000 .61</td></tr>
+            <tr><td><span class="ip">177.72.104.61</span></td><td>NE8000 (Pantano⇒Juca Ana)</td></tr>
+            <tr><td><span class="ip">177.72.104.66</span></td><td>CGNAT-1 Jardim Formoso</td></tr>
+            <tr><td><span class="ip">177.72.104.102</span></td><td>CGNAT-2 Jardim Formoso</td></tr>
+            <tr><td><span class="ip">177.72.104.107</span></td><td>CdnTV-Origin</td></tr>
+            <tr><td><span class="ip">177.72.104.108</span></td><td>CdnTV-Edge</td></tr>
+            <tr><td><span class="ip">177.72.104.109</span></td><td>Docker-Netpal</td></tr>
+            <tr><td><span class="ip">177.72.104.131</span></td><td>Storage BCP</td></tr>
+            <tr><td><span class="ip">177.72.105.217</span></td><td>GW CC BCP</td></tr>
+            <tr><td><span class="ip">177.72.105.221</span></td><td><span class="tag tag-warn">residual (sem ARP)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="bloco93">
+      <div class="sec-head">
+        <h2>Públicos 177.93</h2>
+        <p>Segundo bloco da operação</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>IP</th><th>Uso</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="ip">177.93.247.138</span></td><td>SpeedTest (Docker/CDNTV, VLAN 38)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="foot-note">Só o inventário do trecho GW Servidores / Proxmox Docker — não o BGP inteiro.</p>
+    </section>
+
+    <section id="pop-olt">
+      <div class="sec-head">
+        <h2>POP · OLT · Gerência</h2>
+        <p>VLANs QinQ do RB3011 · fonte relacao-vlan-ip</p>
+      </div>
+      <div class="filters" role="group" aria-label="Filtrar por tipo">
+        <button type="button" data-filter="all" aria-pressed="true">Todos</button>
+        <button type="button" data-filter="POP" aria-pressed="false">POP</button>
+        <button type="button" data-filter="OLT" aria-pressed="false">OLT</button>
+        <button type="button" data-filter="Gerência" aria-pressed="false">Gerência</button>
+        <button type="button" data-filter="Site" aria-pressed="false">Site</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tabela-pop-olt">
+          <thead>
+            <tr><th>Tipo</th><th>VLAN</th><th>Nome</th><th>IP</th></tr>
+          </thead>
+          <tbody>
+            <tr data-tipo="OLT"><td><span class="tag tag-olt">OLT</span></td><td>ether9</td><td>Gerência OLT CPV</td><td><span class="ip">192.168.115.41/30</span></td></tr>
+            <tr data-tipo="OLT"><td><span class="tag tag-olt">OLT</span></td><td>21</td><td>OLT ZTE GGV</td><td><span class="ip">192.168.115.125/30</span></td></tr>
+            <tr data-tipo="OLT"><td><span class="tag tag-olt">OLT</span></td><td>35</td><td>Gerência OLT FSB</td><td><span class="ip">192.168.115.53/30</span></td></tr>
+            <tr data-tipo="OLT"><td><span class="tag tag-olt">OLT</span></td><td>37</td><td>OLT BCP</td><td><span class="ip">192.168.115.225/30</span></td></tr>
+            <tr data-tipo="OLT"><td><span class="tag tag-olt">OLT</span></td><td>539</td><td>Gerência OLT LBCP</td><td><span class="ip">192.168.115.177/30</span></td></tr>
+            <tr data-tipo="OLT"><td><span class="tag tag-olt">OLT</span></td><td>—</td><td>OLT CLOUD (público)</td><td><span class="ip">177.72.104.24</span></td></tr>
+
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>93</td><td>Gerência POP JDF / Rancho Velho</td><td><span class="ip">192.168.31.49/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>93</td><td>Gerência POP JDF / Rancho Velho</td><td><span class="ip">192.168.22.1/27</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>93</td><td>Gerência POP JDF / Rancho Velho</td><td><span class="ip">192.168.30.25/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>93</td><td>Gerência POP JDF / Rancho Velho</td><td><span class="ip">192.168.116.177/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>708</td><td>MK POP Serraria</td><td><span class="ip">192.168.17.17/30</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>712</td><td>MK POP Casca</td><td><span class="ip">192.168.30.201/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>713</td><td>GW Solidão</td><td><span class="ip">172.31.254.33/30</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>718</td><td>MK POP Valim</td><td><span class="ip">192.168.30.73/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>719</td><td>MK POP Pantano</td><td><span class="ip">192.168.17.9/30</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>720</td><td>MK POP Povos</td><td><span class="ip">192.168.17.5/30</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>721</td><td>MK POP Faz. Cardoso</td><td><span class="ip">192.168.30.81/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>731</td><td>MK POP Cavalhada</td><td><span class="ip">192.168.30.113/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>738</td><td>MK POP Solidão 101</td><td><span class="ip">192.168.30.193/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>738</td><td>MK POP Solidão 101</td><td><span class="ip">192.168.30.49/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>753</td><td>MK POP Bacupari</td><td><span class="ip">192.168.31.41/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>753</td><td>MK POP Bacupari</td><td><span class="ip">192.168.31.17/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>753</td><td>MK POP Bacupari</td><td><span class="ip">192.168.31.9/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>753</td><td>MK POP Bacupari</td><td><span class="ip">192.168.17.21/30</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>753</td><td>MK POP Bacupari</td><td><span class="ip">192.168.17.25/30</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>753</td><td>MK POP Bacupari</td><td><span class="ip">192.168.30.145/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>753</td><td>MK POP Bacupari</td><td><span class="ip">192.168.31.33/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>765</td><td>Serraria ⇒ BCP</td><td><span class="ip">192.168.30.161/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>775</td><td>MK POP Aguapé</td><td><span class="ip">192.168.30.177/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>775</td><td>MK POP Aguapé</td><td><span class="ip">192.168.30.153/29</span></td></tr>
+            <tr data-tipo="POP"><td><span class="tag tag-pop">POP</span></td><td>775</td><td>MK POP Aguapé</td><td><span class="ip">192.168.17.1/30</span></td></tr>
+
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>11</td><td>Gerência SW Datacom (EoIP)</td><td><span class="ip">192.168.15.49/30</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>15</td><td>Gerência NTP Server</td><td><span class="ip">192.168.116.9/30</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>30</td><td>Gerência Rádios CPV</td><td><span class="ip">192.168.15.93/30</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>30</td><td>Gerência Rádios CPV</td><td><span class="ip">192.168.6.1/24</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>50</td><td>Gerência TVR</td><td><span class="ip">192.168.15.253/30</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>600</td><td>AP Centro TVR Rei dos Pampas</td><td><span class="ip">192.168.16.1/27</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>2020</td><td>Gerência EDD MST (TIM)</td><td><span class="ip">192.168.116.157/30</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>sfp1</td><td>Gerência local OSPF ↔ NE8000</td><td><span class="ip">192.168.116.34/30</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>sfp1</td><td>Gerência Huawei (secundário)</td><td><span class="ip">177.72.104.53/30</span></td></tr>
+            <tr data-tipo="Gerência"><td><span class="tag tag-ger">Gerência</span></td><td>1066</td><td>Gerador MST (DHCP)</td><td><span class="ip">192.168.90.1/24</span></td></tr>
+
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>22</td><td>PWW</td><td><span class="ip">192.168.115.9/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>27</td><td>SW FO Shopping</td><td><span class="ip">192.168.115.241/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>35</td><td>FSB</td><td><span class="ip">192.168.23.89/29</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>39</td><td>LBCP</td><td><span class="ip">192.168.15.61/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>39</td><td>LBCP</td><td><span class="ip">192.168.115.229/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>39</td><td>LBCP</td><td><span class="ip">192.168.22.49/28</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>40</td><td>PSLD</td><td><span class="ip">192.168.15.29/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>40</td><td>PSLD</td><td><span class="ip">192.168.115.233/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>40</td><td>PSLD</td><td><span class="ip">192.168.115.245/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>41</td><td>CCB</td><td><span class="ip">192.168.115.237/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>42</td><td>Casca</td><td><span class="ip">192.168.115.17/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>43</td><td>MST</td><td><span class="ip">192.168.115.169/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>44</td><td>SLD</td><td><span class="ip">192.168.15.81/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>44</td><td>SLD</td><td><span class="ip">192.168.115.105/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>46</td><td>TVR</td><td><span class="ip">192.168.116.197/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>47</td><td>Praia MST</td><td><span class="ip">192.168.15.45/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>47</td><td>Praia MST</td><td><span class="ip">192.168.115.173/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>47</td><td>Praia MST</td><td><span class="ip">172.31.254.29/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>48</td><td>Praia São Simão</td><td><span class="ip">192.168.15.53/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>48</td><td>Praia São Simão</td><td><span class="ip">192.168.115.181/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>49</td><td>Clientes IP Público MST</td><td><span class="ip">192.168.115.81/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>52</td><td>Clientes IP Público PWW</td><td><span class="ip">192.168.15.85/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>52</td><td>Clientes IP Público PWW</td><td><span class="ip">192.168.15.89/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>52</td><td>Clientes IP Público PWW</td><td><span class="ip">192.168.115.65/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>52</td><td>Clientes IP Público PWW</td><td><span class="ip">192.168.115.141/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>52</td><td>Clientes IP Público PWW</td><td><span class="ip">192.168.116.209/28</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>54</td><td>Marcos Solon</td><td><span class="ip">192.168.116.149/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>54</td><td>Marcos Solon</td><td><span class="ip">192.168.116.153/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>90</td><td>RB Bridge Consepro PWW</td><td><span class="ip">192.168.115.205/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>196</td><td>RB Banco do Brasil CPV</td><td><span class="ip">192.168.115.85/30</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>200</td><td>RB Bridge Prédio Maicon</td><td><span class="ip">192.168.116.113/29</span></td></tr>
+            <tr data-tipo="Site"><td><span class="tag tag-site">Site</span></td><td>200</td><td>RB Bridge Prédio Maicon</td><td><span class="ip">192.168.115.5/30</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="foot-note">Fonte: <code>config/rb3011/relacao-vlan-ip.md</code>. VLAN 198 (Juca Ana) já migrou pro NE8000. Use os filtros POP / OLT / Gerência / Site.</p>
+    </section>
+
+    <section id="privados">
+      <div class="sec-head">
+        <h2>IPs privados (referência)</h2>
+        <p>Clusters Proxmox</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Host</th><th>IP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>NTP_SERVER</td><td><span class="ip">192.168.116.10</span></td></tr>
+            <tr><td>Radius HubSoft</td><td><span class="ip">192.168.115.214</span></td></tr>
+            <tr><td>Dude-VLSul</td><td><span class="ip">192.168.17.38</span></td></tr>
+            <tr><td>Dude-PM-CPV</td><td><span class="ip">192.168.17.42</span></td></tr>
+            <tr><td>Monsta</td><td><span class="ip">192.168.115.62</span></td></tr>
+            <tr><td>SEVERINO</td><td><span class="ip">192.168.15.74</span></td></tr>
+            <tr><td>OpenVPN-2 (interno)</td><td><span class="ip">10.254.0.30</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="page-foot">
+      <span>docs/07 · 12 · 14 · 2026-07-24</span>
+      <a href="http://177.72.104.29:8888/">177.72.104.29:8888</a>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const links = Array.from(document.querySelectorAll(".nav a"));
+      const sections = links
+        .map((a) => document.querySelector(a.getAttribute("href")))
+        .filter(Boolean);
+
+      function setActive(id) {
+        links.forEach((a) => {
+          const on = a.getAttribute("href") === "#" + id;
+          a.classList.toggle("is-active", on);
+          if (on) a.setAttribute("aria-current", "true");
+          else a.removeAttribute("aria-current");
+        });
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (visible) setActive(visible.target.id);
+        },
+        { rootMargin: "-20% 0px -55% 0px", threshold: [0.1, 0.4, 0.7] }
+      );
+      sections.forEach((s) => observer.observe(s));
+
+      if (location.hash) setActive(location.hash.slice(1));
+      else if (sections[0]) setActive(sections[0].id);
+
+      const filterBtns = document.querySelectorAll(".filters button");
+      const popRows = document.querySelectorAll("#tabela-pop-olt tbody tr");
+      filterBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const f = btn.getAttribute("data-filter");
+          filterBtns.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+          popRows.forEach((row) => {
+            const show = f === "all" || row.getAttribute("data-tipo") === f;
+            row.classList.toggle("is-hidden", !show);
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
