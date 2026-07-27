@@ -1,249 +1,348 @@
-# Runbook — Etapa 1 (madrugada dos 4 Proxmox)
+# Runbook Etapa 1 — comandos da madrugada (4 Proxmox)
 
-> **Objetivo:** colocar VLAN **100** (gerência `192.168.254.0/24`) + VLAN **16** (pública `177.x`)
-> no path dos 4 hypervisors **ainda nos Mikrotiks**. Datacom/CCR/QinQ = depois.
->
-> **Janela:** uma madrugada · **4 servidores** · ordem abaixo.
-> **Scripts:** [`scripts/noite-etapa1/`](../scripts/noite-etapa1/)  
-> **Contexto:** [16-etapa1-proxmox-vlans-datacom.md](16-etapa1-proxmox-vlans-datacom.md)
+> Colar na ordem. Comentários explicam o que cada bloco faz.
+> Se algo falhar no meio: use a seção **ROLLBACK** do bloco e **pare**.
+> Scripts espelho: `scripts/noite-etapa1/`
 
----
-
-## Mapa rápido
-
-| VLAN | Uso | No fio |
-|------|-----|--------|
-| **100** | gerência Proxmox + VMs privadas | native / untagged |
-| **16** | VMs `177.72.104.x` | tagged |
-
-| IP | Quem | Sai de |
-|----|------|--------|
-| `192.168.254.1` | GW (RB3011 `vlan100-servidores`) | — |
-| `.10` | Proxmox Zabbix | `177.72.104.5` |
-| `.11` | Proxmox Docker | `192.168.116.122/30` |
-| `.12` | Proxmox DNS | `192.168.115.138/30` |
-| `.13` | Proxmox HubSoft | `192.168.115.210/30` |
-
-**Regra de ouro:** nunca `tag=16` no Proxmox **antes** do trunk no Mikrotik.
-
-**Se um bloco falhar:** rollback **só daquele** bloco · não avance.
+**IPs alvo:** `.1` GW · `.10` Zabbix · `.11` Docker · `.12` DNS · `.13` HubSoft  
+**VLANs:** 100 = gerência (native) · 16 = público (tagged)  
+**Regra:** nunca `tag=16` no Proxmox antes do trunk no Mikrotik.
 
 ---
 
-## Antes de começar (checklist)
+# BLOCO 1 — Docker (começa aqui)
 
-- [ ] SSH/Winbox: **RB3011** (`GW Servidores`)
-- [ ] SSH/Winbox: **RB750-WIREGUARD**
-- [ ] SSH root: Proxmox **Docker**, **HubSoft**, **Zabbix**, **DNS**
-- [ ] Pasta `scripts/noite-etapa1/` aberta (ou impressa)
-- [ ] Rollback de cada bloco à mão (arquivos `*-rollback.rsc`)
-- [ ] Confirmar nomes:
-  - RB3011: `ether7 - Proxmox Docker CDNTV` · `ether8 - Proxmox DNS` · `ether10 - RB750 Bridge`
-  - RB750: `ether3 - Proxmox Zabbix` · `ether4 - Proxmox HubSoft` · `ether5 - Uplink GW Servidores` · `bridge1 - Servidores`
-
----
-
-## Bloco 1 — Base + Docker
-
-### 1.1 RB3011 — criar `bridge-servidores` + GW `.1`
-
-Arquivo: `00-bridge-servidores-base.rsc`
-
-- [ ] Colar no RB3011
-- [ ] Validar:
+## 1A) RB3011 — cria bridge-servidores + GW 192.168.254.1
 
 ```rsc
+# Cria a bridge VLAN-aware que vai receber ether7/8/10
+/interface bridge add name=bridge-servidores vlan-filtering=yes protocol-mode=none \
+  comment="Etapa1 VLAN100 gerencia + VLAN16 publico"
+
+# SVI privada (gerencia dos Proxmox)
+/interface vlan add name=vlan100-servidores vlan-id=100 interface=bridge-servidores \
+  comment="GERENCIA SERVIDORES 192.168.254.0/24"
+
+# SVI publica tagged — joga no Bridge IP Publico (mesmo L2 do /27)
+/interface vlan add name=vlan16-servidores vlan-id=16 interface=bridge-servidores \
+  comment="IP PUBLICO tagged dos servidores"
+
+/ip address add address=192.168.254.1/24 interface=vlan100-servidores \
+  comment="GW VLAN100 hypervisors"
+
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=100 tagged=bridge-servidores
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=16 tagged=bridge-servidores
+/interface bridge port add bridge="Bridge IP Publico" interface=vlan16-servidores
+
+# Conferir: tem que aparecer .1/24
 /ip address print where address~"192.168.254.1"
 /ping 192.168.254.1 count=2
-/interface bridge print where name=bridge-servidores
 ```
 
-- [ ] Vê `192.168.254.1/24` em `vlan100-servidores` → segue  
-- [ ] Senão → **para** (não continue)
-
-### 1.2 RB3011 — M1 Docker (`ether7`)
-
-Arquivo: `docker-m1-rb3011.rsc`
-
-- [ ] Colar no RB3011
-- [ ] Validar:
+## 1B) RB3011 — ether7 Docker entra no trunk 100+16
 
 ```rsc
+# Tira ether7 da Bridge IP Publico (flat) e mete na bridge-servidores
+/interface bridge port remove [find interface="ether7 - Proxmox Docker CDNTV"]
+
+/interface bridge port add bridge=bridge-servidores \
+  interface="ether7 - Proxmox Docker CDNTV" pvid=100
+
+# Native 100 + tagged 16 no cabo do Docker
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=100 \
+  untagged="ether7 - Proxmox Docker CDNTV"
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=16 \
+  tagged="ether7 - Proxmox Docker CDNTV"
+
+# Mantem GW /30 antigo na vlan100 ate o host migrar pro .11
+:do {
+  /ip address set [find address="192.168.116.121/30"] interface=vlan100-servidores
+} on-error={}
+
+# TEM que pingar o Docker antigo — se nao pingar, ROLLBACK Docker
 /ping 192.168.116.122 count=5
 /ping 192.168.254.1 count=2
 ```
 
-- [ ] Ping `.122` OK → Proxmox  
-- [ ] Ping falhou → `docker-rollback.rsc` · **para**
+## 1C) Proxmox Docker — IP .11 + tag 16 nas VMs
 
-### 1.3 Proxmox Docker — M2
+```bash
+# No host proxmoxDockerCDNTV (gerencia hoje em vmbr1)
 
-Host: `proxmoxDockerCDNTV` · gerência hoje em **vmbr1** · alvo **`.11`**
+# --- VLAN-aware no vmbr1 (editar /etc/network/interfaces) ---
+# No bloco iface vmbr1 inet static, acrescentar:
+#   bridge-vlan-aware yes
+#   bridge-vids 2-4094
+# Depois:
+ifreload -a
+cat /sys/class/net/vmbr1/bridge/vlan_filtering
+# esperado: 1
 
-Arquivo: `docker-m2-proxmox.sh` + edição manual de `/etc/network/interfaces`
+# --- IP novo EM PARALELO (manter 192.168.116.122 ate validar) ---
+# Em /etc/network/interfaces no vmbr1 (ou secondary):
+#   address 192.168.254.11/24
+#   gateway 192.168.254.1
+ifreload -a
+ping -c 3 192.168.254.1
+# Abrir GUI: https://192.168.254.11:8006
 
-- [ ] `bridge-vlan-aware yes` no `vmbr1` + `bridge-vids 2-4094`
-- [ ] `ifreload -a` · conferir: `cat /sys/class/net/vmbr1/bridge/vlan_filtering` → `1`
-- [ ] IP **paralelo** `192.168.254.11/24` GW `192.168.254.1` (**manter** `.122` por enquanto)
-- [ ] `ping 192.168.254.1` · GUI `https://192.168.254.11:8006`
-- [ ] Rodar `qm set … tag=16` do script (VMs 101, 103–107)
-- [ ] `ping 177.72.104.12` (ou outra VM 177 do cluster)
-- [ ] Docker-Netpal macvlan 177: parent com tag 16 (ajustar na VM) · **não** mexer net5/net6 (18/38)
-- [ ] OK → remover `.122` · deixar só `.11`
-- [ ] Falhou → reverter tags/IP no Proxmox · se preciso `docker-rollback.rsc` no MK
+# --- Tag 16 nas VMs publicas (vmbr1) ---
+qm set 103 -net0 e1000,bridge=vmbr1,tag=16,firewall=1,macaddr=F6:C7:5C:8A:4A:A3
+qm set 104 -net0 virtio,bridge=vmbr1,tag=16,firewall=0,macaddr=6E:26:1A:C9:19:CE
+qm set 105 -net0 virtio,bridge=vmbr1,tag=16,firewall=1,macaddr=62:B2:A1:0A:B1:AE
+qm set 106 -net0 virtio,bridge=vmbr1,tag=16,firewall=1,macaddr=0E:C8:34:76:59:4E
+qm set 107 -net0 virtio,bridge=vmbr1,tag=16,firewall=1,macaddr=36:DC:89:9D:DA:5A
+qm set 101 -net0 virtio,bridge=vmbr1,tag=16,firewall=1,queues=8,macaddr=2A:B7:2D:D8:6E:A2
+# Docker-Netpal macvlan 177: parent com tag 16 (ajustar na VM)
+# NAO mexer net5/net6 (tags 18/38)
 
-**Bloco 1 concluído quando:** gerência Docker = `.11` · VMs 177 respondem com tag 16.
+ping -c 3 177.72.104.12
+
+# Se tudo OK: remover 192.168.116.122 do vmbr1 e deixar so .11
+# ifreload -a
+```
+
+### ROLLBACK Docker (RB3011) — se 1B/1C der ruim
+
+```rsc
+/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=100 untagged~"ether7"]
+/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=16 tagged~"ether7"]
+/interface bridge port remove [find bridge=bridge-servidores interface~"ether7"]
+:do {
+  /ip address set [find address="192.168.116.121/30"] interface="Bridge IP Publico"
+} on-error={}
+/interface bridge port add bridge="Bridge IP Publico" \
+  interface="ether7 - Proxmox Docker CDNTV" hw=yes
+/ping 192.168.116.122 count=5
+```
 
 ---
 
-## Bloco 2 — HubSoft + Zabbix (juntos)
+# BLOCO 2 — HubSoft + Zabbix (juntos)
 
-> Mesmo path RB750 + `ether10`. Fazer os dois neste bloco.
-
-### 2.1 RB750-WIREGUARD — parte (A)
-
-Arquivo: `hubsoft-zabbix-m1-rb750-rb3011.rsc` · **só a seção (A)**
-
-- [ ] Criar `vlan16-wg` / `vlan100-wg`
-- [ ] Mover `177.72.104.19/27` de ether5 → `vlan16-wg`
-- [ ] `vlan-filtering=yes` na `bridge1 - Servidores`
-- [ ] PVID 100 nas portas · VLAN 100/16 conforme script
-- [ ] Validar:
+## 2A) RB750-WIREGUARD — trunk 100+16 + move .19 para vlan16
 
 ```rsc
+# Impacto: HubSoft + Zabbix + NE8000 mgmt + VPN .19 no mesmo bridge
+
+# VLAN 16 para o IP publico .19 (antes de filtrar)
+/interface vlan add name=vlan16-wg vlan-id=16 interface="bridge1 - Servidores" \
+  comment="IP PUBLICO .19 WireGuard"
+/interface vlan add name=vlan100-wg vlan-id=100 interface="bridge1 - Servidores" \
+  comment="GERENCIA (L2 only; GW fica no RB3011 .1)"
+
+# Move .19 do ether5 para a vlan16
+/ip address set [find address="177.72.104.19/27"] interface=vlan16-wg
+
+/interface bridge set [find name="bridge1 - Servidores"] vlan-filtering=yes
+
+/interface bridge port
+set [find interface="ether1 - LIVRE"] pvid=100
+set [find interface="ether2 - NE8000 Gerencia"] pvid=100
+set [find interface="ether3 - Proxmox Zabbix"] pvid=100
+set [find interface="ether4 - Proxmox HubSoft"] pvid=100
+set [find interface="ether5 - Uplink GW Servidores"] pvid=100
+
+# ether3/4: native 100 + tagged 16 | ether5: tagged 100+16 (uplink)
+/interface bridge vlan
+add bridge="bridge1 - Servidores" vlan-ids=100 \
+  untagged="ether1 - LIVRE","ether2 - NE8000 Gerencia","ether3 - Proxmox Zabbix","ether4 - Proxmox HubSoft" \
+  tagged="ether5 - Uplink GW Servidores","bridge1 - Servidores"
+add bridge="bridge1 - Servidores" vlan-ids=16 \
+  tagged="ether3 - Proxmox Zabbix","ether4 - Proxmox HubSoft","ether5 - Uplink GW Servidores","bridge1 - Servidores"
+
+# Conferir VPN / default
 /ip address print where address~"177.72.104.19"
 /ping 177.72.104.1 count=5
 ```
 
-- [ ] VPN/WG ok (peers vivos)  
-- [ ] `.19` ou default falhou → `hubsoft-zabbix-rollback.rsc` (RB750) · **para**
-
-### 2.2 RB3011 — parte (B) `ether10`
-
-Mesmo arquivo · **seção (B)**
-
-- [ ] Tirar `ether10 - RB750 Bridge` da Bridge IP Publico · meter em `bridge-servidores` (tagged 100+16)
-- [ ] Validar:
+## 2B) RB3011 — ether10 (RB750) entra no trunk
 
 ```rsc
+/interface bridge port remove [find interface~"ether10"]
+
+/interface bridge port add bridge=bridge-servidores \
+  interface="ether10 - RB750 Bridge" pvid=1
+
+# Uplink so tagged (sem untagged util)
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=100 \
+  tagged="ether10 - RB750 Bridge"
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=16 \
+  tagged="ether10 - RB750 Bridge"
+
+# /30 HubSoft antigo, se existir, vai pra vlan100
+:do {
+  /ip address set [find address="192.168.115.209/30"] interface=vlan100-servidores
+} on-error={}
+
+# Tem que continuar pingando HubSoft e Zabbix antigos
 /ping 192.168.254.1 count=2
 /ping 177.72.104.19 count=5
 /ping 192.168.115.210 count=3
 /ping 177.72.104.5 count=3
 ```
 
-- [ ] HubSoft/Zabbix antigos ainda pingam → M2  
-- [ ] Falhou → rollback HubSoft+Zabbix · **para**
+## 2C) Proxmox HubSoft — IP .13 + tag 16
 
-### 2.3 Proxmox HubSoft — M2
+```bash
+# Host px-hubsoft — vlan-aware no vmbr0 ja deve ser 1
+cat /sys/class/net/vmbr0/bridge/vlan_filtering
 
-Host: `px-hubsoft` · vmbr0 · alvo **`.13`** · vlan-aware já deve estar `1`
+# IP paralelo 192.168.254.13/24 GW .1 (manter .210 ate validar)
+# Editar /etc/network/interfaces + ifreload -a
+ping -c 3 192.168.254.1
+# GUI: https://192.168.254.13:8006
 
-Arquivo: `hubsoft-m2-proxmox.sh`
+# HubSoft publico
+qm set 102 -net0 virtio,bridge=vmbr0,tag=16,macaddr=72:56:05:A7:29:E9
+# Radius 101: SEM tag 16 (fica native VLAN 100)
 
-- [ ] IP paralelo `192.168.254.13/24` GW `.1` (manter `.210`)
-- [ ] `ping 192.168.254.1` · GUI `:8006` no `.13`
-- [ ] `qm set 102 … tag=16` (HubSoft `.16`)
-- [ ] Radius (101): **sem** tag 16 (fica native 100)
-- [ ] `ping 177.72.104.16`
-- [ ] OK → remover `.210`
+ping -c 3 177.72.104.16
+# OK -> remover 192.168.115.210
+```
 
-### 2.4 Proxmox Zabbix — M2
+## 2D) Proxmox Zabbix — IP .10 + tag 16 + tira .5
 
-Host: `proxmox3` · vmbr0 · hoje **`.5/27`** · alvo **`.10`**
+```bash
+# Host proxmox3 — hoje 177.72.104.5/27 no vmbr0
 
-Arquivo: `zabbix-m2-proxmox.sh`
+# VLAN-aware vmbr0 (editar interfaces):
+#   bridge-vlan-aware yes
+#   bridge-vids 2-4094
+ifreload -a
 
-- [ ] `bridge-vlan-aware` no vmbr0 + `ifreload -a`
-- [ ] IP paralelo `192.168.254.10/24` GW `.1` (**manter `.5` até validar**)
-- [ ] `ping 192.168.254.1` · GUI `https://192.168.254.10:8006`
-- [ ] **Dude:** device `177.72.104.5` → `192.168.254.10`
-- [ ] `qm set … tag=16` nas VMs públicas (lista no script / `qm-set-lista.md`)
-- [ ] `ping 177.72.104.6` (Zabbix VM)
-- [ ] OK → **remover `177.72.104.5`** do vmbr0
-- [ ] VMs órfãs 100/101/109: sem tag 16 (later / VLAN 100)
+# IP paralelo 192.168.254.10/24 GW .1 — MANTER .5 ate validar
+ping -c 3 192.168.254.1
+# GUI: https://192.168.254.10:8006
 
-**Bloco 2 concluído quando:** HubSoft `.13` · Zabbix `.10` · Dude no `.10` · `.5` fora · VMs 177 ok.
+# Dude: trocar device 177.72.104.5 -> 192.168.254.10
+
+# VMs publicas tag 16
+qm set 110 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=4E:01:6C:C9:F0:78
+qm set 103 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=B2:63:2D:95:56:FD
+qm set 107 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=56:EC:57:EB:68:14
+qm set 105 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=8A:26:35:E8:3A:BF
+qm set 104 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=EE:2A:8A:5A:EE:E0
+qm set 106 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=1A:97:C3:E0:DC:D3
+qm set 108 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=16:8C:EF:D4:03:FD
+qm set 102 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=F2:19:E1:4A:8C:8A
+# 100/101/109: sem tag 16 (privadas / later)
+
+ping -c 3 177.72.104.6
+
+# OK -> REMOVER 177.72.104.5 do vmbr0 (hypervisor sai do /27)
+```
+
+### ROLLBACK HubSoft+Zabbix — RB750 depois RB3011
+
+```rsc
+# --- No RB750-WIREGUARD ---
+/interface bridge set [find name="bridge1 - Servidores"] vlan-filtering=no
+/interface bridge vlan remove [find bridge="bridge1 - Servidores"]
+/ip address set [find address="177.72.104.19/27"] interface="ether5 - Uplink GW Servidores"
+/interface vlan remove [find name=vlan16-wg]
+/interface vlan remove [find name=vlan100-wg]
+/ping 177.72.104.1 count=5
+
+# --- No RB3011 ---
+/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=100 tagged~"ether10"]
+/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=16 tagged~"ether10"]
+/interface bridge port remove [find bridge=bridge-servidores interface~"ether10"]
+:do {
+  /ip address set [find address="192.168.115.209/30"] interface="Bridge IP Publico"
+} on-error={}
+/interface bridge port add bridge="Bridge IP Publico" \
+  interface="ether10 - RB750 Bridge" hw=yes
+/ping 192.168.115.210 count=3
+/ping 177.72.104.5 count=3
+/ping 177.72.104.19 count=3
+```
 
 ---
 
-## Bloco 3 — DNS
+# BLOCO 3 — DNS
 
-### 3.1 RB3011 — M1 DNS (`ether8`)
-
-Arquivo: `dns-m1-rb3011.rsc`
-
-- [ ] Colar no RB3011
-- [ ] Validar:
+## 3A) RB3011 — ether8 DNS no trunk
 
 ```rsc
+/interface bridge port remove [find interface="ether8 - Proxmox DNS"]
+
+/interface bridge port add bridge=bridge-servidores \
+  interface="ether8 - Proxmox DNS" pvid=100
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=100 \
+  untagged="ether8 - Proxmox DNS"
+/interface bridge vlan add bridge=bridge-servidores vlan-ids=16 \
+  tagged="ether8 - Proxmox DNS"
+
+:do {
+  /ip address set [find address="192.168.115.137/30"] interface=vlan100-servidores
+} on-error={}
+
 /ping 192.168.115.138 count=5
 /ping 192.168.254.1 count=2
 ```
 
-- [ ] Falhou → `dns-rollback.rsc` · **para**
+## 3B) Proxmox DNS — IP .12 + tag 16
 
-### 3.2 Proxmox DNS — M2
+```bash
+# Host proxmox-dns
 
-Host: `proxmox-dns` · vmbr0 · alvo **`.12`**
+# VLAN-aware vmbr0 + ifreload -a
+# IP paralelo 192.168.254.12/24 GW .1 (manter .138 ate validar)
+ping -c 3 192.168.254.1
+# GUI: https://192.168.254.12:8006
 
-Arquivo: `dns-m2-proxmox.sh`
+qm set 101 -net0 e1000e,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:89:AD:23
+qm set 102 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:50:14:F9
+qm set 103 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:BF:0B:B5
+qm set 105 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:E7:B0:75
 
-- [ ] `bridge-vlan-aware` no vmbr0 + `ifreload -a`
-- [ ] IP paralelo `192.168.254.12/24` GW `.1` (manter `.138`)
-- [ ] Ping `.1` · GUI `:8006` no `.12`
-- [ ] `qm set` tag 16 nas VMs 101, 102, 103, 105
-- [ ] `ping 177.72.104.28` (NS-UNBOUND)
-- [ ] OK → remover `.138`
-
-**Bloco 3 concluído quando:** DNS `.12` · VMs 177 ok.
-
----
-
-## Encerramento da Etapa 1
-
-- [ ] Ping dos 4: `.10` `.11` `.12` `.13` + GW `.1`
-- [ ] Spot-check `177.72.104.x` (HubSoft, DNS, Zabbix, Docker)
-- [ ] WireGuard `.19` ok
-- [ ] Export pós-noite RB3011 + RB750 → salvar em `config/`
-- [ ] Atualizar bookmarks locais dos 4 Proxmox
-
-### Estado esperado
-
+ping -c 3 177.72.104.28
+# OK -> remover 192.168.115.138
 ```
-RB3011 bridge-servidores: ether7 + ether8 + ether10 (100+16)
-RB750: vlan-filtering · ether3/4 access 100+tag16 · ether5 trunk · .19 em vlan16
-Hypervisors: só 192.168.254.x · nenhum no /27
-VMs públicas: tag=16
+
+### ROLLBACK DNS (RB3011)
+
+```rsc
+/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=100 untagged~"ether8"]
+/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=16 tagged~"ether8"]
+/interface bridge port remove [find bridge=bridge-servidores interface~"ether8"]
+:do {
+  /ip address set [find address="192.168.115.137/30"] interface="Bridge IP Publico"
+} on-error={}
+/interface bridge port add bridge="Bridge IP Publico" \
+  interface="ether8 - Proxmox DNS" hw=yes
+/ping 192.168.115.138 count=5
 ```
 
 ---
 
-## Rollbacks (referência rápida)
+# Depois dos 4
 
-| Bloco | Arquivo |
-|-------|---------|
-| Docker | `docker-rollback.rsc` (+ reverter Proxmox) |
-| HubSoft+Zabbix | `hubsoft-zabbix-rollback.rsc` (RB750 depois RB3011) |
-| DNS | `dns-rollback.rsc` |
+```rsc
+# No RB3011 — conferência final
+/ping 192.168.254.1 count=2
+/ping 192.168.254.10 count=3
+/ping 192.168.254.11 count=3
+/ping 192.168.254.12 count=3
+/ping 192.168.254.13 count=3
+/ping 177.72.104.16 count=2
+/ping 177.72.104.28 count=2
+/ping 177.72.104.6 count=2
+/ping 177.72.104.19 count=2
+
+/export file=gw-servidores-pos-etapa1
+```
+
+```rsc
+# No RB750-WIREGUARD
+/export file=rb750-pos-etapa1
+```
 
 ---
 
-## Fora desta etapa (não fazer agora)
+# Fora desta etapa (não fazer agora)
 
-- Datacom DM4170 / CCR1036 / troca de cabos
-- POP / OLT / QinQ / virada L3 do `/27`
-- VMs órfãs finas · `10.1.1.2` no Zabbix
-
----
-
-## Índice de arquivos
-
-| Passo | Arquivo |
-|-------|---------|
-| Base | `scripts/noite-etapa1/00-bridge-servidores-base.rsc` |
-| Docker M1/M2/RB | `docker-m1-rb3011.rsc` · `docker-m2-proxmox.sh` · `docker-rollback.rsc` |
-| HubSoft+Zabbix M1/M2/RB | `hubsoft-zabbix-m1-rb750-rb3011.rsc` · `hubsoft-m2-proxmox.sh` · `zabbix-m2-proxmox.sh` · `hubsoft-zabbix-rollback.rsc` |
-| DNS M1/M2/RB | `dns-m1-rb3011.rsc` · `dns-m2-proxmox.sh` · `dns-rollback.rsc` |
-| Lista qm | `qm-set-lista.md` |
-| Visão | [16](16-etapa1-proxmox-vlans-datacom.md) · [14](14-ips-servidores-e-17772.md) · topologia rack |
+```
+# Datacom / CCR / troca de cabo / QinQ / POP / OLT / virada L3 do /27
+```
