@@ -69,20 +69,18 @@
 ```bash
 # No host proxmoxDockerCDNTV (gerencia hoje em vmbr1)
 
-# --- VLAN-aware no vmbr1 (editar /etc/network/interfaces) ---
-# No bloco iface vmbr1 inet static, acrescentar:
+# --- VLAN-aware no vmbr1 ---
+# Editar /etc/network/interfaces — no bloco "iface vmbr1 inet static" acrescentar:
 #   bridge-vlan-aware yes
 #   bridge-vids 2-4094
-# Depois:
+nano /etc/network/interfaces
 ifreload -a
 cat /sys/class/net/vmbr1/bridge/vlan_filtering
 # esperado: 1
 
-# --- IP novo EM PARALELO (manter 192.168.116.122 ate validar) ---
-# Em /etc/network/interfaces no vmbr1 (ou secondary):
-#   address 192.168.254.11/24
-#   gateway 192.168.254.1
-ifreload -a
+# --- IP novo EM PARALELO (ao vivo; ainda nao remove o .122) ---
+ip addr add 192.168.254.11/24 dev vmbr1
+ip addr show dev vmbr1
 ping -c 3 192.168.254.1
 # Abrir GUI: https://192.168.254.11:8006
 
@@ -98,8 +96,17 @@ qm set 101 -net0 virtio,bridge=vmbr1,tag=16,firewall=1,queues=8,macaddr=2A:B7:2D
 
 ping -c 3 177.72.104.12
 
-# Se tudo OK: remover 192.168.116.122 do vmbr1 e deixar so .11
-# ifreload -a
+# --- Se tudo OK: virar default + gravar permanente + tirar .122 ---
+ip route replace default via 192.168.254.1
+# No /etc/network/interfaces do vmbr1 trocar address/gateway para:
+#   address 192.168.254.11/24
+#   gateway 192.168.254.1
+# (remover as linhas do 192.168.116.122/30 e gateway .121)
+nano /etc/network/interfaces
+ifreload -a
+ip addr del 192.168.116.122/30 dev vmbr1 2>/dev/null || true
+ip addr show dev vmbr1
+ping -c 3 192.168.254.1
 ```
 
 ### ROLLBACK Docker (RB3011) — se 1B/1C der ruim
@@ -188,8 +195,9 @@ add bridge="bridge1 - Servidores" vlan-ids=16 \
 # Host px-hubsoft — vlan-aware no vmbr0 ja deve ser 1
 cat /sys/class/net/vmbr0/bridge/vlan_filtering
 
-# IP paralelo 192.168.254.13/24 GW .1 (manter .210 ate validar)
-# Editar /etc/network/interfaces + ifreload -a
+# --- IP novo EM PARALELO (ao vivo; manter .210) ---
+ip addr add 192.168.254.13/24 dev vmbr0
+ip addr show dev vmbr0
 ping -c 3 192.168.254.1
 # GUI: https://192.168.254.13:8006
 
@@ -198,7 +206,17 @@ qm set 102 -net0 virtio,bridge=vmbr0,tag=16,macaddr=72:56:05:A7:29:E9
 # Radius 101: SEM tag 16 (fica native VLAN 100)
 
 ping -c 3 177.72.104.16
-# OK -> remover 192.168.115.210
+
+# --- Se OK: virar default + gravar + tirar .210 ---
+ip route replace default via 192.168.254.1
+# Em /etc/network/interfaces do vmbr0:
+#   address 192.168.254.13/24
+#   gateway 192.168.254.1
+# (remover 192.168.115.210/30 e gateway .209)
+nano /etc/network/interfaces
+ifreload -a
+ip addr del 192.168.115.210/30 dev vmbr0 2>/dev/null || true
+ping -c 3 192.168.254.1
 ```
 
 ## 2D) Proxmox Zabbix — IP .10 + tag 16 + tira .5
@@ -206,12 +224,17 @@ ping -c 3 177.72.104.16
 ```bash
 # Host proxmox3 — hoje 177.72.104.5/27 no vmbr0
 
-# VLAN-aware vmbr0 (editar interfaces):
+# --- VLAN-aware vmbr0 ---
+# Em /etc/network/interfaces no bloco vmbr0 acrescentar:
 #   bridge-vlan-aware yes
 #   bridge-vids 2-4094
+nano /etc/network/interfaces
 ifreload -a
+cat /sys/class/net/vmbr0/bridge/vlan_filtering
 
-# IP paralelo 192.168.254.10/24 GW .1 — MANTER .5 ate validar
+# --- IP novo EM PARALELO (MANTER .5 ate validar) ---
+ip addr add 192.168.254.10/24 dev vmbr0
+ip addr show dev vmbr0
 ping -c 3 192.168.254.1
 # GUI: https://192.168.254.10:8006
 
@@ -230,7 +253,16 @@ qm set 102 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=F2:19:E1:4A:8C:8A
 
 ping -c 3 177.72.104.6
 
-# OK -> REMOVER 177.72.104.5 do vmbr0 (hypervisor sai do /27)
+# --- Se OK: virar default + gravar + REMOVER .5 do /27 ---
+ip route replace default via 192.168.254.1
+# Em /etc/network/interfaces do vmbr0:
+#   address 192.168.254.10/24
+#   gateway 192.168.254.1
+# (remover 177.72.104.5/27 e gateway 177.72.104.1)
+nano /etc/network/interfaces
+ifreload -a
+ip addr del 177.72.104.5/27 dev vmbr0 2>/dev/null || true
+ping -c 3 192.168.254.1
 ```
 
 ### ROLLBACK HubSoft+Zabbix — RB750 depois RB3011
@@ -287,8 +319,17 @@ ping -c 3 177.72.104.6
 ```bash
 # Host proxmox-dns
 
-# VLAN-aware vmbr0 + ifreload -a
-# IP paralelo 192.168.254.12/24 GW .1 (manter .138 ate validar)
+# --- VLAN-aware vmbr0 ---
+# Em /etc/network/interfaces no bloco vmbr0:
+#   bridge-vlan-aware yes
+#   bridge-vids 2-4094
+nano /etc/network/interfaces
+ifreload -a
+cat /sys/class/net/vmbr0/bridge/vlan_filtering
+
+# --- IP novo EM PARALELO (manter .138) ---
+ip addr add 192.168.254.12/24 dev vmbr0
+ip addr show dev vmbr0
 ping -c 3 192.168.254.1
 # GUI: https://192.168.254.12:8006
 
@@ -298,7 +339,17 @@ qm set 103 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:BF:0B:B5
 qm set 105 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:E7:B0:75
 
 ping -c 3 177.72.104.28
-# OK -> remover 192.168.115.138
+
+# --- Se OK: virar default + gravar + tirar .138 ---
+ip route replace default via 192.168.254.1
+# Em /etc/network/interfaces do vmbr0:
+#   address 192.168.254.12/24
+#   gateway 192.168.254.1
+# (remover 192.168.115.138/30 e gateway .137)
+nano /etc/network/interfaces
+ifreload -a
+ip addr del 192.168.115.138/30 dev vmbr0 2>/dev/null || true
+ping -c 3 192.168.254.1
 ```
 
 ### ROLLBACK DNS (RB3011)
