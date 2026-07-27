@@ -1,0 +1,14 @@
+# SW_JDF — busca MAC Proxmox (2026-07-27) — só leitura
+
+Comandos:
+  display mac-address | include 84:2B:2B:5A:45:55   # HubSoft NIC
+  display mac-address | include 44:1E:A1:48:2F:00   # Zabbix NIC
+  display mac-address | include BC:24:11:E7:B0:75   # DNS NS-UNBOUND
+  display mac-address | include 0E:C8:34:76:59:4E   # Docker VM
+
+Resultado: **nenhum hit** (tabela ~7902 entradas, linhas filtradas vazias).
+
+Conclusao: esperado. Servidores nao penduram no SW_JDF — sobem pelo
+RB3011 ether7/8 e RB750 (ether10). SW_JDF so ve o uplink sfp1 do GW
+(VLAN16 etc.). Mapeamento de porta fisica dos Proxmox no SW_JDF = N/A
+para Etapa 1.

@@ -1,0 +1,16 @@
+# NE8000 BGP_NETPAL — checagem 192.168.254.0/24 (só leitura)
+# 2026-07-27 14:49:55-03:00 — login SSH from 177.72.104.19
+
+display ip routing-table 192.168.254.0 24
+# (vazio — sem rota)
+
+display ospf routing 192.168.254.0 24
+# (vazio — sem LSA/rota OSPF)
+
+display bgp routing-table 192.168.254.0 24
+# Info: The network does not exist.
+
+display ip interface brief | include 192.168.254
+# (nenhuma interface com 192.168.254)
+
+# Conclusao: bloco LIVRE no core BGP/OSPF da ISP.

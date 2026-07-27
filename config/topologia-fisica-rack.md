@@ -25,9 +25,20 @@ RB GW SERVIDORES (RB3011)
                └── p5 GW SERVIDORES PORTA 10 (uplink de volta pro RB3011 ether10)
 ```
 
-🆕 **TERCEIRO Mikrotik descoberto: RB BRIDGE 750 (RB750)** — não estava inventariado. Bridge L2 que
-agrega gerência do NE8000 + Proxmox Zabbix + Proxmox HubSoft, com uplink no `ether10` do RB3011.
-**Corrige a decisão #2** (que dava só RB3011 + RB2011 como os MKs do trecho).
+🆕 **TERCEIRO Mikrotik: RB BRIDGE 750 = identity `WIREGUARD` (RB750Gr3, sn CC210F9A08D3)** —
+confirmado 2026-07-27 por MAC + `bridge host`. Duplo papel: bridge L2 (NE8000 mgmt + Zabbix +
+HubSoft, uplink `ether10` do RB3011) **e** concentrador VPN (WireGuard/OpenVPN) no
+`177.72.104.19`. Export em `config/rb750gr3-wireguard/`. **Corrige a decisão #2**.
+
+| Porta ROS | Nome alvo (renomear) | Destino |
+|---|---|---|
+| ether1 | `ether1 - LIVRE` | p1 livre (INACTIVE) |
+| ether2 | `ether2 - NE8000 Gerencia` | p2 NE8000 gerência |
+| ether3 | `ether3 - Proxmox Zabbix` | p3 cluster Zabbix (MACs confirmados) |
+| ether4 | `ether4 - Proxmox HubSoft` | p4 HubSoft + Radius |
+| ether5 | `ether5 - Uplink GW Servidores` | p5 uplink RB3011 ether10 + `.19/27` |
+
+Script: `config/rb750gr3-wireguard/renomear-portas.rsc` (identity → `RB750-WIREGUARD`).
 
 ⚠️ **Os servidores NÃO plugam direto no RB3011** — a maioria passa por 2 bridges intermediárias:
 - **RB2011** (no `ether6`): TS SIX, CGNAT-1 mgmt, Régua Volt, Dude, RRFlow

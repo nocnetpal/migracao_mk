@@ -603,6 +603,12 @@ padrão único da casa.
 pública=**16** (confirmado livre/existente no SW_JDF). Substitui a ideia de 210/138/116/999
 por cluster. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
 
+🆕 **IPs dos hypervisors (usuário, 2026-07-27):** **todos os Proxmox só com IP privado** na
+VLAN 100 — nenhum hypervisor com IP no `/27`. ✅ **Subnet fechada: `192.168.254.0/24`**
+(`.1` GW · `.10` Zabbix · `.11` Docker · `.12` DNS · `.13` HubSoft). Docker/DNS/HubSoft saem
+dos `/30`; Zabbix sai do `.5`. IP público/fixo só nas VMs (`tag=16`). Ver [16](16-etapa1-proxmox-vlans-datacom.md).
+HubSoft+Zabbix na **mesma madrugada** (mesmo RB750).
+
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do
 cluster Zabbix** — ou seja, HubSoft nunca teve cabo dedicado, compartilha o segmento físico com o

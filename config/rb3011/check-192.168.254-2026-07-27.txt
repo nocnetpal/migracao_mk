@@ -1,0 +1,11 @@
+# RB3011 GW Servidores — checagem 192.168.254.0/24 (só leitura)
+# 2026-07-27 — RouterOS 6.49
+
+/ip address print where address~"192.168.254"
+# (vazio)
+
+/ip route print where dst-address in 192.168.254.0/24
+# (vazio)
+
+# Conclusao: bloco LIVRE no RB3011 (sem address, sem rota).
+# NE8000 ja confirmado em check-192.168.254-2026-07-27.txt

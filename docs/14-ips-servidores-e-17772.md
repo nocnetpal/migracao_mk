@@ -18,10 +18,14 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 
 | # | Equipamento | IP(s) | Hoje pendura em | Notas |
 |---|---|---|---|---|
-| 1 | Proxmox Docker/CDNTV (Dell R420) | `192.168.116.122/30` | RB3011 ether7 | VMs/containers na §1.1 |
-| 2 | Proxmox DNS (HP 360 G7) | `192.168.115.138/30` | RB3011 ether8 | VMs na §1.2 |
-| 3 | Proxmox Zabbix/Zeus (HP DL360 G7) | `177.72.104.5` | RB750 p3 | Sem gerência privada hoje; VMs na §1.3 |
-| 4 | Proxmox HubSoft (Dell R720) | `192.168.115.210/30` | RB750 p4 | VMs na §1.4 |
+| 1 | Proxmox Docker/CDNTV (Dell R420) | `192.168.116.122/30` → alvo **VLAN 100** privado | RB3011 ether7 | VMs/containers na §1.1 |
+| 2 | Proxmox DNS (HP 360 G7) | `192.168.115.138/30` → alvo **VLAN 100** privado | RB3011 ether8 | VMs na §1.2 |
+| 3 | Proxmox Zabbix/Zeus (HP DL360 G7) | **`177.72.104.5` → sai do `/27`** → VLAN 100 privado | RB750 p3 | Sem gerência privada hoje; VMs na §1.3 |
+| 4 | Proxmox HubSoft (Dell R720) | `192.168.115.210/30` → alvo **VLAN 100** privado | RB750 p4 | VMs na §1.4 |
+
+> ✅ **2026-07-27:** nenhum hypervisor fica com IP no `/27`. Subnet VLAN 100 fechada:
+> **`192.168.254.0/24`** (`.1` GW · `.10` Zabbix · `.11` Docker · `.12` DNS · `.13` HubSoft) —
+> [16](16-etapa1-proxmox-vlans-datacom.md).
 | 5 | TS SIX | `192.168.66.14` | RB2011 p2 | Alvo DST-NAT `.1:15389` |
 | 6 | Servidor Dude | `192.168.116.30` | RB2011 p5 | Alvo DST-NAT `.1:18291` |
 | 7 | Servidor RRFlow | `177.72.104.27` | RB2011 p6 | RR FlowSpec + NetStream `:3055` |

@@ -22,8 +22,8 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 
 ## Status
 
-📋 Fase atual: **Etapa 1** — 2 VLANs servidores: **100** (privada) + **16** (pública),
-ainda nos Mikrotiks; depois Datacom/CCR; depois virar GW ([16](16-etapa1-proxmox-vlans-datacom.md)).
+📋 Fase atual: **Etapa 1** — VLAN **100** = `192.168.254.0/24` (hypervisors `.10`–`.13`, GW `.1`)
++ VLAN **16** (VMs `177.x`); ainda nos Mikrotiks — [16](16-etapa1-proxmox-vlans-datacom.md).
 SW_JDF: 100 livre · 16 = IP_PUBLICO.
 
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,

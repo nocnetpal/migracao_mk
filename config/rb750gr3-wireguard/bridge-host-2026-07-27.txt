@@ -1,0 +1,47 @@
+# WIREGUARD (RB750Gr3) — /interface bridge host print
+# Coleta 2026-07-27. Identity = WIREGUARD = "RB BRIDGE 750" do rack
+# (duplo papel: bridge L2 HubSoft/Zabbix + VPN .19).
+
+Flags: D - DYNAMIC; L - LOCAL; E - EXTERNAL
+Columns: MAC-ADDRESS, ON-INTERFACE, BRIDGE
+ #     MAC-ADDRESS        ON-INTERFACE  BRIDGE
+ 0 D E 00:1B:21:BC:2F:E9  ether5        bridge1
+ 1 D E 00:E0:4C:BE:02:36  ether5        bridge1
+ 2 D E 0E:C8:34:76:59:4E  ether5        bridge1
+ 3 D E 16:8C:EF:D4:03:FD  ether3        bridge1   # Zabbix VM 108 Fusion-0800
+ 4 D E 1A:97:C3:E0:DC:D3  ether3        bridge1   # Zabbix VM 106 Fusionpbx MST
+ 5 D E 22:C6:6C:11:AB:E3  ether3        bridge1   # Zabbix VM 109 Dude-PM-CPV
+ 6 D E 36:DC:89:9D:DA:5A  ether5        bridge1
+ 7 D E 44:1E:A1:48:2F:00  ether3        bridge1   # provável NIC física Zabbix
+ 8 D E 4E:01:6C:C9:F0:78  ether3        bridge1   # Zabbix VM 110
+ 9 D E 56:EC:57:EB:68:14  ether3        bridge1   # Zabbix VM 107 OVPN (.9)
+10 D E 64:D1:54:2F:B9:5F  ether5        bridge1   # remoto via uplink (TS SIX / Bridge)
+11 D E 6E:26:1A:C9:19:CE  ether5        bridge1
+12 D E 70:85:C2:D1:F9:41  ether5        bridge1   # remoto via uplink
+13 D E 72:56:05:A7:29:E9  ether4        bridge1   # HubSoft VM 102
+14 D E 84:2B:2B:5A:45:55  ether4        bridge1   # provável NIC física HubSoft
+15 D E 8A:26:35:E8:3A:BF  ether3        bridge1   # Zabbix VM 105 TIP-VOIP
+16 D E 96:4F:38:AB:86:21  ether4        bridge1   # HubSoft VM 101 Radius
+17 D E B2:63:2D:95:56:FD  ether3        bridge1   # Zabbix VM 103 Docs
+18 D E BC:24:11:50:14:F9  ether5        bridge1   # DNS VM 102 (remoto via uplink)
+19 D E BC:24:11:BF:0B:B5  ether5        bridge1   # DNS VM 103 (remoto)
+20 D E BC:24:11:E7:B0:75  ether5        bridge1   # DNS VM 105 (remoto)
+21 D E C4:AD:34:F9:F1:70  ether5        bridge1   # RB3011 Bridge IP Publico
+22 D E C4:AD:34:F9:F1:7A  ether5        bridge1   # RB3011 ether10
+23 DL  DC:2C:6E:ED:23:18  bridge1       bridge1   # LOCAL ether1
+24 DL  DC:2C:6E:ED:23:19  ether2        bridge1   # LOCAL
+25 DL  DC:2C:6E:ED:23:1A  ether3        bridge1   # LOCAL
+26 DL  DC:2C:6E:ED:23:1B  ether4        bridge1   # LOCAL
+27 DL  DC:2C:6E:ED:23:1C  ether5        bridge1   # LOCAL (+ IP .19)
+28 D E DE:5F:56:B1:1A:14  ether3        bridge1   # Zabbix VM 100 Dude-VLSul
+29 D E E2:E9:C9:DC:BA:BF  ether3        bridge1   # Zabbix VM 101 Monsta
+30 D E EE:2A:8A:5A:EE:E0  ether3        bridge1   # Zabbix VM 104 Fusionpbx CPV
+31 D E F2:19:E1:4A:8C:8A  ether3        bridge1   # Zabbix VM 102 SFTP
+32 D E F6:C7:5C:8A:4A:A3  ether5        bridge1
+
+# Mapa físico confirmado (bate com topologia-fisica-rack.md):
+#   ether1 = p1 LIVRE (INACTIVE)
+#   ether2 = p2 NE8000 gerência (RUNNING, sem host externo agora)
+#   ether3 = p3 Proxmox Zabbix (todas as VMs do cluster)
+#   ether4 = p4 Proxmox HubSoft (VMs 101+102 + NIC física)
+#   ether5 = p5 uplink RB3011 ether10 (+ IP 177.72.104.19/27)
