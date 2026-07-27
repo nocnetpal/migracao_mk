@@ -13,7 +13,8 @@
 > renomes ether6–10 no RB3011 e portas do RB750 (`RB750-WIREGUARD`, 2026-07-27).
 >
 > ⚠️ **Virada Etapa 1:** scripts/runbook prontos — **não aplicar agora** (usuário 2026-07-27).
-> **RB750 sai depois** (VPN/NAT → CCR1036); M1 no 750 é só ponte até a troca física.
+> ✅ **Não mexer no bridge do RB750** (usuário 2026-07-27). HubSoft + Zabbix **fora** desta
+> etapa no MK — ficam flat no 750 até CCR/Datacom. Etapa 1 no Mikrotik = **Docker + DNS** só.
 
 ## Mapa
 
@@ -46,33 +47,27 @@ sem rota IP, sem OSPF, sem BGP. Evidências:
 Os `/30` atuais de gerência **deixam de existir** após cada host migrar. Dude / allowlists /
 bookmarks `8006` do `.5` atualizam para `.10`.
 
-L2: um único `bridge-servidores` no RB3011 (ether7 + ether8 + ether10) estende a VLAN 100;
-o `RB750-WIREGUARD` propaga 100+16 para HubSoft/Zabbix/NE8000 mgmt.
+L2: `bridge-servidores` no RB3011 com **ether7 (Docker) + ether8 (DNS)**.
+`ether10` / RB750 **não entra** nesta etapa (bridge do 750 intocado).
 
 ## Ordem
 
 ```
-M1  Trunks 100+16 nos Mikrotiks (bridge-servidores + RB750)
-M2  Proxmox: gerência 192.168.254.x · VMs 177 na tag 16
-M3  Validar ainda no MK
-D   Datacom + CCR (mesmas 2 VLANs)
-E   Trocar cabos
-F   POP / OLT / QinQ / virada L3 — depois
+M1  Trunks 100+16 no RB3011 (ether7 + ether8 only)
+M2  Proxmox Docker + DNS: gerência 192.168.254.x · VMs 177 na tag 16
+M3  Validar
+…   HubSoft + Zabbix: na troca pra CCR/Datacom (sem mexer no RB750 agora)
 ```
 
 **Regra:** não aplicar `tag=16` no Proxmox **antes** do trunk no MK (HubSoft caiu assim).
 
-## Sequência de janelas
+## Sequência (quando for virar)
 
-✅ **Usuário (2026-07-27): os 4 servidores na mesma madrugada** (não 3 noites).
+✅ **Usuário (2026-07-27):** não mexer no bridge do RB750 · HubSoft/Zabbix depois (CCR).
 
-Ordem na madrugada:
-
-1. **Base + Docker** — `00-bridge-servidores-base` → `docker-m1` → `docker-m2` (`.11`)
-2. **HubSoft + Zabbix** (juntos, mesmo RB750) — `hubsoft-zabbix-m1` → `hubsoft-m2` (`.13`) → `zabbix-m2` (`.10`, sai do `.5`) + Dude `.5`→`.10`
-3. **DNS** — `dns-m1` → `dns-m2` (`.12`)
-
-Entre cada bloco: ping gerência + 1× `177` OK antes do próximo. Rollback só do bloco que falhou.
+1. **Docker** — `00-bridge-servidores-base` → `docker-m1` → `docker-m2` (`.11`)
+2. **DNS** — `dns-m1` → `dns-m2` (`.12`)
+3. ~~HubSoft + Zabbix~~ — **adiado** até CCR/Datacom (scripts guardados, não usar)
 
 ## Preparação sem parada (já feito / falta)
 

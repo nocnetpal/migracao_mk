@@ -1,14 +1,17 @@
-# Runbook Etapa 1 — comandos da madrugada (4 Proxmox)
+# Runbook Etapa 1 — comandos da madrugada
 
 > Colar na ordem. Comentários explicam o que cada bloco faz.
 > Se algo falhar no meio: use a seção **ROLLBACK** do bloco e **pare**.
 > Scripts espelho: `scripts/noite-etapa1/`
 >
-> ⚠️ **Não aplicar agora (usuário, 2026-07-27):** só preparar. A **RB750-WIREGUARD sai depois**
-> — NAT/VPN vão para a **CCR1036**. O M1 no RB750 é **provisório** (até a troca de cabo);
-> não é desenho final.
+> ⚠️ **Não aplicar agora (usuário, 2026-07-27):** só preparar.
+>
+> ✅ **Decisão (usuário, 2026-07-27):** **não mexer no bridge do RB750-WIREGUARD.**
+> HubSoft + Zabbix ficam **fora** desta etapa no MK — migram quando o 750 sair e for
+> pra **CCR/Datacom**. Etapa 1 no Mikrotik = só **Docker (ether7)** + **DNS (ether8)**.
 
-**IPs alvo:** `.1` GW · `.10` Zabbix · `.11` Docker · `.12` DNS · `.13` HubSoft  
+**IPs alvo nesta etapa:** `.1` GW · `.11` Docker · `.12` DNS  
+**Depois (CCR):** `.10` Zabbix · `.13` HubSoft  
 **VLANs:** 100 = gerência (native) · 16 = público (tagged)  
 **Regra:** nunca `tag=16` no Proxmox antes do trunk no Mikrotik.
 
@@ -19,7 +22,7 @@
 ## 1A) RB3011 — cria bridge-servidores + GW 192.168.254.1
 
 ```rsc
-# Cria a bridge VLAN-aware que vai receber ether7/8/10
+# Cria a bridge VLAN-aware (ether7 Docker; depois ether8 DNS — SEM ether10/RB750)
 /interface bridge add name=bridge-servidores vlan-filtering=yes protocol-mode=none \
   comment="Etapa1 VLAN100 gerencia + VLAN16 publico"
 
@@ -129,173 +132,16 @@ ping -c 3 192.168.254.1
 
 ---
 
-# BLOCO 2 — HubSoft + Zabbix (juntos)
+# BLOCO 2 — HubSoft + Zabbix — NÃO FAZER AGORA
 
-## 2A) RB750-WIREGUARD — trunk 100+16 + move .19 para vlan16
-
-```rsc
-# PROVISORIO: este RB750 sai depois; VPN/NAT migram pra CCR1036.
-# Este bloco so existe pra Etapa 1 enquanto HubSoft/Zabbix ainda penduram aqui.
-#
-# Por que vlan16-wg?
-# Hoje o .19 esta no ether5 (porta do bridge, L2 flat).
-# Quando liga vlan-filtering, publico = VLAN 16.
-# WireGuard/NAT precisa CONTINUAR no /27 — .19 sai do ether5 para iface VLAN 16.
-# vlan100-wg: NAO precisa (.1 fica no RB3011; 750 so encaminha L2 da 100).
-
-/interface vlan add name=vlan16-wg vlan-id=16 interface="bridge1 - Servidores" \
-  comment="IP PUBLICO .19 WireGuard — obrigatorio apos vlan-filtering"
-
-# Move .19 do ether5 para a vlan16 (mesmo L2 publico de antes)
-/ip address set [find address="177.72.104.19/27"] interface=vlan16-wg
-
-/interface bridge set [find name="bridge1 - Servidores"] vlan-filtering=yes
-
-/interface bridge port
-set [find interface="ether1 - LIVRE"] pvid=100
-set [find interface="ether2 - NE8000 Gerencia"] pvid=100
-set [find interface="ether3 - Proxmox Zabbix"] pvid=100
-set [find interface="ether4 - Proxmox HubSoft"] pvid=100
-set [find interface="ether5 - Uplink GW Servidores"] pvid=100
-
-# 100: servidores untagged | uplink tagged (so L2, sem IP no 750)
-# 16: servidores+uplink tagged | bridge tagged porque existe vlan16-wg (.19)
-/interface bridge vlan
-add bridge="bridge1 - Servidores" vlan-ids=100 \
-  untagged="ether1 - LIVRE","ether2 - NE8000 Gerencia","ether3 - Proxmox Zabbix","ether4 - Proxmox HubSoft" \
-  tagged="ether5 - Uplink GW Servidores"
-add bridge="bridge1 - Servidores" vlan-ids=16 \
-  tagged="ether3 - Proxmox Zabbix","ether4 - Proxmox HubSoft","ether5 - Uplink GW Servidores","bridge1 - Servidores"
-
-# Conferir VPN / default
-/ip address print where address~"177.72.104.19"
-/ping 177.72.104.1 count=5
 ```
-
-## 2B) RB3011 — ether10 (RB750) entra no trunk
-
-```rsc
-/interface bridge port remove [find interface~"ether10"]
-
-/interface bridge port add bridge=bridge-servidores \
-  interface="ether10 - RB750 Bridge" pvid=1
-
-# Uplink so tagged (sem untagged util)
-/interface bridge vlan add bridge=bridge-servidores vlan-ids=100 \
-  tagged="ether10 - RB750 Bridge"
-/interface bridge vlan add bridge=bridge-servidores vlan-ids=16 \
-  tagged="ether10 - RB750 Bridge"
-
-# /30 HubSoft antigo, se existir, vai pra vlan100
-:do {
-  /ip address set [find address="192.168.115.209/30"] interface=vlan100-servidores
-} on-error={}
-
-# Tem que continuar pingando HubSoft e Zabbix antigos
-/ping 192.168.254.1 count=2
-/ping 177.72.104.19 count=5
-/ping 192.168.115.210 count=3
-/ping 177.72.104.5 count=3
-```
-
-## 2C) Proxmox HubSoft — IP .13 + tag 16
-
-```bash
-# Host px-hubsoft — vlan-aware no vmbr0 ja deve ser 1
-cat /sys/class/net/vmbr0/bridge/vlan_filtering
-
-# --- IP novo EM PARALELO (ao vivo; manter .210) ---
-ip addr add 192.168.254.13/24 dev vmbr0
-ip addr show dev vmbr0
-ping -c 3 192.168.254.1
-# GUI: https://192.168.254.13:8006
-
-# HubSoft publico
-qm set 102 -net0 virtio,bridge=vmbr0,tag=16,macaddr=72:56:05:A7:29:E9
-# Radius 101: SEM tag 16 (fica native VLAN 100)
-
-ping -c 3 177.72.104.16
-
-# --- Se OK: virar default + gravar + tirar .210 ---
-ip route replace default via 192.168.254.1
-# Em /etc/network/interfaces do vmbr0:
-#   address 192.168.254.13/24
-#   gateway 192.168.254.1
-# (remover 192.168.115.210/30 e gateway .209)
-nano /etc/network/interfaces
-ifreload -a
-ip addr del 192.168.115.210/30 dev vmbr0 2>/dev/null || true
-ping -c 3 192.168.254.1
-```
-
-## 2D) Proxmox Zabbix — IP .10 + tag 16 + tira .5
-
-```bash
-# Host proxmox3 — hoje 177.72.104.5/27 no vmbr0
-
-# --- VLAN-aware vmbr0 ---
-# Em /etc/network/interfaces no bloco vmbr0 acrescentar:
-#   bridge-vlan-aware yes
-#   bridge-vids 2-4094
-nano /etc/network/interfaces
-ifreload -a
-cat /sys/class/net/vmbr0/bridge/vlan_filtering
-
-# --- IP novo EM PARALELO (MANTER .5 ate validar) ---
-ip addr add 192.168.254.10/24 dev vmbr0
-ip addr show dev vmbr0
-ping -c 3 192.168.254.1
-# GUI: https://192.168.254.10:8006
-
-# Dude: trocar device 177.72.104.5 -> 192.168.254.10
-
-# VMs publicas tag 16
-qm set 110 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=4E:01:6C:C9:F0:78
-qm set 103 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=B2:63:2D:95:56:FD
-qm set 107 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=56:EC:57:EB:68:14
-qm set 105 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=8A:26:35:E8:3A:BF
-qm set 104 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=EE:2A:8A:5A:EE:E0
-qm set 106 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=1A:97:C3:E0:DC:D3
-qm set 108 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=16:8C:EF:D4:03:FD
-qm set 102 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=F2:19:E1:4A:8C:8A
-# 100/101/109: sem tag 16 (privadas / later)
-
-ping -c 3 177.72.104.6
-
-# --- Se OK: virar default + gravar + REMOVER .5 do /27 ---
-ip route replace default via 192.168.254.1
-# Em /etc/network/interfaces do vmbr0:
-#   address 192.168.254.10/24
-#   gateway 192.168.254.1
-# (remover 177.72.104.5/27 e gateway 177.72.104.1)
-nano /etc/network/interfaces
-ifreload -a
-ip addr del 177.72.104.5/27 dev vmbr0 2>/dev/null || true
-ping -c 3 192.168.254.1
-```
-
-### ROLLBACK HubSoft+Zabbix — RB750 depois RB3011
-
-```rsc
-# --- No RB750-WIREGUARD ---
-/interface bridge set [find name="bridge1 - Servidores"] vlan-filtering=no
-/interface bridge vlan remove [find bridge="bridge1 - Servidores"]
-/ip address set [find address="177.72.104.19/27"] interface="ether5 - Uplink GW Servidores"
-/interface vlan remove [find name=vlan16-wg]
-/ping 177.72.104.1 count=5
-
-# --- No RB3011 ---
-/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=100 tagged~"ether10"]
-/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=16 tagged~"ether10"]
-/interface bridge port remove [find bridge=bridge-servidores interface~"ether10"]
-:do {
-  /ip address set [find address="192.168.115.209/30"] interface="Bridge IP Publico"
-} on-error={}
-/interface bridge port add bridge="Bridge IP Publico" \
-  interface="ether10 - RB750 Bridge" hw=yes
-/ping 192.168.115.210 count=3
-/ping 177.72.104.5 count=3
-/ping 177.72.104.19 count=3
+# Usuario 2026-07-27: nao mexer no bridge do RB750.
+# HubSoft/Zabbix continuam no path flat do 750 ate a troca pra CCR/Datacom.
+# Scripts guardados (nao usar nesta etapa):
+#   scripts/noite-etapa1/hubsoft-zabbix-m1-rb750-rb3011.rsc
+#   hubsoft-m2-proxmox.sh · zabbix-m2-proxmox.sh · hubsoft-zabbix-rollback.rsc
+# Motivo: sem vlan-filtering no 750, nao da pra separar VLAN 100/.19 no mesmo
+# uplink sem quebrar o WireGuard .19 (ou sem tag=16 cedo demais).
 ```
 
 ---
@@ -376,26 +222,17 @@ ping -c 3 192.168.254.1
 
 ---
 
-# Depois dos 4
+# Depois dos 2 (Docker + DNS)
 
 ```rsc
-# No RB3011 — conferência final
+# No RB3011 — conferencia final (HubSoft/Zabbix ainda no path antigo do RB750)
 /ping 192.168.254.1 count=2
-/ping 192.168.254.10 count=3
 /ping 192.168.254.11 count=3
 /ping 192.168.254.12 count=3
-/ping 192.168.254.13 count=3
-/ping 177.72.104.16 count=2
 /ping 177.72.104.28 count=2
-/ping 177.72.104.6 count=2
-/ping 177.72.104.19 count=2
+/ping 177.72.104.12 count=2
 
-/export file=gw-servidores-pos-etapa1
-```
-
-```rsc
-# No RB750-WIREGUARD
-/export file=rb750-pos-etapa1
+/export file=gw-servidores-pos-etapa1-docker-dns
 ```
 
 ---

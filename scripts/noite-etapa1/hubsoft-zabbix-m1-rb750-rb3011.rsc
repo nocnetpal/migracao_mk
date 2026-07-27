@@ -1,15 +1,11 @@
-# M1 HubSoft + Zabbix — MESMA madrugada (RB750 + RB3011 ether10)
-# Ordem: (A) RB750-WIREGUARD → (B) RB3011 ether10 → validar → M2 hosts
-# IPs alvo: HubSoft .13 · Zabbix .10 · GW .1
-# Nomes confirmados 2026-07-27.
+# M1 HubSoft + Zabbix — ADIADO (usuario 2026-07-27)
+# NAO APLICAR: nao mexer no bridge do RB750.
+# HubSoft/Zabbix migram na troca pra CCR/Datacom.
+# Conteudo antigo preservado abaixo so como referencia — NAO COLAR.
 
 # =============================================================================
-# (A) No RB750-WIREGUARD
+# (A) No RB750-WIREGUARD — NAO USAR AGORA
 # =============================================================================
-# Por que vlan16-wg?
-# Hoje .19 esta no ether5 (L2 flat). Com vlan-filtering, publico = VLAN 16.
-# WireGuard/NAT precisa do .19 no /27 → move IP para iface VLAN 16 no bridge.
-# vlan100-wg NAO precisa: RB750 so encaminha L2 da 100; GW .1 fica no RB3011.
 
 /interface vlan add name=vlan16-wg vlan-id=16 interface="bridge1 - Servidores" \
   comment="IP PUBLICO .19 WireGuard — obrigatorio apos vlan-filtering"
