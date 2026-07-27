@@ -3,6 +3,10 @@
 > Colar na ordem. Comentários explicam o que cada bloco faz.
 > Se algo falhar no meio: use a seção **ROLLBACK** do bloco e **pare**.
 > Scripts espelho: `scripts/noite-etapa1/`
+>
+> ⚠️ **Não aplicar agora (usuário, 2026-07-27):** só preparar. A **RB750-WIREGUARD sai depois**
+> — NAT/VPN vão para a **CCR1036**. O M1 no RB750 é **provisório** (até a troca de cabo);
+> não é desenho final.
 
 **IPs alvo:** `.1` GW · `.10` Zabbix · `.11` Docker · `.12` DNS · `.13` HubSoft  
 **VLANs:** 100 = gerência (native) · 16 = público (tagged)  
@@ -130,15 +134,14 @@ ping -c 3 192.168.254.1
 ## 2A) RB750-WIREGUARD — trunk 100+16 + move .19 para vlan16
 
 ```rsc
+# PROVISORIO: este RB750 sai depois; VPN/NAT migram pra CCR1036.
+# Este bloco so existe pra Etapa 1 enquanto HubSoft/Zabbix ainda penduram aqui.
+#
 # Por que vlan16-wg?
 # Hoje o .19 esta no ether5 (porta do bridge, L2 flat).
-# Quando liga vlan-filtering, as VLANs separam: a gerencia vira 100 e o
-# publico vira 16. O WireGuard/NAT precisa CONTINUAR no /27 publico —
-# entao o IP .19 tem que sair do ether5 e ir para uma iface VLAN 16 no bridge.
-# Sem isso o .19 some do L2 do Bridge IP Publico e a VPN cai.
-#
-# vlan100-wg: NAO precisa. O RB750 nao tem IP na gerencia (.1 fica no RB3011).
-# A VLAN 100 so atravessa o bridge (ether3/4 untagged <-> ether5 tagged).
+# Quando liga vlan-filtering, publico = VLAN 16.
+# WireGuard/NAT precisa CONTINUAR no /27 — .19 sai do ether5 para iface VLAN 16.
+# vlan100-wg: NAO precisa (.1 fica no RB3011; 750 so encaminha L2 da 100).
 
 /interface vlan add name=vlan16-wg vlan-id=16 interface="bridge1 - Servidores" \
   comment="IP PUBLICO .19 WireGuard — obrigatorio apos vlan-filtering"

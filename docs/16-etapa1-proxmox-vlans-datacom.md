@@ -11,6 +11,9 @@
 >
 > PPPoE_NETPAL / BGP_NETPAL: sem VLAN L2 100/16 (normal). Zero mudança aplicada além de
 > renomes ether6–10 no RB3011 e portas do RB750 (`RB750-WIREGUARD`, 2026-07-27).
+>
+> ⚠️ **Virada Etapa 1:** scripts/runbook prontos — **não aplicar agora** (usuário 2026-07-27).
+> **RB750 sai depois** (VPN/NAT → CCR1036); M1 no 750 é só ponte até a troca física.
 
 ## Mapa
 
