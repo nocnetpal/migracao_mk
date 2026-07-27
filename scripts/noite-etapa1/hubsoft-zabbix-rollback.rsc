@@ -6,7 +6,6 @@
 /interface bridge vlan remove [find bridge="bridge1 - Servidores"]
 /ip address set [find address="177.72.104.19/27"] interface="ether5 - Uplink GW Servidores"
 /interface vlan remove [find name=vlan16-wg]
-/interface vlan remove [find name=vlan100-wg]
 /ping 177.72.104.1 count=5
 
 # --- RB3011 ---

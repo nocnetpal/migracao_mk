@@ -130,15 +130,20 @@ ping -c 3 192.168.254.1
 ## 2A) RB750-WIREGUARD — trunk 100+16 + move .19 para vlan16
 
 ```rsc
-# Impacto: HubSoft + Zabbix + NE8000 mgmt + VPN .19 no mesmo bridge
+# Por que vlan16-wg?
+# Hoje o .19 esta no ether5 (porta do bridge, L2 flat).
+# Quando liga vlan-filtering, as VLANs separam: a gerencia vira 100 e o
+# publico vira 16. O WireGuard/NAT precisa CONTINUAR no /27 publico —
+# entao o IP .19 tem que sair do ether5 e ir para uma iface VLAN 16 no bridge.
+# Sem isso o .19 some do L2 do Bridge IP Publico e a VPN cai.
+#
+# vlan100-wg: NAO precisa. O RB750 nao tem IP na gerencia (.1 fica no RB3011).
+# A VLAN 100 so atravessa o bridge (ether3/4 untagged <-> ether5 tagged).
 
-# VLAN 16 para o IP publico .19 (antes de filtrar)
 /interface vlan add name=vlan16-wg vlan-id=16 interface="bridge1 - Servidores" \
-  comment="IP PUBLICO .19 WireGuard"
-/interface vlan add name=vlan100-wg vlan-id=100 interface="bridge1 - Servidores" \
-  comment="GERENCIA (L2 only; GW fica no RB3011 .1)"
+  comment="IP PUBLICO .19 WireGuard — obrigatorio apos vlan-filtering"
 
-# Move .19 do ether5 para a vlan16
+# Move .19 do ether5 para a vlan16 (mesmo L2 publico de antes)
 /ip address set [find address="177.72.104.19/27"] interface=vlan16-wg
 
 /interface bridge set [find name="bridge1 - Servidores"] vlan-filtering=yes
@@ -150,11 +155,12 @@ set [find interface="ether3 - Proxmox Zabbix"] pvid=100
 set [find interface="ether4 - Proxmox HubSoft"] pvid=100
 set [find interface="ether5 - Uplink GW Servidores"] pvid=100
 
-# ether3/4: native 100 + tagged 16 | ether5: tagged 100+16 (uplink)
+# 100: servidores untagged | uplink tagged (so L2, sem IP no 750)
+# 16: servidores+uplink tagged | bridge tagged porque existe vlan16-wg (.19)
 /interface bridge vlan
 add bridge="bridge1 - Servidores" vlan-ids=100 \
   untagged="ether1 - LIVRE","ether2 - NE8000 Gerencia","ether3 - Proxmox Zabbix","ether4 - Proxmox HubSoft" \
-  tagged="ether5 - Uplink GW Servidores","bridge1 - Servidores"
+  tagged="ether5 - Uplink GW Servidores"
 add bridge="bridge1 - Servidores" vlan-ids=16 \
   tagged="ether3 - Proxmox Zabbix","ether4 - Proxmox HubSoft","ether5 - Uplink GW Servidores","bridge1 - Servidores"
 
@@ -273,7 +279,6 @@ ping -c 3 192.168.254.1
 /interface bridge vlan remove [find bridge="bridge1 - Servidores"]
 /ip address set [find address="177.72.104.19/27"] interface="ether5 - Uplink GW Servidores"
 /interface vlan remove [find name=vlan16-wg]
-/interface vlan remove [find name=vlan100-wg]
 /ping 177.72.104.1 count=5
 
 # --- No RB3011 ---
