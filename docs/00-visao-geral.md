@@ -23,7 +23,8 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 ## Status
 
 📋 Fase atual: **Etapa 1** — VLAN **100** = `192.168.254.0/24` (hypervisors `.10`–`.13`, GW `.1`)
-+ VLAN **16** (VMs `177.x`); ainda nos Mikrotiks — [16](16-etapa1-proxmox-vlans-datacom.md).
++ VLAN **16** (VMs `177.x`); ainda nos Mikrotiks — [16](16-etapa1-proxmox-vlans-datacom.md) ·
+**runbook madrugada:** [17](17-runbook-etapa1-madrugada.md).
 SW_JDF: 100 livre · 16 = IP_PUBLICO.
 
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
@@ -105,4 +106,5 @@ SW_JDF: 100 livre · 16 = IP_PUBLICO.
 - [14-ips-servidores-e-17772.md](14-ips-servidores-e-17772.md) — lista consolidada de IPs dos servidores físicos/VMs + mapa do `177.72.104.0/27` para a virada
 - [15-plano-migracao-servidores-177.md](15-plano-migracao-servidores-177.md) — **Etapa A** (DM4170+CCR no NE8000) e **Etapa B** (só servidores 177); QinQ fora desta fase
 - [16-etapa1-proxmox-vlans-datacom.md](16-etapa1-proxmox-vlans-datacom.md) — 🆕 **primeira etapa:** VLANs Proxmox + portas Datacom (native gerência + tag 16)
+- [17-runbook-etapa1-madrugada.md](17-runbook-etapa1-madrugada.md) — 🆕 **runbook passo a passo** da madrugada Etapa 1 (4 Proxmox)
 - [arquitetura-alvo.drawio](arquitetura-alvo.drawio) — diagrama esquemático da arquitetura alvo (abrir no draw.io desktop ou app.diagrams.net)

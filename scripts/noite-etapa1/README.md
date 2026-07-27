@@ -34,7 +34,7 @@ Por bloco: M1 → ping → M2 (IP paralelo + tags) → validar → remover IP ve
 | DNS | `dns-m1-rb3011.rsc` | `dns-m2-proxmox.sh` | `dns-rollback.rsc` |
 
 Lista VMs: `qm-set-lista.md`  
-Docs: `docs/16-etapa1-proxmox-vlans-datacom.md`
+Docs: `docs/16-etapa1-proxmox-vlans-datacom.md` · **runbook:** `docs/17-runbook-etapa1-madrugada.md`
 
 ## Placeholders antigos
 

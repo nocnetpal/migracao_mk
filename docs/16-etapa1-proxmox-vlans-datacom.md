@@ -96,5 +96,6 @@ Entre cada bloco: ping gerência + 1× `177` OK antes do próximo. Rollback só 
 
 - Live Proxmox: `config/proxmox-*/live-network-2026-07-27.txt`
 - Scripts: `scripts/noite-etapa1/`
+- **Runbook madrugada (passo a passo):** [17-runbook-etapa1-madrugada.md](17-runbook-etapa1-madrugada.md)
 - SW_JDF: `display vlan 100/16` (2026-07-27)
 - [15](15-plano-migracao-servidores-177.md) · topologia rack
