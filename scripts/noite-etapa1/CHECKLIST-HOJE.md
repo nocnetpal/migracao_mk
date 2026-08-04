@@ -9,25 +9,22 @@
 
 ## FASE 0 — Pré-janela (fazer ANTES de começar)
 
-- [ ] **0.1** Confirmar autorização: o banner "não aplicar agora" (2026-07-27) está superado — hoje é a janela oficial.
-- [ ] **0.2** Export fresco do RB3011: `/export file=gw-servidores-pre-etapa1-2026-08-04`
+- [x] **0.1** Confirmar autorização ✅ (2026-08-04)
+- [x] **0.2** Export fresco do RB3011 ✅ → `config/rb3011/gw-servidores-pre-etapa1-2026-08-04.rsc`
 - [ ] **0.3** Export fresco do RB750-WIREGUARD (precaução, não vamos mexer nele)
 - [ ] **0.4** Acesso IPMI/iDRAC validado no Proxmox Docker (Dell) e iLO no Proxmox DNS (HP)
-- [ ] **0.5** Conferir nomes exatos no RB3011: `/interface print`
-  - [ ] `ether7 - Proxmox Docker CDNTV`
-  - [ ] `ether8 - Proxmox DNS`
-  - [ ] `Bridge IP Publico`
-- [ ] **0.6** `192.168.254.0/24` livre: `/ip address print where address~"192.168.254"` (nada), `/ip route print where dst-address~"192.168.254"`, checar também no NE8000
-- [ ] **0.7** Baseline de pings (anotar resultados):
-  - [ ] `ping 192.168.116.122` (Docker host) ✓
-  - [ ] `ping 192.168.115.138` (DNS host) ✓
-  - [ ] `ping 177.72.104.12` (OpenVPN2) ✓
-  - [ ] `ping 177.72.104.28` (NS-UNBOUND) ✓
-  - [ ] `ping 192.168.116.10` (NTP da rede) ✓
-  - [ ] `ping 177.72.104.2` `.3` `.8` `.10` `.11` `.21` (containers Docker-Netpal) ✓
-- [ ] **0.8** No host Docker: `cp /etc/network/interfaces /etc/network/interfaces.bak-pre-etapa1` (preserva `10.250.104.1/24` e `10.250.102.1/24` no vmbr1)
+- [x] **0.5** Conferir nomes exatos no RB3011 ✅
+  - [x] `ether7 - Proxmox Docker CDNTV`
+  - [x] `ether8 - Proxmox DNS`
+  - [x] `Bridge IP Publico`
+- [x] **0.6** `192.168.254.0/24` livre ✅ — nada no RB3011
+- [x] **0.7** Baseline de pings ✅ → `config/rb3011/baseline-pings-pre-etapa1-2026-08-04.txt`
+  - [x] `ping 192.168.116.122` (Docker host) → 5/5 OK
+  - [x] `ping 177.72.104.12` (OpenVPN2) → 3/3 OK
+  - [x] `ping 177.72.104.2` `.3` `.8` `.10` `.11` `.21` `.107` → todos OK
+- [x] **0.8** No host Docker: backup interfaces ✅ → `config/proxmox-docker/interfaces-pre-etapa1-2026-08-04.txt`
 - [ ] **0.9** No host DNS: `cp /etc/network/interfaces /etc/network/interfaces.bak-pre-etapa1`
-- [ ] **0.10** `qm config` salvo das VMs: Docker (101, 103–107), DNS (101, 102, 103, 105)
+- [x] **0.10** `qm config` salvo das VMs Docker (101, 103–107) ✅ → `config/proxmox-docker/qm-configs-pre-etapa1-2026-08-04.txt`
 - [ ] **0.11** Decisão tomada e comandos escritos para **Docker-Netpal (VMID 100) macvlan → VLAN 16** (ver FASE 1.5 abaixo)
 - [ ] **0.12** Decisão sobre **CdnTV-Edge `.108`**: entra ou fica de fora (hoje só `.107` entra nos qm set)
 - [ ] **0.13** Critério de abort definido: se gate de ping falhar ou bloco travar > 15 min → rollback do bloco e **parar**
