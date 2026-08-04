@@ -1,0 +1,12 @@
+# Baseline de pings — pré-janela Etapa 1 — 2026-08-04 ~17:10
+# Todos OK, 0% loss
+
+192.168.116.122  (Docker host)       → 5/5 loss=0% 0ms
+177.72.104.12   (OpenVPN2)          → 3/3 loss=0% 0ms
+177.72.104.2    (container)         → 3/3 loss=0% 0ms
+177.72.104.3    (container)         → 3/3 loss=0% 0ms
+177.72.104.8    (container)         → 3/3 loss=0% 0ms
+177.72.104.10   (container)         → 3/3 loss=0% 0ms
+177.72.104.11   (container)         → 3/3 loss=0% 0ms
+177.72.104.21   (container)         → 3/3 loss=0% 0ms
+177.72.104.107  (CdnTV-Origin)      → 3/3 loss=0% 0ms

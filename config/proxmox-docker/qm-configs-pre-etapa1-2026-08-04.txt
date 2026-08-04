@@ -1,0 +1,103 @@
+# qm config — Proxmox Docker/CDNTV — pré-janela Etapa 1 — 2026-08-04
+
+## VMID 101 — CdnTV-Origin
+boot: order=scsi0;net0
+cores: 8
+cpu: host
+memory: 16384
+name: CdnTV-Origin
+net0: virtio=2A:B7:2D:D8:6E:A2,bridge=vmbr1,firewall=1,queues=8
+numa: 0
+onboot: 1
+ostype: l26
+scsi0: Docker:vm-101-disk-0,size=150G
+scsihw: virtio-scsi-pci
+smbios1: uuid=9e9cbab4-f332-4dee-bc11-53170e9823c0
+sockets: 2
+vmgenid: f3c1daf1-de8a-4a9b-87d8-1905d677eae9
+
+## VMID 103 — OPA.SUIT
+boot: order=scsi0;net0
+cores: 2
+cpu: host
+memory: 16984
+name: OPA.SUIT
+net0: e1000=F6:C7:5C:8A:4A:A3,bridge=vmbr1,firewall=1
+numa: 0
+onboot: 1
+ostype: l26
+scsi0: local-lvm:vm-103-disk-0,size=500G
+scsihw: virtio-scsi-pci
+smbios1: uuid=820d86e0-f8ea-44c9-8262-ef7339cb22e6
+sockets: 4
+vmgenid: e71f703f-3a38-47e5-8daf-211a9b0884bd
+
+## VMID 104 — Fusion-Painel-Elaborados
+boot: order=scsi0;net0
+cores: 4
+cpu: host
+memory: 8492
+name: Fusion-Painel-Elaborados
+net0: virtio=6E:26:1A:C9:19:CE,bridge=vmbr1,firewall=0
+numa: 0
+onboot: 1
+ostype: l26
+scsi0: local-lvm:vm-104-disk-0,size=200G
+scsihw: virtio-scsi-pci
+smbios1: uuid=9174a748-c37f-4382-a023-7ae74881e530
+sockets: 2
+vmgenid: 7e7aac32-dc44-499e-bfc4-150f29742a2c
+
+## VMID 105 — OpenVPN2
+boot: order=scsi0;net0
+cores: 2
+cpu: kvm64
+memory: 4096
+name: OpenVPN2
+net0: virtio=62:B2:A1:0A:B1:AE,bridge=vmbr1,firewall=1
+numa: 0
+onboot: 1
+ostype: l26
+scsi0: Docker:vm-105-disk-0,size=500G
+scsihw: virtio-scsi-pci
+smbios1: uuid=834bc9f8-c053-4074-b11f-3c8b87ebee3b
+sockets: 2
+vmgenid: efaf209c-2230-4afb-a8f5-6f13b3641830
+
+## VMID 106 — Fusion-Painel-Simples
+boot: order=scsi0;net0
+cores: 4
+cpu: host
+memory: 4192
+name: Fusion-Painel-Simples
+net0: virtio=0E:C8:34:76:59:4E,bridge=vmbr1,firewall=1
+numa: 0
+onboot: 1
+ostype: l26
+scsi0: local-lvm:vm-106-disk-0,size=300G
+scsihw: virtio-scsi-pci
+smbios1: uuid=acb7dcec-f351-4b72-a120-a8259c1dafcf
+sockets: 2
+vmgenid: 69e3ca40-a52c-4dfb-b9e8-87fbea2a8b55
+
+## VMID 107 — APP-ETC-SCRIPTS
+balloon: 0
+boot: order=sata0;net0
+cores: 4
+cpu: host
+memory: 8196
+name: APP-ETC-SCRIPTS
+net0: virtio=36:DC:89:9D:DA:5A,bridge=vmbr1,firewall=1
+numa: 0
+onboot: 1
+ostype: l26
+sata0: Docker:vm-107-disk-0,size=60G
+scsihw: virtio-scsi-pci
+smbios1: uuid=c14881da-6fa3-4e56-b5aa-0f35919bd8d7
+sockets: 2
+vmgenid: c9d92702-94e5-450c-97c8-13636ccfc085
+
+## Resumo
+- Todas em vmbr1 (flat, sem tag)
+- MACs confirmados conforme qm-set-lista.md
+- Nenhuma tem VLAN tag hoje
