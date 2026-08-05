@@ -624,6 +624,19 @@ o transporte IPv6 sem rota (`do-ip6: no`). A pendência operacional da decisão 
 HubSoft `.13` e Zabbix `.10`, adiados para CCR/Datacom. Evidência:
 [`config/proxmox-dns/fase2-concluida-2026-08-05.txt`](../config/proxmox-dns/fase2-concluida-2026-08-05.txt).
 
+⚠️ **Pré-check HubSoft (2026-08-05):** host `px-hubsoft` saudável em `.210/30`, `vmbr0`
+VLAN-aware e somente `eno1` conectado; VMs 101 RADIUS (`.214`) e 102 HubSoft (`.16`) estão
+`running`, mas sem QEMU Agent. Todos os gateways/serviços e internet responderam. O TTL 63 de
+`.214` confirmou que o RADIUS usa outra rede, `192.168.115.212/30`, cujo gateway `.213` também
+está na `Bridge IP Publico` do RB3011. O script antigo movia apenas `.209/30` e estava incompleto.
+Além disso, ativar VLAN filtering no RB750 para migrar só a porta p4 reclassifica também o tráfego
+untagged do Zabbix, WireGuard e gerência do NE8000; portanto **HubSoft não pode ser virado
+isoladamente pelo procedimento antigo**. ✅ **Escopo reafirmado pelo usuário em 2026-08-05:**
+esta rodada é somente organização/inventário dos IPs; DM4170 e CCR não entram agora, não haverá
+recabeamento nem mudança no RB750. Para o futuro, os caminhos seguros continuam sendo porta nova
+direta no DM4170, segundo cabo temporário ou corte coordenado HubSoft+Zabbix. Evidência:
+[`config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt`](../config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt).
+
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do
 cluster Zabbix** — ou seja, HubSoft nunca teve cabo dedicado, compartilha o segmento físico com o

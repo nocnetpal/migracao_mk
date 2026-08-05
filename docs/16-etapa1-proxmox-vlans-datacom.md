@@ -155,7 +155,13 @@ Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-
 
 ## Fora / later
 
-- VMs órfãs detalhe fino (cabem na 100 se RFC1918)
+- ⚠️ HubSoft não pode ser migrado isoladamente pelo RB750: ativar VLAN filtering afeta também
+  Zabbix, WireGuard e gerência NE8000. A VM `HUBSOFT-RADIUS` `.214` usa gateway `.213/30`, que o
+  script antigo não transportava. **Nesta rodada, por decisão do usuário (2026-08-05), somente
+  organizar os IPs:** sem DM4170, CCR, recabeamento, tags ou mudança no RB750. Pré-check:
+  `config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt`.
+- VMs privadas: decidir se mantêm as sub-redes atuais como secundárias na VLAN 100 ou se serão
+  renumeradas; para o RADIUS, renumerar exige revisar clientes e secrets antes.
 - `10.1.1.2` Zabbix `enp3s0f1`
 - QinQ / POP / OLT
 
