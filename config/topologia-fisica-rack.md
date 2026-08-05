@@ -25,6 +25,11 @@ RB GW SERVIDORES (RB3011)
                └── p5 GW SERVIDORES PORTA 10 (uplink de volta pro RB3011 ether10)
 ```
 
+> ✅ **Portas RB2011 confirmadas ao vivo em 2026-08-05:** `ether1` uplink, `ether2` TS SIX,
+> `ether3` MGNT CGNAT-1, `ether4` Régua Volt, `ether5` Dude e `ether6` RRFlow. `ether7`–`ether10`
+> estão sem link e livres. A `ether4` está `running` e aprende MAC mesmo com a Régua registrada
+> como estragada; link ativo não confirma que a função da Régua esteja operacional.
+
 🆕 **TERCEIRO Mikrotik: RB BRIDGE 750 = identity `WIREGUARD` (RB750Gr3, sn CC210F9A08D3)** —
 confirmado 2026-07-27 por MAC + `bridge host`. Duplo papel: bridge L2 (NE8000 mgmt + Zabbix +
 HubSoft, uplink `ether10` do RB3011) **e** concentrador VPN (WireGuard/OpenVPN) no

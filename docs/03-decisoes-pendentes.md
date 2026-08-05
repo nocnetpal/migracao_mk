@@ -81,7 +81,9 @@ que hoje penduram nos 3 MKs e passam a plugar direto:
 | 9 | Gerência NE8000 | RB750 p2 | confirmar |
 | 10 | Gerência OLT CPV | RB3011 ether9 | cobre |
 
-+ **Régua Volt** (RB2011 p4) — ESTRAGADA, **não migra** (dropar). ~10 portas de servidor +
++ **Régua Volt** (RB2011 p4) — ESTRAGADA, **não migra** (dropar). Coleta ao vivo de 2026-08-05
+mostrou `ether4` running e um MAC aprendido; isso confirma enlace físico, não funcionamento da
+Régua, e não altera a decisão de não migrar. ~10 portas de servidor +
 uplinks (QinQ de acesso, trunk NE8000, trunk CCR1036). Cabe folgado no DM4170 24GX+12XS (24 GE +
 12 10GE). ⚠️ **Material: ~8 transceivers SFP-RJ45 (1000BASE-T)** pros servidores em cobre — item de
 compra a confirmar (ver [02](02-arquitetura-alvo.md), questão física). CGNAT-1 e gerência NE8000
@@ -643,6 +645,14 @@ a tag até `ether4`. O `px-hubsoft` recebeu `.13/24` temporário em `vmbr0.100`,
 `.1` (3/3 perdidos). Rollback completo no host e RB3011; `.209`, RADIUS `.214` e HubSoft `.16`
 responderam 3/3 depois. **Sem alteração persistente e sem nova tentativa hoje.** Evidência:
 [`config/proxmox-hubsoft/tentativa-vlan100-rollback-2026-08-05.txt`](../config/proxmox-hubsoft/tentativa-vlan100-rollback-2026-08-05.txt).
+
+🔎 **Diagnóstico refinado na mesma data:** a primeira tentativa não saía da NIC porque faltava
+VLAN 100 no `vmbr0 self`. Após adicionar a associação temporária, `tcpdump` confirmou ARP tagged
+na `eno1` e o sniffer confirmou os mesmos quadros chegando à RB750 `ether4`. Ainda assim não houve
+resposta de `.1`; desativar hw-offload em `ether4/ether5` e declarar VLAN 100 explicitamente com
+`vlan-filtering=yes` na RB750 também não resolveu. Tudo foi novamente revertido e validado. A
+falha final está depois da entrada `ether4` da RB750 ou no handoff entre as bridges do RB3011; não
+há evidência suficiente para apontar um único equipamento sem captura adicional.
 
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do
