@@ -637,6 +637,13 @@ recabeamento nem mudança no RB750. Para o futuro, os caminhos seguros continuam
 direta no DM4170, segundo cabo temporário ou corte coordenado HubSoft+Zabbix. Evidência:
 [`config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt`](../config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt).
 
+❌ **Tentativa controlada abortada (2026-08-05):** foi criado temporariamente no RB3011 um
+handoff da VLAN 100 tagged sobre a `Bridge IP Publico`, contando com a RB750 flat para transportar
+a tag até `ether4`. O `px-hubsoft` recebeu `.13/24` temporário em `vmbr0.100`, mas não alcançou
+`.1` (3/3 perdidos). Rollback completo no host e RB3011; `.209`, RADIUS `.214` e HubSoft `.16`
+responderam 3/3 depois. **Sem alteração persistente e sem nova tentativa hoje.** Evidência:
+[`config/proxmox-hubsoft/tentativa-vlan100-rollback-2026-08-05.txt`](../config/proxmox-hubsoft/tentativa-vlan100-rollback-2026-08-05.txt).
+
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do
 cluster Zabbix** — ou seja, HubSoft nunca teve cabo dedicado, compartilha o segmento físico com o

@@ -160,6 +160,9 @@ Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-
   script antigo não transportava. **Nesta rodada, por decisão do usuário (2026-08-05), somente
   organizar os IPs:** sem DM4170, CCR, recabeamento, tags ou mudança no RB750. Pré-check:
   `config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt`.
+- ❌ Tentativa de transportar VLAN 100 tagged por RB3011 `Bridge IP Publico` → RB750 flat →
+  HubSoft não alcançou `.1`; rollback completo e serviços antigos 3/3 OK. Não repetir sem
+  diagnóstico. Evidência: `config/proxmox-hubsoft/tentativa-vlan100-rollback-2026-08-05.txt`.
 - VMs privadas: decidir se mantêm as sub-redes atuais como secundárias na VLAN 100 ou se serão
   renumeradas; para o RADIUS, renumerar exige revisar clientes e secrets antes.
 - `10.1.1.2` Zabbix `enp3s0f1`

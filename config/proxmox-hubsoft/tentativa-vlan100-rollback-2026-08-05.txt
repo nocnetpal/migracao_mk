@@ -1,0 +1,30 @@
+# Tentativa VLAN 100 HubSoft + rollback - 2026-08-05
+
+## Transporte temporario criado no RB3011
+
+- vlan100-rb750: VLAN ID 100 sobre Bridge IP Publico
+- vlan100-rb750 adicionada ao bridge-servidores com PVID 100
+- VLAN 100 manteve ether7/ether8 e acrescentou vlan100-rb750 como untagged
+- RB750 nao foi alterada
+
+## Teste temporario no px-hubsoft
+
+root@px-hubsoft:~# ip link add link vmbr0 name vmbr0.100 type vlan id 100; ip link set vmbr0.100 up; ip addr add 192.168.254.13/24 dev vmbr0.100; ip -4 -br addr show vmbr0.100; ping -I vmbr0.100 -c3 192.168.254.1
+vmbr0.100@vmbr0  UP             192.168.254.13/24
+PING 192.168.254.1 (192.168.254.1) from 192.168.254.13 vmbr0.100: 56(84) bytes of data.
+3 packets transmitted, 0 received, 100% packet loss
+
+## Rollback executado
+
+- px-hubsoft: IP removido e vmbr0.100 eliminada
+- RB3011: vlan100-rb750 removida da tabela/bridge e interface VLAN eliminada
+- VLAN 100 voltou a ter somente ether7 Docker e ether8 DNS como untagged
+
+## Validacao pos-rollback a partir do px-hubsoft
+
+192.168.115.209: 3/3, 0% perda, media 0.161 ms
+192.168.115.214: 3/3, 0% perda, media 0.668 ms
+177.72.104.16:   3/3, 0% perda, media 0.555 ms
+
+Conclusao: tentativa abortada sem impacto persistente. Nao repetir sem diagnosticar em
+captura/bridge onde a tag 100 deixou de atravessar. Gerencia permanece em 192.168.115.210/30.
