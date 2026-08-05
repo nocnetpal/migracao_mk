@@ -1,0 +1,19 @@
+# Fase 2 - Proxmox DNS - IPs via QEMU Guest Agent - 2026-08-05
+# Saida bruta fornecida pelo usuario.
+
+root@proxmox-dns[~]# for id in $(qm list | awk 'NR>1 {print $1}'); do
+  name=$(qm config "$id" | awk -F': ' '/^name:/ {print $2}')
+  ips=$(qm guest cmd "$id" network-get-interfaces 2>/dev/null |
+    awk -F'"' '$2=="ip-address" {print $4}' |
+    grep -Ev '^(127\.|::1$|fe80:)' |
+    paste -sd ',' -)
+  printf "%-6s %-25s %s\n" "$id" "$name" "${ips:-AGENT_SEM_RESPOSTA}"
+done
+101    OLT-CLOUD                 AGENT_SEM_RESPOSTA
+102    API-ZAP                   177.72.104.26
+103    AUTOMACOES                177.72.104.29,172.23.0.1,172.20.0.1,172.17.0.1,172.18.0.1,172.19.0.1,172.21.0.1,172.22.0.1,172.24.0.1,172.25.0.1
+105    NS-UNBOUND                177.72.104.28,177.72.104.58,177.72.104.59
+
+# Leitura:
+# - OLT-CLOUD nao responde ao QEMU Guest Agent; o IP esperado .24 foi validado por ping.
+# - Os enderecos 172.x da VM AUTOMACOES sao redes Docker internas e nao fazem parte da VLAN 16.
