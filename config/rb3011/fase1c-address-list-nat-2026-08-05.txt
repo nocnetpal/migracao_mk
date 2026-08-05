@@ -1,0 +1,3 @@
+[jdf@GW Servidores] > /ip firewall address-list print where list=NAT
+# Mostrou apenas indices, sem os enderecos
+# Precisa de print detalhado

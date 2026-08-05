@@ -1,0 +1,4 @@
+# Problema: host Docker sem acesso a internet
+# Default route OK (192.168.254.1), ping .1 OK
+# Ping 8.8.8.8 falha
+# Causa: NAT nao configurado para VLAN 100 (192.168.254.0/24)

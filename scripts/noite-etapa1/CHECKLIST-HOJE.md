@@ -61,12 +61,13 @@
 - [x] **1C-macvlan (CRÍTICO):** VLAN 16 chegando ao parent macvlan da Docker-Netpal (VMID 100)
   - [x] Executar procedimento: `net7` adicionado, rede macvlan recriada com parent `ens2`
   - [x] Validar: `ping 177.72.104.2` `.3` `.8` `.10` `.11` `.21` — todos OK
-- [ ] Validar: `ping -c3 177.72.104.12` (OpenVPN2) → pendente
-- [ ] Validar: `ping -c3 177.72.104.107` (CdnTV-Origin, VM 101) → pendente
-- [ ] Só agora: `ip route replace default via 192.168.254.1` — pendente
-- [ ] Gravar `.11/24` + `gateway 192.168.254.1` em `/etc/network/interfaces` → `ifreload -a` — pendente
-- [ ] Remover IP velho: `ip addr del 192.168.116.122/30 dev vmbr1` — pendente
-- [ ] Conferir `10.250.104.1` e `10.250.102.1` ainda presentes no vmbr1 — pendente
+- [x] Validar: `ping -c3 177.72.104.12` (OpenVPN2) → OK
+- [x] Validar: `ping -c3 177.72.104.107` (CdnTV-Origin, VM 101) → OK
+- [x] Só agora: `ip route replace default via 192.168.254.1` — OK
+- [x] Gravar `.11/24` + `gateway 192.168.254.1` em `/etc/network/interfaces` → `ifreload -a` — OK
+- [x] Remover IP velho: `ip addr del 192.168.116.122/30 dev vmbr1` — OK
+- [x] Conferir `10.250.104.1` e `10.250.102.1` ainda presentes no vmbr1 — OK
+- [x] **NAT VLAN 100:** adicionado `192.168.254.0/24` na address-list `NAT` do RB3011 — OK (`ping 8.8.8.8` OK)
 
 ### 1D. Rollback lado Proxmox (ter pronto ANTES — usar só se necessário)
 ```
@@ -105,12 +106,13 @@
 
 ## FASE 3 — Validação final e fechamento
 
-- [ ] Do RB3011: ping `192.168.254.1` `.11` `.12` `177.72.104.12` `177.72.104.28`
-- [ ] Serviços públicos um a um: OpenVPN2 `.12` · Fusion `.22`/`.25` · APP `.23` · OPA `.30` · NS-UNBOUND `.28`/`.58` · OLT-CLOUD `.24` · API-ZAP `.26` · AUTOMACOES `.29` · containers `.2`/`.3`/`.8`/`.10`/`.11`/`.21` · CdnTV `.107`
-- [ ] NTP da rede: `ping 192.168.116.10` + equipamentos sincronizando
-- [ ] DNS recursivo resolvendo (testar de um cliente/rede de acesso)
-- [ ] GUIs Proxmox: `https://192.168.254.11:8006` e `https://192.168.254.12:8006`
-- [ ] Export final: `/export file=gw-servidores-pos-etapa1-docker-dns`
+- [x] Do RB3011: ping `192.168.254.1` `.11` `177.72.104.12` `177.72.104.2` `.3` `.8` `.10` `.11` `.21` — OK
+- [x] NE8000 validado: configuração atual salva em `config/ne8000/bgp_netpal-2026-08-05.txt`
+- [ ] Serviços públicos um a um: OpenVPN2 `.12` · Fusion `.22`/`.25` · APP `.23` · OPA `.30` · NS-UNBOUND `.28`/`.58` · OLT-CLOUD `.24` · API-ZAP `.26` · AUTOMACOES `.29` · containers `.2`/`.3`/`.8`/`.10`/`.11`/`.21` · CdnTV `.107` — pendente
+- [ ] NTP da rede: `ping 192.168.116.10` + equipamentos sincronizando — pendente
+- [ ] DNS recursivo resolvendo (testar de um cliente/rede de acesso) — pendente
+- [ ] GUIs Proxmox: `https://192.168.254.11:8006` — OK · `https://192.168.254.12:8006` — pendente (Fase 2)
+- [ ] Export final: `/export file=gw-servidores-pos-etapa1-docker-dns` — pendente
 
 ## FASE 4 — Pós (pode ser amanhã, mas registrar)
 

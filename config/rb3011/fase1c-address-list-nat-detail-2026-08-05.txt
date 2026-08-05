@@ -1,0 +1,3 @@
+# Address-list NAT: 32 entradas mas print detail nao mostra enderecos
+# Possivelmente lista vazia ou problema de visualizacao no RouterOS 6.49
+# Solucao direta: adicionar 192.168.254.0/24 na lista NAT

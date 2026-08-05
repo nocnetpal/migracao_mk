@@ -1,0 +1,7 @@
+[jdf@GW Servidores] > /ip firewall nat print where chain=srcnat
+Flags: X - disabled, I - invalid, D - dynamic 
+ 0    ;;; NAT GERAL
+      chain=srcnat action=src-nat to-addresses=177.72.104.1 dst-address=!192.168.116.30 src-address-list=NAT log=no log-prefix="" 
+
+ 1    ;;; NAT GERAL
+      chain=srcnat action=src-nat to-addresses=177.72.104.1 src-address-list=NAT_RADIUS dst-address-list=!FORA_DO_NAT_RADIUS log=no log-prefix="" 

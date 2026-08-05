@@ -1,0 +1,3 @@
+# Usuario informou: "subi o ip"
+# Provavelmente virou default route ou removeu IP velho
+# Validando estado final
