@@ -1,0 +1,73 @@
+# Pre-check segundo cabo - Proxmox Zabbix - 2026-08-05
+# Saida bruta fornecida pelo usuario; comandos somente de leitura.
+
+root@proxmox3:~# hostname; pveversion; cat /etc/network/interfaces; ip -br link; ip -4 -br addr; lspci -nn | grep -i ethernet
+proxmox3
+pve-manager/7.3-3/c3928077 (running kernel: 5.15.74-1-pve)
+
+=== /etc/network/interfaces ===
+auto lo
+iface lo inet loopback
+
+iface enp3s0f0 inet manual
+
+auto enp3s0f1
+iface enp3s0f1 inet static
+        address 10.1.1.2/24
+
+iface enp4s0f0 inet manual
+iface enp4s0f1 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+        address 177.72.104.5/27
+        gateway 177.72.104.1
+        bridge-ports enp3s0f0
+        bridge-stp off
+        bridge-fd 0
+
+=== Interfaces fisicas ===
+enp3s0f0         UP             44:1e:a1:48:2f:00 <BROADCAST,MULTICAST,UP,LOWER_UP>
+enp3s0f1         DOWN           44:1e:a1:48:2f:02 <NO-CARRIER,BROADCAST,MULTICAST,UP>
+enp4s0f0         DOWN           44:1e:a1:48:1f:fc <BROADCAST,MULTICAST>
+enp4s0f1         DOWN           44:1e:a1:48:1f:fe <BROADCAST,MULTICAST>
+vmbr0            UP             44:1e:a1:48:2f:00 <BROADCAST,MULTICAST,UP,LOWER_UP>
+
+=== Enderecos IPv4 ===
+lo               UNKNOWN        127.0.0.1/8
+enp3s0f1         DOWN           10.1.1.2/24
+vmbr0            UP             177.72.104.5/27
+
+=== Hardware ===
+03:00.0 Ethernet controller: Broadcom NetXtreme II BCM5709 Gigabit Ethernet
+03:00.1 Ethernet controller: Broadcom NetXtreme II BCM5709 Gigabit Ethernet
+04:00.0 Ethernet controller: Broadcom NetXtreme II BCM5709 Gigabit Ethernet
+04:00.1 Ethernet controller: Broadcom NetXtreme II BCM5709 Gigabit Ethernet
+
+## Conclusao
+
+- enp3s0f0: producao atual, vmbr0, 177.72.104.5/27 via RB750;
+- enp3s0f1: configurada em 10.1.1.2/24, mas confirmada pelo usuario como nao utilizada;
+- enp4s0f0 e enp4s0f1: sem configuracao, sem carrier e candidatas ao segundo cabo;
+- candidato preferencial para o teste paralelo: enp4s0f0.
+
+Confirmacao posterior do usuario: `enp3s0f1`/`10.1.1.2/24` nao tem uso atual. A configuracao e
+orfa e pode ser limpa em etapa controlada, mas nao precisa ser tocada para o teste: `enp4s0f0`
+continua sendo a opcao mais simples por ja estar sem IP.
+
+## Preparacao executada
+
+O usuario optou por reutilizar a NIC 2 (`enp3s0f1`) por conveniencia fisica. Executado no estado
+ao vivo, antes de conectar o segundo cabo:
+
+```bash
+cp -a /etc/network/interfaces /root/interfaces.pre-vlan100-zabbix-2026-08-05
+ip addr del 10.1.1.2/24 dev enp3s0f1
+```
+
+Resultado: `enp3s0f1` sem IPv4, administrativamente UP e `NO-CARRIER`. O backup foi criado. A
+configuracao persistente ainda contem `10.1.1.2/24` e deve ser alterada somente depois de validar
+link fisico e VLAN 100; um reboot antes dessa etapa restauraria o IP antigo.
+
+As interfaces tap/fwbr/fwpr e bridges dinamicas das VMs foram omitidas desta transcricao por nao
+alterarem a identificacao das quatro portas fisicas; permanecem na saida original do chat.

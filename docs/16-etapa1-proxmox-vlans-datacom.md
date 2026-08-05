@@ -182,7 +182,13 @@ Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-
   `config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md`.
 - VMs privadas: decidir se mantêm as sub-redes atuais como secundárias na VLAN 100 ou se serão
   renumeradas; para o RADIUS, renumerar exige revisar clientes e secrets antes.
-- `10.1.1.2` Zabbix `enp3s0f1`
+- ~~`10.1.1.2` Zabbix `enp3s0f1` com função pendente~~ → ✅ usuário confirmou que não usa; config
+  órfã, limpar depois em etapa controlada.
+- 🆕 Zabbix tem `enp4s0f0` e `enp4s0f1` livres; `enp4s0f0` pode receber um segundo cabo para
+  testar `.10/24` em paralelo pelo switch temporário, mantendo `enp3s0f0/.5` na RB750. Ainda não
+  mover VMs: `vmbr0` não é VLAN-aware e as redes privadas precisam ser tratadas separadamente.
+- ✅ Usuário escolheu reutilizar `enp3s0f1` (NIC 2) no segundo cabo; `10.1.1.2/24` já foi removido
+  ao vivo e `enp4s0f0/enp4s0f1` ficam como reserva. Bridge persistente aguarda link físico.
 - QinQ / POP / OLT
 
 ## Fontes

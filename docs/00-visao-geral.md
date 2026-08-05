@@ -47,7 +47,9 @@ não deve ser repetido.** Rollback total validado nos dois equipamentos. Scripts
 bloqueados. **Plano temporário aprovado, ainda não executado:** intercalar switch gigabit não
 gerenciável na `ether8`, mantendo o DNS e ligando a `eno2` do HubSoft; `eno1` continua na RB750
 durante a transição. Isso entrega a VLAN 100 diretamente pela `bridge-servidores`, sem o handoff
-defeituoso. Zabbix `.10` continua aguardando o novo L2. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
+defeituoso. Para o Zabbix, o usuário escolheu a NIC 2 `enp3s0f1` como segundo cabo no mesmo switch;
+o IP órfão `10.1.1.2/24` foi removido ao vivo, mas cabo, bridge e `.10/24` ainda não foram
+aplicados. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
 
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)

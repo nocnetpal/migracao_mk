@@ -675,6 +675,20 @@ Migração das VMs e do gateway RADIUS `.213/30` é etapa posterior; somente no 
 `eno1` saem. Plano e rollback:
 [`config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md`](../config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md).
 
+🆕 **Zabbix também suporta segundo cabo (pré-check 2026-08-05):** o `proxmox3` tem quatro portas
+Broadcom. `enp3s0f0` sustenta `vmbr0`/`.5`; `enp3s0f1` já está configurada como `10.1.1.2/24` e
+~~não deve ser reutilizada~~ ✅ **o usuário confirmou que não é usada; a configuração é órfã**.
+`enp4s0f0` e `enp4s0f1` estão livres, sem IP e sem carrier. Portanto,
+`enp4s0f0` pode testar `.10/24` em bridge separada pelo mesmo switch temporário, mantendo `.5` e
+as VMs no cabo antigo. Isso confirma viabilidade física, não autoriza ainda mover as VMs: o
+`vmbr0` atual não é VLAN-aware e as redes privadas do cluster ainda precisam de tratamento.
+Evidência: [`config/proxmox-zabbix/precheck-segundo-cabo-2026-08-05.txt`](../config/proxmox-zabbix/precheck-segundo-cabo-2026-08-05.txt).
+
+✅ **Porta escolhida pelo usuário:** reutilizar `enp3s0f1` (NIC 2, MAC `44:1E:A1:48:2F:02`) para
+o segundo cabo. O endereço órfão `10.1.1.2/24` já foi removido do estado ao vivo, com backup de
+`/etc/network/interfaces`; a configuração persistente e a bridge `.10/24` aguardam link físico.
+`enp4s0f0` e `enp4s0f1` permanecem como reserva.
+
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do
 cluster Zabbix** — ou seja, HubSoft nunca teve cabo dedicado, compartilha o segmento físico com o

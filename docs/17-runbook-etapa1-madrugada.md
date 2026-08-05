@@ -22,7 +22,9 @@ VLAN 100 pelo caminho flat do RB750 cria QinQ `16,100` ao cruzar o handoff VLAN 
 **não repetir os scripts antigos nem criar outro handoff entre as duas bridges**. Para o HubSoft,
 há plano temporário ainda não executado: switch não gerenciável intercalado na `ether8`, DNS
 validado primeiro e `eno2` do HubSoft como segundo cabo; `eno1` permanece na RB750 até concluir a
-migração. Zabbix continua aguardando o novo L2 DM4170/recabeamento.
+migração. O Zabbix pode usar o mesmo switch pela NIC 2 `enp3s0f1`, mantendo `enp3s0f0/.5` na
+RB750; o IP órfão `10.1.1.2/24` já saiu do estado ao vivo, mas link, bridge e `.10/24` ainda
+aguardam execução e validação.
 
 ---
 

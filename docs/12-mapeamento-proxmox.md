@@ -194,3 +194,14 @@ Ver decisões #6, #9 e #12 em [03-decisoes-pendentes.md](03-decisoes-pendentes.m
 > 🆕 **HubSoft tem caminho temporário separado planejado:** `eno2` livre → switch não gerenciável
 > intercalado na RB3011 `ether8`; `eno1` permanece na RB750 até `.13`, VM `.16` e RADIUS `.214`
 > estarem validados no novo caminho. Esse arranjo não libera o Zabbix, que continua bloqueado.
+
+> 🆕 **Pré-check físico do Zabbix (2026-08-05):** `enp4s0f0` e `enp4s0f1` estão livres; a primeira
+> é candidata ao segundo cabo no mesmo switch temporário. `enp3s0f0` continua em produção com
+> `.5`. ~~`enp3s0f1` permanece reservada para `10.1.1.2/24`.~~ ✅ O usuário confirmou que essa
+> porta/rede não é usada; a configuração é órfã. Mesmo assim, `enp4s0f0` é preferível por já estar
+> limpa. Assim, `.10/24` pode ser testado em
+> paralelo sem retirar `.5`; a migração das VMs segue bloqueada até definir tags/redes privadas.
+
+> ✅ **Escolha posterior do usuário:** por conveniência física, o segundo cabo usará a NIC 2
+> `enp3s0f1` (`44:1E:A1:48:2F:02`), não `enp4s0f0`. O IP órfão foi removido ao vivo; falta conectar
+> o cabo, confirmar `LOWER_UP` e só então persistir a nova bridge/VLAN 100.
