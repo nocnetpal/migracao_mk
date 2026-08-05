@@ -4,6 +4,10 @@
 # Hoje: 177.72.104.5/27 no vmbr0 — OBRIGATORIO sair
 set -euo pipefail
 
+echo "BLOQUEADO: Zabbix usa o mesmo caminho RB750/RB3011 ainda sem VLAN 100 validada." >&2
+echo "Nao alterar .5, vmbr0 ou tags das VMs antes de fechar o transporte L2 e o rollback." >&2
+exit 1
+
 echo "=== 1) VLAN-aware vmbr0 ==="
 grep -A20 'iface vmbr0' /etc/network/interfaces || true
 echo "bridge-vlan-aware yes; ifreload -a"

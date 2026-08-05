@@ -7,6 +7,10 @@
 # estar na VLAN 100 antes de manter a VM 101 untagged.
 set -euo pipefail
 
+echo "BLOQUEADO: transporte VLAN 100 via RB750/RB3011 falhou e foi revertido em 2026-08-05." >&2
+echo "Nao executar ate existir caminho L2 validado para as VLANs 100 e 16." >&2
+exit 1
+
 cat /sys/class/net/vmbr0/bridge/vlan_filtering
 
 echo "=== IP .13/24 GW .1 em paralelo; remover .210 depois ==="

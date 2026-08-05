@@ -76,8 +76,9 @@
 > mitigável.
 
 ### Fase 0 — Preparação (sem tocar em produção)
-1. Resolver os bloqueios restantes da lista de pré-requisitos (a essa altura, só o mecanismo de
-   rota do NAT na CCR1036 e as portas/VLANs Proxmox HubSoft/DNS — decisão #12).
+1. Resolver os bloqueios restantes da lista de pré-requisitos: testar o mecanismo de rota do NAT
+   na CCR1036 e montar/validar no novo L2 as portas/VLANs Proxmox de HubSoft e Zabbix — decisão
+   #12. O DNS já foi migrado para a VLAN 100.
 2. 🆕 Montar a config completa do **DM4170** em bancada: **só L2** (decisão #13) — QinQ
    termination de todas as VLANs de acesso, trunk 802.1q pro NE8000, ACL de gerência no padrão
    `IPV4_NOC_NETPAL`. **Nenhuma SVI, nenhum OSPF no DM4170.**

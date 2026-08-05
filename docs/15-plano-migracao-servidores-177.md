@@ -69,7 +69,7 @@ servidor/gerência no DM4170 **sem** hosts plugados; prep de SVI `/27` e rota NA
 |---|---|---|---|---|
 | 1 | NE8000 ↔ DM4170 | 10GE | VLAN 16 (prep) + VLANs de gerência privada dos clusters (prep) — **sem** QinQ de acesso | UP, sem hosts |
 | 2 | NE8000 ↔ CCR1036 | 10GE | Link dedicado NAT/VPN (sem VLAN de servidor) | UP; NAT **off** |
-| 3 | DM4170 ↔ CCR1036 | GE/10GE trunk | `vlan66`, `vlan116`, `vlan10`, `vlan999`, `vlan109` + HubSoft/DNS ([10](10-enderecamento-ccr1036.md), decisão #12) | UP; sem servidores |
+| 3 | DM4170 ↔ CCR1036 | GE/10GE trunk | `vlan66`, `vlan116`, `vlan10`, `vlan999`, `vlan109` + VLAN 100 das gerências Proxmox ([10](10-enderecamento-ccr1036.md), decisão #12) | UP; sem servidores |
 | 4 | QinQ `sfp1` RB3011 | — | — | **não mexer** |
 | 5 | Servidores → DM4170 | — | — | **Etapa B** |
 
@@ -191,7 +191,7 @@ Lista completa de hosts: [14](14-ips-servidores-e-17772.md).
 | # | Item | Doc | Precisa antes de |
 |---|---|---|---|
 | 1 | CCR `.4` na VLAN 16 (NAT no `/27`) | [03 #9](03-decisoes-pendentes.md) | Modelo ✅ — **testar** ARP/ping na Etapa A antes de ativar NAT |
-| 2 | Portas/VLANs Proxmox HubSoft e DNS | [03 #12](03-decisoes-pendentes.md) | Migrar esses dois clusters |
+| 2 | Portas/VLANs Proxmox HubSoft e Zabbix | [03 #12](03-decisoes-pendentes.md) | Montar o novo L2 e migrar esses dois clusters; DNS já concluído |
 | 3 | SFP-RJ45 no rack | [02](02-arquitetura-alvo.md) | Plugar qualquer servidor cobre |
 
 Etapa A pode avançar com (1) e (2) ainda abertos — mas (1) tem que fechar **ainda na A** (teste

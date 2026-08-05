@@ -36,6 +36,13 @@ O IP antigo `.138/30` foi removido e a configuração `.12/24` + gateway `.1` es
 testes funcionais das aplicações e atualizações de monitoramento; HubSoft/Zabbix ficam para a
 fase CCR/Datacom, conforme escopo.
 
+⛔ **HubSoft/Zabbix bloqueados no caminho atual (2026-08-05):** tentativa controlada de estender
+a VLAN 100 pelo RB3011 `ether10` e pela RB750 foi revertida sem impacto. O diagnóstico corrigiu
+uma falha local do `vmbr0 self` e comprovou ARP tagged chegando à RB750 `ether4`, mas não fechou o
+caminho até a SVI `.1`. Testes com hw-offload desativado e VLAN filtering explícito na RB750 também
+falharam; todos os equipamentos voltaram ao estado original. Scripts M1/M2 agora abortam por
+segurança. **Não virar Zabbix `.5→.10` nem HubSoft `.210→.13` antes de validar o L2 fim a fim.**
+
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)
 - ✅ Decisões fechadas: DHCP trivial (1 escopo); natureza das VPNs (L2TP sem criptografia +
@@ -49,7 +56,8 @@ fase CCR/Datacom, conforme escopo.
 - 📝 Plano de corte ([04](04-plano-migracao.md)): QinQ em janela futura; **agora** prioridade =
   servidores 177 ([15](15-plano-migracao-servidores-177.md)) — Etapa A em andamento/documentada
 - ⏳ Principais bloqueios restantes: NAT ✅ CCR no `/27` (`.4` VLAN 16); DST-NAT Dude/TS SIX
-  (`.1` vs `.4`); decisão #12 agora restrita a HubSoft/Zabbix (Docker e DNS concluídos). Sistemas vivos
+  (`.1` vs `.4`); decisão #12 agora restrita a HubSoft/Zabbix, com transporte L2 bloqueado no
+  caminho RB750/RB3011 (Docker e DNS concluídos). Sistemas vivos
   ([05](05-limpeza-politicas.md), passo 1) conscientemente adiado.
   ~~Confirmações DmOS (SVI sobre QinQ)~~ ✅ **caiu (decisão #13, 2026-07-24)** — DM4170 fica só L2.
   ~~MTU nos dois trechos~~ ✅ **estratégia fechada (2026-07-24)**: jumbo frame máximo de cada
@@ -87,8 +95,9 @@ fase CCR/Datacom, conforme escopo.
   (`177.72.104.4`, entre os únicos 2 IPs livres do `/27` — `.4` e `.15`); MTU decidido (jumbo
   frame máximo de cada equipamento); dimensionamento do NE8000 confirmado livre; variante da
   CCR1036 decidida (**8G-2S+**); rotina 1 da decisão #6 (backup semanal FTP) **também descartada**
-  — não migra, mesmo tratamento da rotina 2. Só ficam de pé: mecanismo de rota do NAT, decisão #12
-  (Proxmox HubSoft/DNS + checklist Zabbix), e sistemas vivos (adiado por escolha).
+  — não migra, mesmo tratamento da rotina 2. Só ficam de pé: teste do mecanismo de rota do NAT,
+  decisão #12 (DNS concluído; HubSoft/Zabbix bloqueados até o novo L2), e sistemas vivos (adiado
+  por escolha).
 - ✅ **Decisão #6 (rotina 2) fechada — descartada (usuário, 2026-07-24):** a notificação
   netwatch → script `dude` → `api.focuschat.com.br` **não vai ser recriada** — usuário nem sabia
   que essa automação existia. De quebra, invalidou a hipótese de que `API-ZAP` (`.26`) era o

@@ -6,6 +6,8 @@
 # 1. ativar vlan-filtering tambem muda Zabbix, WireGuard e gerencia do NE8000;
 # 2. HUBSOFT-RADIUS .214 usa gateway .213/30, que tambem precisa viajar na VLAN 100.
 
+:error "BLOQUEADO: VLAN100 via RB750/RB3011 falhou em 2026-08-05; nao aplicar este script"
+
 # =============================================================================
 # (A) No RB750-WIREGUARD — NAO USAR AGORA
 # =============================================================================

@@ -182,3 +182,10 @@ VMs estão no mesmo `vmbr0` sem VLAN tag** — público e privado juntos no mesm
 | 🆕 `.107`, `.108`, `.109` (CdnTV) e `177.93.247.138` (SpeedTest) | ✅ CDN confirmado fora do `/27`: `.107`/`.108`/`.109` usam `vmbr2`/`enp8s0f0` untagged até a VLAN 23 no NE8000; SpeedTest continua em caminho próprio |
 
 Ver decisões #6, #9 e #12 em [03-decisoes-pendentes.md](03-decisoes-pendentes.md).
+
+> ⛔ **Bloqueio operacional em 2026-08-05:** o Zabbix permanece com o próprio hypervisor em
+> `177.72.104.5/27`; `192.168.254.10/24` continua apenas reservado. O host ainda tem `vmbr0`
+> não VLAN-aware sobre `enp3s0f0` e uma interface separada `enp3s0f1` em `10.1.1.2/24`. Como o
+> transporte VLAN 100 pelo caminho compartilhado RB750→RB3011 não foi validado na tentativa do
+> HubSoft, o script `zabbix-m2-proxmox.sh` foi bloqueado com `exit 1`. Antes da virada, mapear o
+> caminho físico de `enp3s0f1` e validar VLAN 100 fim a fim sem remover `.5`.

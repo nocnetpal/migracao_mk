@@ -14,8 +14,9 @@
 > | **Etapa B** | Migrar só servidores `177.*` + virada `/27`/NAT; QinQ fica no RB3011 | [15 § Etapa B](15-plano-migracao-servidores-177.md) + seção **Etapa B** abaixo |
 > | **Futura** | Troca QinQ `sfp1` + SVIs POP + desliga RB3011 | Restante deste runbook (T-14 / janela QinQ) |
 >
-> 🚨 **Etapa B ainda não está pronta pra agendar** enquanto os bloqueadores #3 (rota NAT `.4`) e
-> #8 (HubSoft/DNS) abaixo estiverem abertos. Os passos `⛔ BLOQUEADO` continuam válidos.
+> 🚨 **Etapa B ainda não está pronta pra agendar** enquanto os bloqueadores #3 (teste da rota NAT
+> `.4`) e #8 (novo L2 para HubSoft/Zabbix) abaixo estiverem abertos. Os passos `⛔ BLOQUEADO`
+> continuam válidos.
 
 ## 🚦 Bloqueadores — precisam fechar antes de marcar a data
 
@@ -28,15 +29,15 @@
 | 5 | ~~Estratégia da chave OSPF MD5 `ntprb1030` no corte~~ | [03 #11](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — Opção A: mantém `ntprb1030` no corte, rotaciona na fase 4 |
 | 6 | ~~Variante da CCR1036~~ | [02](02-arquitetura-alvo.md) | ✅ **decidido (2026-07-24): 8G-2S+** |
 | 7 | Passo 1 da limpeza — quais sistemas do firewall antigo ainda estão vivos | [05](05-limpeza-politicas.md) | 🟡 conscientemente adiado (2026-07-24) — voltar depois de fechar o resto |
-| 8 | Portas/VLANs Proxmox HubSoft e DNS | [03 #12](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-27):** HubSoft=210, DNS=138 — ver [16](16-etapa1-proxmox-vlans-datacom.md) |
+| 8 | Portas/VLANs Proxmox HubSoft e Zabbix | [03 #12](03-decisoes-pendentes.md) | ⛔ **bloqueado (2026-08-05):** DNS já migrou; tentativa HubSoft via RB750/RB3011 foi revertida e o Zabbix usa o mesmo caminho. Validar no novo L2 — ver [16](16-etapa1-proxmox-vlans-datacom.md) |
 | 9 | ~~Destino final das automações (backup FTP, netwatch→API)~~ | [03 #6](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — as duas descartadas, não migram, nada a implementar aqui |
 | 10 | VPN nova (L2TP+OpenVPN) implementada e testada na CCR1036 | [03 #5](03-decisoes-pendentes.md) | 🟡 destino definido, falta implementar/testar |
 | 11 | Solução de acesso do NOC (EoIP morre com o MK) | [03 #8](03-decisoes-pendentes.md) | 🟡 NE8000 já libera `177.93.244.165` direto na ACL de gerência — provavelmente já resolvido, falta confirmar |
 | 12 | ~~Dimensionamento do NE8000 para +30 subinterfaces/adjacências OSPF novas~~ | [03 #13](03-decisoes-pendentes.md) | ✅ **confirmado (2026-07-24): capacidade livre** |
 
-**Dos bloqueadores originais, resta de verdade só o mecanismo de rota do item 3 (NAT/CCR1036) e o
-item 8 (portas/VLANs Proxmox HubSoft/DNS)** — mudam a config que vai ser montada. Os itens 7, 10,
-11 podem correr em paralelo até a véspera; o 7 foi conscientemente deixado pro final.
+**Dos bloqueadores originais, restam de verdade o teste do mecanismo de rota do item 3
+(NAT/CCR1036) e o item 8 (novo L2 para HubSoft/Zabbix)** — mudam a config que vai ser montada. Os
+itens 7, 10 e 11 podem correr em paralelo até a véspera; o 7 foi conscientemente deixado pro final.
 
 ---
 
