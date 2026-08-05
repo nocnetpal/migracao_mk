@@ -27,29 +27,33 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 **runbook madrugada:** [17](17-runbook-etapa1-madrugada.md).
 SW_JDF: 100 livre · 16 = IP_PUBLICO.
 
-✅ **Docker/CDNTV + Proxmox DNS concluídos (2026-08-05):** hosts `.11` e `.12` somente na VLAN
-100, VMs públicas na VLAN 16, NAT e internet OK. CDN dedicada `.107`/`.108`/`.109` segue pela
+✅ **Os 4 Proxmox concluídos (2026-08-05):** hosts `.10`–`.13` somente na VLAN 100, VMs públicas
+na VLAN 16, NAT e internet OK. CDN dedicada `.107`/`.108`/`.109` segue pela
 VLAN 23. No DNS, as VMs `.24`, `.26`, `.29` e `NS-UNBOUND` `.28/.58/.59` estão `running`, com
 `tag=16`; o Unbound responde `NOERROR` nos três IPs após desabilitar transporte IPv6 sem rota.
-O IP antigo `.138/30` foi removido e a configuração `.12/24` + gateway `.1` está persistida.
-`.21` DNS2-Recursivo foi removido intencionalmente e não migra. Restam o export final do RB3011,
-testes funcionais das aplicações e atualizações de monitoramento; HubSoft/Zabbix ficam para a
-fase CCR/Datacom, conforme escopo.
+Os IPs antigos `.138/30` e `.210/30` foram removidos. No HubSoft, a VM `.16` passou para
+`vmbr1/tag 16`, o RADIUS `.214` para `vmbr1` untagged, e o gateway RADIUS `.213/30` para
+`vlan100-servidores`; aplicação e autenticação foram validadas. `.21` DNS2-Recursivo foi removido
+intencionalmente e não migra. No Zabbix, as 8 VMs públicas passaram para `tag=16`, as 3 privadas
+ficaram untagged na VLAN 100, `.5/27` foi removido e `ether3` da RB750 foi desativada. Restam o
+export final do RB3011, testes funcionais restantes e
+atualizações de monitoramento.
 
-⛔ **HubSoft/Zabbix bloqueados no caminho atual (2026-08-05):** tentativa controlada de estender
+~~⛔ **HubSoft/Zabbix bloqueados no caminho RB750 (2026-08-05):**~~ tentativa controlada de estender
 a VLAN 100 pelo RB3011 `ether10` e pela RB750 foi revertida sem impacto. O diagnóstico corrigiu
 uma falha local do `vmbr0 self` e comprovou o caminho completo até a interface virtual no RB3011.
 Captura conclusiva mostrou o ARP entrando sem tag em `vlan100-rb750-test`, mas saindo na
 `bridge-servidores` como **QinQ `16,100`** (56→64 bytes), sem chegar à SVI `.1`: o segundo handoff
 entre `Bridge IP Publico` e `bridge-servidores` interage com o handoff VLAN 16 já existente e
 empilha as duas tags. ~~A causa provável era hw-offload/RB750.~~ ✅ **Causa L2 isolada; esse desenho
-não deve ser repetido.** Rollback total validado nos dois equipamentos. Scripts M1/M2 continuam
-bloqueados. **Plano temporário aprovado, ainda não executado:** intercalar switch gigabit não
-gerenciável na `ether8`, mantendo o DNS e ligando a `eno2` do HubSoft; `eno1` continua na RB750
-durante a transição. Isso entrega a VLAN 100 diretamente pela `bridge-servidores`, sem o handoff
-defeituoso. Para o Zabbix, o usuário escolheu a NIC 2 `enp3s0f1` como segundo cabo no mesmo switch;
-o IP órfão `10.1.1.2/24` foi removido ao vivo, mas cabo, bridge e `.10/24` ainda não foram
-aplicados. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
+não deve ser repetido.** Rollback total validado nos dois equipamentos. Scripts M1/M2 antigos
+continuam bloqueados. ✅ **HubSoft resolvido por outro caminho:** switch gigabit não gerenciável
+intercalado na `ether8`, com DNS + `eno2` do HubSoft. A migração foi concluída sem usar o handoff
+defeituoso; `eno1/vmbr0` ficou sem IP e sem VMs, e a porta antiga `ether4` foi desativada na RB750
+(`eno1` confirmou `NO-CARRIER`). ✅ **Zabbix também concluído:** `enp3s0f1/vmbr1` com `.10/24`,
+8 VMs públicas em VLAN 16 e 3 privadas untagged; gateways privados `.37`, `.41` e `.61` movidos
+para `vlan100-servidores`. A porta antiga `ether3` da RB750 foi desativada e `enp3s0f0` confirmou
+`NO-CARRIER`. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
 
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)
@@ -64,8 +68,7 @@ aplicados. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
 - 📝 Plano de corte ([04](04-plano-migracao.md)): QinQ em janela futura; **agora** prioridade =
   servidores 177 ([15](15-plano-migracao-servidores-177.md)) — Etapa A em andamento/documentada
 - ⏳ Principais bloqueios restantes: NAT ✅ CCR no `/27` (`.4` VLAN 16); DST-NAT Dude/TS SIX
-  (`.1` vs `.4`); decisão #12 agora restrita a HubSoft/Zabbix, com transporte L2 bloqueado no
-  caminho RB750/RB3011 (Docker e DNS concluídos). Sistemas vivos
+  (`.1` vs `.4`); decisão #12 ✅ concluída para os 4 Proxmox. Sistemas vivos
   ([05](05-limpeza-politicas.md), passo 1) conscientemente adiado.
   ~~Confirmações DmOS (SVI sobre QinQ)~~ ✅ **caiu (decisão #13, 2026-07-24)** — DM4170 fica só L2.
   ~~MTU nos dois trechos~~ ✅ **estratégia fechada (2026-07-24)**: jumbo frame máximo de cada
@@ -104,7 +107,7 @@ aplicados. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
   frame máximo de cada equipamento); dimensionamento do NE8000 confirmado livre; variante da
   CCR1036 decidida (**8G-2S+**); rotina 1 da decisão #6 (backup semanal FTP) **também descartada**
   — não migra, mesmo tratamento da rotina 2. Só ficam de pé: teste do mecanismo de rota do NAT,
-  decisão #12 (DNS concluído; HubSoft/Zabbix bloqueados até o novo L2), e sistemas vivos (adiado
+  ~~decisão #12~~ ✅ os 4 Proxmox concluídos, e sistemas vivos (adiado
   por escolha).
 - ✅ **Decisão #6 (rotina 2) fechada — descartada (usuário, 2026-07-24):** a notificação
   netwatch → script `dude` → `api.focuschat.com.br` **não vai ser recriada** — usuário nem sabia

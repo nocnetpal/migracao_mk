@@ -191,7 +191,7 @@ Lista completa de hosts: [14](14-ips-servidores-e-17772.md).
 | # | Item | Doc | Precisa antes de |
 |---|---|---|---|
 | 1 | CCR `.4` na VLAN 16 (NAT no `/27`) | [03 #9](03-decisoes-pendentes.md) | Modelo ✅ — **testar** ARP/ping na Etapa A antes de ativar NAT |
-| 2 | Portas/VLANs Proxmox HubSoft e Zabbix | [03 #12](03-decisoes-pendentes.md) | Montar o novo L2 e migrar esses dois clusters; DNS já concluído |
+| 2 | ~~Portas/VLANs Proxmox HubSoft e Zabbix~~ | [03 #12](03-decisoes-pendentes.md) | ✅ concluído em 2026-08-05; os 4 Proxmox estão organizados em VLAN 100/16 |
 | 3 | SFP-RJ45 no rack | [02](02-arquitetura-alvo.md) | Plugar qualquer servidor cobre |
 
 Etapa A pode avançar com (1) e (2) ainda abertos — mas (1) tem que fechar **ainda na A** (teste

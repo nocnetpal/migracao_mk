@@ -20,8 +20,8 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 |---|---|---|---|---|
 | 1 | Proxmox Docker/CDNTV (Dell R420) | ✅ `192.168.254.11/24`, **VLAN 100** | RB3011 ether7 | Concluído 2026-08-05; VMs/containers na §1.1 |
 | 2 | Proxmox DNS (HP 360 G7) | ✅ `192.168.254.12/24`, **VLAN 100** | RB3011 ether8 | Concluído 2026-08-05; VMs na §1.2 |
-| 3 | Proxmox Zabbix/Zeus (HP DL360 G7) | **`177.72.104.5` → sai do `/27`** → VLAN 100 privado | RB750 p3 | Sem gerência privada hoje; VMs na §1.3 |
-| 4 | Proxmox HubSoft (Dell R720) | `192.168.115.210/30` → alvo **VLAN 100** privado | RB750 p4 | VMs na §1.4 |
+| 3 | Proxmox Zabbix/Zeus (HP DL360 G7) | ✅ `192.168.254.10/24`, **VLAN 100** | RB750 p3 desativada; novo cabo na ether8 | Concluído 2026-08-05; VMs na §1.3 |
+| 4 | Proxmox HubSoft (Dell R720) | ✅ `192.168.254.13/24`, **VLAN 100** | RB750 p4 desativada; novo cabo na ether8 | Concluído 2026-08-05; VMs na §1.4 |
 
 > ✅ **2026-07-27:** nenhum hypervisor fica com IP no `/27`. Subnet VLAN 100 fechada:
 > **`192.168.254.0/24`** (`.1` GW · `.10` Zabbix · `.11` Docker · `.12` DNS · `.13` HubSoft) —
@@ -34,6 +34,9 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 | 10 | Gerência OLT CPV | `192.168.115.42/30` (plano CCR) | RB3011 ether9 | Gateway alvo NE8000 `192.168.115.41/30` |
 
 ### 1.1 Proxmox Docker/CDNTV — VMs e containers com IP
+
+VLAN 100: hypervisor. VLAN 16: IPs `177.72.104.0/27`. Exceção: CDN `.107/.108/.109` segue pela
+NIC dedicada/VLAN 23. Redes internas NTP/SEVERINO mantêm seus caminhos próprios.
 
 | Host/VM/container | IP | Tipo |
 |---|---|---|
@@ -58,6 +61,8 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 
 ### 1.2 Proxmox DNS — VMs
 
+VLAN 100: hypervisor. VLAN 16 tagged: todas as VMs públicas abaixo.
+
 | Host/VM | IP | Tipo |
 |---|---|---|
 | **hypervisor** | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` | gerência privada, VLAN 100 |
@@ -68,9 +73,11 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 
 ### 1.3 Proxmox Zabbix — hypervisor + VMs
 
+VLAN 100 untagged: hypervisor e VMs privadas. VLAN 16 tagged: as 8 VMs públicas.
+
 | Host/VM | IP | Tipo |
 |---|---|---|
-| **hypervisor** | `177.72.104.5` | público (sem gerência privada) |
+| **hypervisor** | ~~`177.72.104.5`~~ → ✅ `192.168.254.10/24` | gerência privada, VLAN 100 |
 | Zabbix | `177.72.104.6` | VM pública |
 | Docs | `177.72.104.7` | VM pública |
 | OVPN | `177.72.104.9` | VM pública |
@@ -85,9 +92,11 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 
 ### 1.4 Proxmox HubSoft — VMs
 
+VLAN 100 untagged: hypervisor e RADIUS. VLAN 16 tagged: VM HUBSOFT.
+
 | Host/VM | IP | Tipo |
 |---|---|---|
-| **hypervisor** | `192.168.115.210/30` | gerência privada |
+| **hypervisor** | ~~`192.168.115.210/30`~~ → ✅ `192.168.254.13/24` | gerência privada, VLAN 100 |
 | HUBSOFT | `177.72.104.16` | VM pública |
 | HUBSOFT-RADIUS | `192.168.115.214` | VM privada |
 
@@ -115,7 +124,7 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.2` | ocupado | UniFi Controller (`docker-netpal`) |
 | `.3` | ocupado | Wiki (`docker-netpal`) |
 | `.4` | **livre → reservado** | NAT da CCR1036 (definido 2026-07-24) |
-| `.5` | ocupado | hypervisor Proxmox Zabbix (+ regras Hubsoft legadas no firewall) |
+| `.5` | ✅ livre desde 2026-08-05 | antigo hypervisor Proxmox Zabbix; regras “Hubsoft/CallSys” são resíduos e não migram |
 | `.6` | ocupado | Zabbix |
 | `.7` | ocupado | Docs / DOCS Cloud |
 | `.8` | ocupado | Smokeping (`docker-netpal`) |

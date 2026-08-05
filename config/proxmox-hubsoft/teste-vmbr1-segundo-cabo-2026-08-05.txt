@@ -1,0 +1,280 @@
+# Teste vmbr1 pelo segundo cabo - Proxmox HubSoft - 2026-08-05
+# Saida bruta fornecida pelo usuario.
+
+## Configuracao temporaria aplicada
+
+- vmbr1 criada sobre eno2
+- 192.168.254.13/24 aplicado em vmbr1
+- nenhuma rota default nova adicionada
+- vmbr0/eno1 e 192.168.115.210/30 mantidos
+
+## Estado observado
+
+eno2             UP             84:2b:2b:5a:45:57 <BROADCAST,MULTICAST,UP,LOWER_UP>
+vmbr1            DOWN           92:82:c2:eb:a9:d6 <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP>
+vmbr1            DOWN           192.168.254.13/24
+
+default via 192.168.115.209 dev vmbr0 proto kernel onlink
+192.168.115.208/30 dev vmbr0 proto kernel scope link src 192.168.115.210
+192.168.254.0/24 dev vmbr1 proto kernel scope link src 192.168.254.13
+
+## Testes pelo caminho novo
+
+192.168.254.1:  3/3, 0% perda, origem 192.168.254.13
+192.168.254.12: 3/3, 0% perda, origem 192.168.254.13
+
+## Servicos mantidos no caminho antigo
+
+192.168.115.214: 3/3, 0% perda
+177.72.104.16:   3/3, 0% perda
+
+## Observacao operacional
+
+Depois dos testes, o usuario colou tambem o texto e os tres comandos de
+rollback. O shell retornou apenas "Nada: command not found" para a frase; os
+comandos de rollback sao silenciosos. Confirmar o estado atual antes de
+prosseguir, pois vmbr1 provavelmente foi removida.
+
+## Conclusao
+
+O L2 temporario pela eno2 esta tecnicamente validado. A indicacao DOWN/NO-CARRIER
+da vmbr1 e inconsistente com LOWER_UP e com os pings bem-sucedidos, portanto nao
+representou falha de transporte neste teste.
+
+## Estado confirmado depois do rollback acidental
+
+root@px-hubsoft:~# ip -br link show dev vmbr1
+Device "vmbr1" does not exist.
+root@px-hubsoft:~# ip -br link show dev eno2
+eno2             UP             84:2b:2b:5a:45:57 <BROADCAST,MULTICAST,UP,LOWER_UP>
+root@px-hubsoft:~# readlink /sys/class/net/eno2/master 2>/dev/null || echo "eno2 sem bridge/master"
+eno2 sem bridge/master
+root@px-hubsoft:~# ip -4 -br addr show | grep -F '192.168.254.13' || echo "IP .13 ausente"
+IP .13 ausente
+
+# Rollback confirmado completo: somente a eno2 permaneceu administrativamente
+# UP, sem master e sem IP. Producao continuou no caminho antigo.
+
+## Segundo teste - bridge recriada e internet pelo gateway novo
+
+Configuracao temporaria recriada:
+
+- vmbr1 sobre eno2
+- 192.168.254.13/24 em vmbr1
+- default route mantida em 192.168.115.209/vmbr0
+- rota /32 temporaria para 8.8.8.8 via 192.168.254.1, removida depois do teste
+
+Resultados:
+
+- 192.168.254.1 pela vmbr1: 3/3, 0% perda
+- 8.8.8.8 com origem 192.168.254.13 e via 192.168.254.1: 3/3, 0% perda
+- RADIUS 192.168.115.214 no caminho antigo: 3/3, 0% perda
+- HubSoft 177.72.104.16 no caminho antigo: 3/3, 0% perda
+
+Estado final ao vivo:
+
+lo               UNKNOWN        127.0.0.1/8
+vmbr0            UP             192.168.115.210/30
+vmbr1            UP             192.168.254.13/24
+default via 192.168.115.209 dev vmbr0 proto kernel onlink
+192.168.115.208/30 dev vmbr0 proto kernel scope link src 192.168.115.210
+192.168.254.0/24 dev vmbr1 proto kernel scope link src 192.168.254.13
+
+# Conclusao: novo L2, SVI, NAT e retorno foram validados fim a fim. vmbr1 ainda
+# nao esta persistida; rota default e todas as cargas de producao seguem antigas.
+
+## Persistencia da vmbr1
+
+Backup criado no host:
+
+`/etc/network/interfaces.pre-vmbr1-2026-08-05`
+
+Stanza adicionada e validada por `ifquery vmbr1`:
+
+auto vmbr1
+iface vmbr1 inet static
+        address 192.168.254.13/24
+        bridge-ports eno2
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+        bridge-stp off
+        bridge-fd 0
+
+Validacao posterior:
+
+- RADIUS 192.168.115.214: 3/3, 0% perda
+- HubSoft 177.72.104.16: 3/3, 0% perda
+
+# Persistencia gravada sem gateway novo e sem alterar vmbr0. Falta reconciliar
+# os atributos VLAN-aware no estado ao vivo antes de mover a VM publica.
+
+## Aplicacao da configuracao persistente
+
+`ifreload -a` executado com sucesso.
+
+Estado relevante:
+
+- vmbr1 com `192.168.254.13/24`
+- `vlan_filtering 1`
+- eno2 com VLAN 1 `PVID Egress Untagged`
+- eno2 permitindo VLANs tagged 2-4094, inclusive VLAN 16
+- vmbr1 self com VLAN 1 `PVID Egress Untagged`
+- ping `.13 -> .1`: 3/3
+- ping `.13 -> .12`: 3/3
+- RADIUS `.214`: 3/3
+- HubSoft `.16`: 3/3
+
+VM 102 antes da migracao:
+
+status: running
+name: HUBSOFT
+net0: virtio=72:56:05:A7:29:E9,bridge=vmbr0
+
+# A listagem completa de `bridge vlan show dev eno2` expandiu individualmente
+# a faixa 2-4094; registrada acima de forma consolidada por ser repetitiva.
+
+## Migracao da VM 102 HubSoft para o caminho novo
+
+Backup da configuracao criado no host:
+
+`/root/vm-102-pre-vmbr1-2026-08-05.conf`
+
+Alteracao aplicada ao vivo:
+
+`net0: virtio=72:56:05:A7:29:E9,bridge=vmbr1,tag=16`
+
+Validacao:
+
+- VM 102 permaneceu `running`
+- configuracao corrente e persistente coincidem, sem pending
+- `tap102i0` esta forwarding na `vmbr1`
+- `tap102i0`: VLAN 16 `PVID Egress Untagged`
+- HubSoft `177.72.104.16`: 5/5, 0% perda
+- VM 101 RADIUS permaneceu na `vmbr0`, sem tag
+- RADIUS `192.168.115.214`: 3/3, 0% perda
+
+# A VM publica HubSoft esta efetivamente no novo cabo/VLAN 16. O RADIUS e a
+# gerencia/default route do hypervisor continuam no caminho antigo.
+
+## Pre-check para migracao do RADIUS
+
+RB3011:
+
+- gateway `192.168.115.213/30` confirmado em `Bridge IP Publico`
+- `vlan100-servidores` running sobre `bridge-servidores`, VLAN ID 100
+- ping RB3011 -> RADIUS `192.168.115.214`: 3/3
+
+Proxmox HubSoft:
+
+- backup: `/root/vm-101-pre-vmbr1-2026-08-05.conf`
+- VM 101 `HUBSOFT-RADIUS`: running
+- net0: `virtio=96:4F:38:AB:86:21,bridge=vmbr0,firewall=1`
+- ping host -> RADIUS `192.168.115.214`: 3/3
+
+# Os dois lados estao prontos. Ainda nao houve mudanca no gateway .213 nem na
+# VM 101; falta o gate funcional da aplicacao HubSoft antes do corte do RADIUS.
+
+## Gate funcional HubSoft
+
+Confirmado pelo usuario as 18:47 de 2026-08-05: a aplicacao continuou exibindo
+e processando eventos operacionais com horario posterior a migracao da VM 102.
+Os dados pessoais presentes na evidencia enviada nao foram copiados para este
+repositorio; registra-se apenas a conclusao funcional sanitizada.
+
+# Gate funcional aprovado. Liberada a migracao da VM 101 RADIUS.
+
+## Migracao da VM 101 RADIUS
+
+No RB3011, o gateway `192.168.115.213/30` foi movido de `Bridge IP Publico`
+para `vlan100-servidores`.
+
+No Proxmox, a VM foi alterada ao vivo para:
+
+`net0: virtio=96:4F:38:AB:86:21,bridge=vmbr1,firewall=1`
+
+Validacao imediata:
+
+- VM 101 permaneceu `running`
+- `tap101i0` forwarding pela bridge de firewall da VM
+- `tap101i0`: VLAN 1 `PVID Egress Untagged`
+- RADIUS `192.168.115.214`: 5/5, 0% perda
+
+# RADIUS agora usa o novo cabo de forma untagged, que corresponde a VLAN 100
+# native na porta fisica. Falta validar autenticacao real antes de remover a
+# gerencia antiga do hypervisor.
+
+Confirmacao no RB3011 depois do corte:
+
+- `192.168.115.213/30` em `vlan100-servidores`
+- `actual-interface=vlan100-servidores`
+- ping RB3011 -> `192.168.115.214`: respostas sem perda observada
+
+# O primeiro comando de verificacao foi colado concatenado com `/ping` e nao
+# executou a consulta; a repeticao em comandos separados confirmou o estado.
+
+## Gate funcional RADIUS e sessao de contingencia
+
+- usuario confirmou RADIUS funcionando normalmente depois da mudanca
+- nova sessao SSH aberta de `177.72.104.19` para `192.168.254.13:45345`
+
+Estado antes da virada final do hypervisor:
+
+- vmbr0: `192.168.115.210/30`, gateway `192.168.115.209`, eno1
+- vmbr1: `192.168.254.13/24`, sem gateway persistente, eno2
+- default ao vivo: `192.168.115.209` via vmbr0
+
+# Condicoes atendidas para mover a default route para 192.168.254.1 e remover
+# o endereco antigo do hypervisor.
+
+## Virada final do hypervisor
+
+Backup criado:
+
+`/etc/network/interfaces.pre-virada-final-2026-08-05`
+
+Configuracao final persistente:
+
+- vmbr0: `inet manual`, sem IP e sem gateway, ainda associada a eno1
+- vmbr1: `192.168.254.13/24`, gateway `192.168.254.1`, eno2, VLAN-aware
+
+Estado final ao vivo:
+
+- somente `vmbr1` possui IPv4: `192.168.254.13/24`
+- default via `192.168.254.1 dev vmbr1 src 192.168.254.13`
+- sessao SSH permaneceu ativa diretamente em `192.168.254.13:45345`
+- gateway `.1`: 3/3
+- internet `8.8.8.8`: 3/3
+- RADIUS `.214`: 3/3
+- HubSoft `.16`: 3/3
+- nenhuma VM ainda referencia `bridge=vmbr0`
+
+# Virada logica concluida. A eno1/vmbr0 ficou sem IP e sem VM; o cabo antigo
+# pode ser retirado fisicamente sem dependencia remanescente deste host.
+
+## Validacao antes da retirada fisica
+
+- eno1: administrativamente UP e ainda `LOWER_UP` (cabo antigo ainda conectado)
+- eno2: UP e `LOWER_UP`
+- unico IPv4 do host: `192.168.254.13/24` em vmbr1
+- default via `192.168.254.1` por vmbr1
+- gateway `.1`, internet, RADIUS `.214` e HubSoft `.16`: 3/3 cada
+- VM 101: vmbr1, untagged
+- VM 102: vmbr1, tag 16
+
+# Plano de dados totalmente validado no caminho novo. A retirada fisica da
+# eno1 ainda nao ocorreu, pois o kernel continua detectando carrier nela.
+
+## Isolamento final do caminho antigo
+
+Como o cabo não podia ser retirado fisicamente, foi desativada na RB750 a porta
+`ether4 - Proxmox HubSoft` (flag `X`, sem `R`). Resultado no host:
+
+- eno1: `DOWN`, `NO-CARRIER`
+- eno2: `UP`, `LOWER_UP`
+- gateway `192.168.254.1`: 3/3
+- internet `8.8.8.8`: 3/3
+- RADIUS `192.168.115.214`: 3/3
+- HubSoft `177.72.104.16`: 3/3
+
+# Migração HubSoft concluída e caminho antigo efetivamente isolado. Rollback
+# físico disponível habilitando novamente a ether4 na RB750.

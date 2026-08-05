@@ -2,7 +2,9 @@
 
 ## Status
 
-Planejado e aprovado pelo usuário; ainda não executado.
+✅ Executado e validado em 2026-08-05. HubSoft `.16`, RADIUS `.214` e hypervisor `.13` usam o
+novo caminho pela `eno2`; `vmbr0/eno1` ficou sem IP e sem VMs. Como o cabo não pôde ser retirado,
+a porta `ether4 - Proxmox HubSoft` foi desativada na RB750 e a `eno1` confirmou `NO-CARRIER`.
 
 ## Objetivo
 
@@ -18,7 +20,7 @@ RB3011 ether8 (VLAN 100 native/untagged + VLAN 16 tagged)
                   |                    |
           Proxmox DNS             HubSoft eno2
 
-HubSoft eno1 -> RB750 ether4 (permanece durante a transição)
+HubSoft eno1 -> RB750 ether4 (usado apenas durante a transição; agora sem dependências)
 ```
 
 O switch apenas replica o L2 que já existe na `ether8`. Não há alteração planejada na RB3011 nem
@@ -36,14 +38,15 @@ no Proxmox DNS para inserir o equipamento.
 7. Criar uma bridge nova sobre `eno2` e testar `192.168.254.13/24` em paralelo, sem remover
    `.210/30` nem trocar imediatamente a rota default.
 
-## Migração posterior
+## Migração concluída
 
-- Hypervisor: `.13/24` pela VLAN 100 untagged.
-- VM HubSoft `.16`: VLAN 16 tagged pelo novo caminho.
-- RADIUS `.214`: permanece untagged, mas depende de transportar/mover o gateway `.213/30` para
-  `vlan100-servidores` antes de abandonar o caminho antigo.
-- Somente após validar tudo: remover `.210/30` e retirar o cabo `eno1` da RB750.
-- Estado final desejado: apenas `eno2` no caminho novo; os dois cabos são temporários.
+- [x] Hypervisor: `.13/24` pela VLAN 100 untagged, gateway `.1`.
+- [x] VM HubSoft `.16`: VLAN 16 tagged pelo novo caminho.
+- [x] RADIUS `.214`: untagged; gateway `.213/30` movido para `vlan100-servidores`.
+- [x] `.210/30` removido; `vmbr0/eno1` sem IP e sem VMs.
+- [x] Caminho antigo isolado: `ether4 - Proxmox HubSoft` desativada na RB750; `eno1` sem carrier.
+
+Evidência operacional: [`teste-vmbr1-segundo-cabo-2026-08-05.txt`](teste-vmbr1-segundo-cabo-2026-08-05.txt).
 
 ## Restrições
 

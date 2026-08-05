@@ -29,14 +29,14 @@
 | 5 | ~~Estratégia da chave OSPF MD5 `ntprb1030` no corte~~ | [03 #11](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — Opção A: mantém `ntprb1030` no corte, rotaciona na fase 4 |
 | 6 | ~~Variante da CCR1036~~ | [02](02-arquitetura-alvo.md) | ✅ **decidido (2026-07-24): 8G-2S+** |
 | 7 | Passo 1 da limpeza — quais sistemas do firewall antigo ainda estão vivos | [05](05-limpeza-politicas.md) | 🟡 conscientemente adiado (2026-07-24) — voltar depois de fechar o resto |
-| 8 | Portas/VLANs Proxmox HubSoft e Zabbix | [03 #12](03-decisoes-pendentes.md) | 🟡 **parcial (2026-08-05):** captura provou QinQ `16,100`; não repetir via RB750. Plano temporário pela `ether8`: HubSoft em `eno2` e Zabbix em `enp3s0f1`, ambos como segundo cabo; ainda sem link/bridge/IP novo validado — ver [16](16-etapa1-proxmox-vlans-datacom.md) |
+| 8 | ~~Portas/VLANs Proxmox HubSoft e Zabbix~~ | [03 #12](03-decisoes-pendentes.md) | ✅ **concluído (2026-08-05):** os 4 hypervisors estão `.10`–`.13` na VLAN 100; públicas tag 16, privadas untagged. Portas antigas RB750 `ether3/ether4` desativadas — ver [16](16-etapa1-proxmox-vlans-datacom.md) |
 | 9 | ~~Destino final das automações (backup FTP, netwatch→API)~~ | [03 #6](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — as duas descartadas, não migram, nada a implementar aqui |
 | 10 | VPN nova (L2TP+OpenVPN) implementada e testada na CCR1036 | [03 #5](03-decisoes-pendentes.md) | 🟡 destino definido, falta implementar/testar |
 | 11 | Solução de acesso do NOC (EoIP morre com o MK) | [03 #8](03-decisoes-pendentes.md) | 🟡 NE8000 já libera `177.93.244.165` direto na ACL de gerência — provavelmente já resolvido, falta confirmar |
 | 12 | ~~Dimensionamento do NE8000 para +30 subinterfaces/adjacências OSPF novas~~ | [03 #13](03-decisoes-pendentes.md) | ✅ **confirmado (2026-07-24): capacidade livre** |
 
-**Dos bloqueadores originais, restam de verdade o teste do mecanismo de rota do item 3
-(NAT/CCR1036) e o item 8 (novo L2 para HubSoft/Zabbix)** — mudam a config que vai ser montada. Os
+**Dos bloqueadores originais, resta de verdade o teste do mecanismo de rota do item 3
+(NAT/CCR1036).** O item 8 foi concluído. Os
 itens 7, 10 e 11 podem correr em paralelo até a véspera; o 7 foi conscientemente deixado pro final.
 
 ---
@@ -61,9 +61,9 @@ itens 7, 10 e 11 podem correr em paralelo até a véspera; o 7 foi conscientemen
 |---|---|---|
 | 1 | RRFlow `.27` | Sessão FlowSpec + NetStream `:3055` no **novo** caminho |
 | 2 | Proxmox Docker/CDNTV + containers 177 | Ping GW; HTTP/serviços públicos |
-| 3 | Proxmox Zabbix `.5` + VMs 177 | Ping GW; Zabbix/OVPN |
-| 4 | Proxmox HubSoft `.16` | ⛔ decisão #12 se VLAN/porta aberta |
-| 5 | Proxmox DNS (`.24` `.26` `.28`/`.58` `.29`) | ⛔ decisão #12; resolver DNS |
+| 3 | Proxmox Zabbix `.10` + VMs 177 | ✅ L2 organizado; Ping GW; Zabbix/OVPN |
+| 4 | Proxmox HubSoft `.13` + VM `.16` | ✅ L2 organizado |
+| 5 | Proxmox DNS `.12` (`.24` `.26` `.28`/`.58` `.29`) | ✅ L2 organizado; resolver DNS |
 | 6 | Demais 177 (WireGuard `.19`, CGNAT `.66`, …) | Conforme [14](14-ips-servidores-e-17772.md) |
 
 Por host:

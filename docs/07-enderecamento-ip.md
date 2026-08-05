@@ -14,7 +14,7 @@
 | `.1` | IP público geral da GW Servidores — masquerade (SRC-NAT) e alvo dos DST-NAT (Dude `:18291`, TS SIX `:15389`) | NAT rules |
 | `.2` | 🆕 **Novo (2026-07-24, consulta direta):** UniFi Controller (`unifi-controller`, `docker-netpal`) — sem regra de firewall própria conhecida, nunca esteve no `07` original | consulta direta ao Docker |
 | `.3` | 🆕 **Novo (2026-07-24):** Wiki (`Wiki`, `docker-netpal`) — já citado genericamente na seção "escala real" abaixo, agora com IP | consulta direta ao Docker |
-| `.5` | **`.5` = IP do próprio hypervisor Proxmox Zabbix** (não uma VM, confirmado — ver [12](12-mapeamento-proxmox.md)). Compartilhado: ✅ Hubsoft (`dst-port=!148`) — **confirmado vivo (usuário, 2026-07-24)**, coexiste com o Hubsoft de `.16` — e ~~CallSys (`dst-port=!45345`)~~ ❌ **confirmado morto, não existe mais na rede**. ⚠️ **Achado de segurança:** a regra Hubsoft não tem origem restrita (a `BRASIL` no nome é órfã, nunca referenciada — decisão #7) e libera **todas as portas exceto 148** direto no hypervisor, da internet inteira — inclui a `8006` (GUI) por abrangência, não por regra dedicada | firewall filter |
+| `.5` | ~~IP público do hypervisor Proxmox Zabbix~~ → ✅ **livre desde 2026-08-05**; hypervisor migrou para `192.168.254.10`. ~~HubSoft vivo em `.5`~~ → ❌ premissa refutada: só havia Proxmox `8006` e SSH `45345`; 80/443 recusavam. Regras “Hubsoft/CallSys” são resíduos que expunham a gerência e não migram | firewall filter + validação ao vivo |
 | `.6` | Accept `dst-port=80,443` — ✅ **Zabbix** (Dude, [11](11-cruzamento-dude-devices.md)) | firewall filter |
 | `.7` | Servidor Fusion Voip (`80,45345,443,3478`) — ✅ **confirmado por consulta direta (2026-07-24): é "Docs"/DOCS Cloud** — nome do firewall estava desatualizado | firewall filter |
 | `.8` | ✅ **Resolvido (2026-07-24, consulta direta ao Docker):** é o **Smokeping** (`docker-netpal`, rede macvlan `IP-DNS-177.72.104.21`) — monitoramento de latência, sem relação com Hubsoft. Não aparecer no Dude não significa morto: o Hubsoft real é `.16` (ver [12](12-mapeamento-proxmox.md)) | firewall filter, FORA_DO_NAT |
@@ -134,12 +134,10 @@ isolado o suficiente para não importar.
   `RANGENETPAL`). `182.168.0.0/16` é um bloco público real de terceiros. Se portado 1:1 pro NE8000,
   a regra viraria um "bypass de NAT" para endereços públicos de outra empresa — **não portar sem
   confirmar antes**.
-- ~~**`.5` compartilhado por dois sistemas** (Hubsoft e CallSys, diferenciados só por porta) reforça
-  que o NAT atual não é puramente 1:1 por servidor~~ → 🆕 **CallSys confirmado morto (usuário,
-  2026-07-24)** — a multiplexação por porta em `.5` era, pelo menos em parte, regra órfã. Reforça a
-  suspeita de que "Hubsoft" em `.5` também fosse resíduo — ❌ **descartada (usuário, 2026-07-24):
-  Hubsoft em `.5` está confirmado vivo**, coexiste com o de `.16` (duas instâncias distintas).
-  Relevante para o desenho de zonas do [05-limpeza-politicas.md](05-limpeza-politicas.md).
+- ~~**`.5` compartilhado por HubSoft e CallSys**~~ → ❌ **premissa corrigida em 2026-08-05.**
+  CallSys estava morto e não havia HubSoft no host: apenas Proxmox `8006` e SSH `45345` escutavam;
+  80/443 recusavam conexão. As duas regras eram resíduos/nomes enganosos que expunham a gerência.
+  `.5` ficou livre após o hypervisor migrar para `.10`; não portar essas regras.
 - ~~**`.27` coincide com o Route-Reflector do NE8000**~~ — ✅ **resolvido, e não era coincidência.**
   `177.72.104.27` é um host real dentro do `/27` que fica na `Bridge IP Publico` da GW Servidores, e
   é simultaneamente o **route-reflector de FlowSpec do NE8000** e o **coletor NetStream**. É uma

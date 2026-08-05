@@ -282,8 +282,8 @@ qualquer lugar da internet. O nome sugere geo-restrição, mas na prática **nã
 puramente órfã hoje. Achado de segurança à parte: a regra pro `.5` (TCP+UDP, `dst-port=!148` — ou
 seja, todas as portas exceto a 148) libera acesso amplo direto ao **IP do próprio hypervisor
 Proxmox Zabbix** (confirmado, ver decisão #12) — bem mais exposto do que o nome "Hubsoft" sugere.
-**Não portar essa regra como está** — no redesenho, restringir só à porta/serviço real do Hubsoft
-em `.5`, com origem explícita (não "aceita tudo").
+**Não portar essa regra.** ~~Restringir ao “serviço real do HubSoft em `.5`”~~ → ❌ premissa
+corrigida em 2026-08-05: não havia HubSoft; somente Proxmox `8006` e SSH `45345` escutavam.
 
 **Status:** ✅ **fechada (2026-07-24)** — não migra. Achado de segurança sobre `.5` registrado
 também na decisão #12.
@@ -533,16 +533,14 @@ outra (VLAN 16), na mesma NIC física, bastando o switch de topo de rack tratar 
 trunk com as duas tags. É o mesmo padrão que os outros 3 clusters (Docker, HubSoft, DNS) já usam
 — só o Zabbix está fora do padrão hoje. Sem cabeamento novo, sem "virada" disruptiva.
 
-**Único risco a checar antes de mexer:** se algum serviço está de fato amarrado no `.5` como IP do
-próprio hypervisor (não de uma VM) — nesse caso precisa atualizar quem aponta pra lá antes de
-trocar. Se `.5` for só o IP que a interface física pegou por acaso, a migração é trivial: criar a
-VLAN de gerência, validar alcance, mover, sem indisponibilidade real.
+~~**Único risco a checar:** serviço amarrado em `.5`.~~ ✅ **Resolvido em 2026-08-05:** inspeção
+direta encontrou somente Proxmox `8006` e SSH `45345`; HTTP/HTTPS 80/443 recusavam conexão.
 
 ✅ **Checklist item 1 investigado (2026-07-24, releitura do export do RB3011)** — achado
 **revisto** depois de confirmar que `.5` é literalmente o IP do hypervisor Proxmox:
 - As duas regras de firewall pra `.5`: `LIBERA CALLSYS` (dst-port `!45345`) — 🆕 **confirmado
-  morto (usuário)**, não migra. `LIBERA HUBSOFT PARA O BRASIL` (`dst-port=!148`, TCP+UDP) — 🆕
-  **confirmado vivo (usuário)**, mas a regra em si é **mais aberta do que parecia**: não tem
+  morto (usuário)**, não migra. ~~`LIBERA HUBSOFT PARA O BRASIL` confirmado vivo~~ → ❌
+  **reclassificado como resíduo em 2026-08-05**. A regra era **mais aberta do que parecia**: não tem
   `src-address-list` nenhum (a lista `BRASIL` no nome é órfã, nunca é referenciada em regra
   `chain=forward` — ver decisão #7) e libera **todas as portas exceto a 148**, de qualquer origem
   na internet, direto no IP do hypervisor. Isso inclui a porta `8006` (GUI/API do Proxmox) — não
@@ -552,19 +550,14 @@ VLAN de gerência, validar alcance, mover, sem indisponibilidade real.
 - No Dude, `.5` é monitorado só como *up/down* genérico ("Proxmox Zabbix") — sem probe específico
   de porta/serviço.
 
-**Risco revisado pra médio:** não é mais "nada aponta pro host", é "o host está mais exposto do
-que o esperado, mas por uma regra genérica aberta, não por uma dependência específica de app na
-gerência". Pra migração, isso não trava a troca de IP em si (a regra pode simplesmente não ser
-portada — reforça a decisão #7 de redesenho limpo), mas é achado de segurança a resolver
-**independente da migração**: hoje o Proxmox Zabbix está com a GUI de gerência (e quase tudo mais)
-alcançável da internet inteira. Vale considerar tratar isso **antes** da janela de corte, não só
-depois.
+**Risco encerrado pela migração:** a exposição era da gerência, não de uma aplicação HubSoft.
+O IP `.5` foi removido do hypervisor em 2026-08-05 e as regras não devem ser portadas.
 
 ✅ **Confirmado (usuário, 2026-07-23): standalone, ~10 VMs.** Não é nó de cluster Proxmox — troca
 de IP não exige reconfigurar corosync/quorum, é a operação mais simples possível desse tipo. A
 contagem de VMs bate com o mapeamento do [12](12-mapeamento-proxmox.md) (8 públicas + 3 privadas).
 
-**Checklist da troca (quando for feita):**
+**Checklist da troca:**
 1. Confirmar se algo aponta pro `.5` como host (GUI/API porta `8006`, backup, allowlist de firewall).
 2. Criar a VLAN/interface de gerência privada nova **em paralelo** (bridge VLAN-aware do Proxmox
    não exige reboot) — não editar a interface pública existente direto.
@@ -573,8 +566,8 @@ contagem de VMs bate com o mapeamento do [12](12-mapeamento-proxmox.md) (8 públ
 5. Reportar aqui o IP privado novo para fechar o [12](12-mapeamento-proxmox.md) e a decisão #9
    (porta/VLAN dedicada na CCR1036, mesmo padrão de `ether7`/`ether8`).
 
-**Status:** standalone confirmado (risco de cluster eliminado); falta rodar o checklist acima e
-definir o IP privado novo.
+**Status:** ✅ checklist executado em 2026-08-05; IP privado `.10`, `.5` removido e Dude precisa
+ser atualizado de `.5` para `.10`.
 
 🆕 **Confirmação direta 2026-07-24** ([`scripts/proxmox-mapear-vms.sh`](../scripts/proxmox-mapear-vms.sh)
 e [`scripts/docker-mapear-containers.sh`](../scripts/docker-mapear-containers.sh), rodados nos
@@ -622,8 +615,9 @@ HubSoft+Zabbix na **mesma madrugada** (mesmo RB750).
 ambos somente na VLAN 100, com gateway `.1`; os `/30` antigos `.122` e `.138` foram removidos dos
 hosts. No Proxmox DNS, as VMs 101/102/103/105 estão `running` e com `tag=16`; `.24`, `.26`, `.29`
 e `.28/.58/.59` respondem sem perda. O `NS-UNBOUND` voltou a resolver com `NOERROR` após desativar
-o transporte IPv6 sem rota (`do-ip6: no`). A pendência operacional da decisão #12 fica restrita a
-HubSoft `.13` e Zabbix `.10`, adiados para CCR/Datacom. Evidência:
+o transporte IPv6 sem rota (`do-ip6: no`). ~~A pendência operacional ficava em HubSoft e
+Zabbix.~~ ✅ Ambos foram concluídos depois pelo switch temporário.
+Evidência:
 [`config/proxmox-dns/fase2-concluida-2026-08-05.txt`](../config/proxmox-dns/fase2-concluida-2026-08-05.txt).
 
 ⚠️ **Pré-check HubSoft (2026-08-05):** host `px-hubsoft` saudável em `.210/30`, `vmbr0`
@@ -666,14 +660,16 @@ VLAN entre essas bridges**. Rollback final confirmou RB3011 limpo, Proxmox novam
 `.210/30`, e gateway `.209`, RADIUS `.214` e HubSoft `.16` com 3/3 respostas. Evidência completa:
 [`config/proxmox-hubsoft/diagnostico-vlan100-preparacao-2026-08-05.txt`](../config/proxmox-hubsoft/diagnostico-vlan100-preparacao-2026-08-05.txt).
 
-🆕 **Alternativa temporária escolhida, ainda não executada (2026-08-05):** intercalar um switch
+✅ **Alternativa temporária executada e HubSoft concluído (2026-08-05):** foi intercalado um switch
 gigabit não gerenciável na `ether8`, que já entrega VLAN 100 native e VLAN 16 tagged. O DNS volta
-ao switch e deve ser validado primeiro; depois a `eno2` livre do R720 HubSoft entra como segundo
-cabo. A `eno1` permanece na RB750 sustentando `.210`, RADIUS `.214` e HubSoft `.16` enquanto
-`.13/24` é testado em bridge separada. Não há mudança na RB3011 ou no DNS para inserir o switch.
-Migração das VMs e do gateway RADIUS `.213/30` é etapa posterior; somente no final `.210` e
-`eno1` saem. Plano e rollback:
-[`config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md`](../config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md).
+ao switch e foi validado; a `eno2` do R720 HubSoft recebeu `vmbr1` com `.13/24`. A VM HubSoft
+`.16` migrou para `vmbr1/tag 16`; a VM RADIUS `.214` migrou untagged e seu gateway `.213/30` foi
+movido no RB3011 para `vlan100-servidores`. Aplicação HubSoft e autenticação RADIUS foram validadas.
+Por fim, default route passou a `.1`, `.210/30` saiu e nenhuma VM permaneceu em `vmbr0`. Como o
+cabo não podia ser retirado, `ether4 - Proxmox HubSoft` foi desativada na RB750; a `eno1` confirmou
+`NO-CARRIER` e todos os testes seguiram sem perda. Evidências:
+[`config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md`](../config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md) e
+[`config/proxmox-hubsoft/teste-vmbr1-segundo-cabo-2026-08-05.txt`](../config/proxmox-hubsoft/teste-vmbr1-segundo-cabo-2026-08-05.txt).
 
 🆕 **Zabbix também suporta segundo cabo (pré-check 2026-08-05):** o `proxmox3` tem quatro portas
 Broadcom. `enp3s0f0` sustenta `vmbr0`/`.5`; `enp3s0f1` já está configurada como `10.1.1.2/24` e
@@ -688,6 +684,16 @@ Evidência: [`config/proxmox-zabbix/precheck-segundo-cabo-2026-08-05.txt`](../co
 o segundo cabo. O endereço órfão `10.1.1.2/24` já foi removido do estado ao vivo, com backup de
 `/etc/network/interfaces`; a configuração persistente e a bridge `.10/24` aguardam link físico.
 `enp4s0f0` e `enp4s0f1` permanecem como reserva.
+
+✅ **Zabbix concluído (2026-08-05):** `enp3s0f1` recebeu `vmbr1/.10`, VLAN-aware; as VMs
+102–108/110 públicas estão em `tag=16`, e 100/101/109 privadas estão untagged. Os gateways
+`.37/30`, `.41/30` e `.61/30` foram movidos para `vlan100-servidores`. `.5/27` saiu do host,
+default route passou a `.1`, `ether3` foi desativada na RB750 e `enp3s0f0` confirmou
+`NO-CARRIER`. Zabbix HTTP/HTTPS, Docs HTTP, SFTP TCP/45345, Monsta web e todos os IPs foram
+validados. Evidência:
+[`config/proxmox-zabbix/teste-vmbr1-segundo-cabo-2026-08-05.txt`](../config/proxmox-zabbix/teste-vmbr1-segundo-cabo-2026-08-05.txt).
+
+**Status final da decisão #12:** ✅ **concluída para os 4 Proxmox.**
 
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do

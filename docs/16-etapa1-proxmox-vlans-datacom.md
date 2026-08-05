@@ -12,9 +12,9 @@
 > PPPoE_NETPAL / BGP_NETPAL: sem VLAN L2 100/16 (normal). Zero mudança aplicada além de
 > renomes ether6–10 no RB3011 e portas do RB750 (`RB750-WIREGUARD`, 2026-07-27).
 >
-> ⚠️ **Virada Etapa 1:** scripts/runbook prontos — **não aplicar agora** (usuário 2026-07-27).
-> ✅ **Não mexer no bridge do RB750** (usuário 2026-07-27). HubSoft + Zabbix **fora** desta
-> etapa no MK — ficam flat no 750 até CCR/Datacom. Etapa 1 no Mikrotik = **Docker + DNS** só.
+> ~~⚠️ Virada não aplicada; HubSoft/Zabbix fora da etapa.~~ ✅ **Os 4 Proxmox foram concluídos em
+> 2026-08-05** usando segundo cabo/switch temporário para HubSoft e Zabbix, sem alterar a bridge
+> do RB750. Portas antigas `ether3/ether4` foram desativadas.
 
 ## Mapa
 
@@ -47,8 +47,8 @@ sem rota IP, sem OSPF, sem BGP. Evidências:
 Os `/30` atuais de gerência **deixam de existir** após cada host migrar. Dude / allowlists /
 bookmarks `8006` do `.5` atualizam para `.10`.
 
-L2: `bridge-servidores` no RB3011 com **ether7 (Docker) + ether8 (DNS)**.
-`ether10` / RB750 **não entra** nesta etapa (bridge do 750 intocado).
+L2: `bridge-servidores` no RB3011 com **ether7 (Docker) + ether8 (switch temporário: DNS,
+HubSoft e Zabbix)**. A bridge do RB750 ficou intocada; apenas `ether3/ether4` foram desativadas.
 
 ## Ordem
 
@@ -56,7 +56,7 @@ L2: `bridge-servidores` no RB3011 com **ether7 (Docker) + ether8 (DNS)**.
 M1  Trunks 100+16 no RB3011 (ether7 + ether8 only)
 M2  Proxmox Docker + DNS: gerência 192.168.254.x · VMs 177 na tag 16
 M3  Validar
-…   HubSoft + Zabbix: na troca pra CCR/Datacom (sem mexer no RB750 agora)
+M4  HubSoft + Zabbix: segundo cabo pela ether8, concluídos
 ```
 
 **Regra:** não aplicar `tag=16` no Proxmox **antes** do trunk no MK (HubSoft caiu assim).
@@ -67,7 +67,8 @@ M3  Validar
 
 1. **Docker** — `00-bridge-servidores-base` → `docker-m1` → `docker-m2` (`.11`)
 2. **DNS** — `dns-m1` → `dns-m2` (`.12`)
-3. ~~HubSoft + Zabbix~~ — **adiado** até CCR/Datacom (scripts guardados, não usar)
+3. **HubSoft** (`.13`) — ✅ concluído
+4. **Zabbix** (`.10`) — ✅ concluído
 
 ## Preparação sem parada (já feito / falta)
 
@@ -81,7 +82,7 @@ M3  Validar
 - [x] Export RB3011 pre-noite colado/confirmado (14:54) — arrastar `.rsc` → `config/rb3011/` (META em `.META.md`)
 - [x] Export `RB750-WIREGUARD` pre-noite (15:02) → `config/rb750gr3-wireguard/rb750-wireguard-pre-noite-2026-07-27.rsc`
 - [x] SW_JDF: MACs Proxmox **não** aparecem (esperado — hosts no MK, não no SW) — `config/sw-jdf/mac-proxmox-check-2026-07-27.txt`
-- [~] Dude `.5` → `.10` — **na virada** (noite HubSoft+Zabbix), não hoje
+- [ ] Dude `.5` → `.10` — atualizar monitoramento após virada concluída
 - [x] Aviso equipe — **pulado** (usuário, 2026-07-27): não teremos
 
 ## Progresso — 2026-08-05
@@ -155,10 +156,10 @@ Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-
 
 ## Fora / later
 
-- ⚠️ HubSoft não pode ser migrado isoladamente pelo RB750: ativar VLAN filtering afeta também
+- ⚠️ HubSoft não podia ser migrado isoladamente pelo RB750: ativar VLAN filtering afeta também
   Zabbix, WireGuard e gerência NE8000. A VM `HUBSOFT-RADIUS` `.214` usa gateway `.213/30`, que o
-  script antigo não transportava. **Nesta rodada, por decisão do usuário (2026-08-05), somente
-  organizar os IPs:** sem DM4170, CCR, recabeamento, tags ou mudança no RB750. Pré-check:
+  script antigo não transportava. ~~Nesta rodada seriam organizados apenas os IPs.~~ ✅ O escopo
+  foi ampliado no mesmo dia para o segundo cabo pela `ether8`, sem mudar o RB750. Pré-check:
   `config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt`.
 - ❌ Tentativa de transportar VLAN 100 tagged por RB3011 `Bridge IP Publico` → RB750 flat →
   HubSoft não alcançou `.1`; rollback completo e serviços antigos 3/3 OK. Evidência inicial:
@@ -168,27 +169,26 @@ Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-
   entrando sem tag (56 bytes), mas saindo na `bridge-servidores` como **QinQ `16,100`** (64 bytes),
   sem chegar à SVI. O handoff VLAN 100 reverso interage com `vlan16-servidores`, já ligando as
   mesmas bridges. ~~Faltava testar hw-offload/RB750.~~ ✅ **Causa isolada: segundo handoff entre as
-  bridges empilha tags. Não repetir.** Zabbix segue somente no novo L2 DM4170; HubSoft pode usar o
-  caminho temporário físico pela `ether8`, descrito abaixo.
+  bridges empilha tags. Não repetir.** HubSoft e Zabbix usaram o caminho temporário físico pela
+  `ether8`, descrito abaixo.
   Rollback final confirmou zero mudança persistente. Evidência completa:
   `config/proxmox-hubsoft/diagnostico-vlan100-preparacao-2026-08-05.txt`.
-- 🟡 **Plano temporário aprovado, não executado:** intercalar switch gigabit não gerenciável na
+- ✅ **Plano temporário executado; HubSoft concluído:** switch gigabit não gerenciável intercalado na
   `ether8`, mantendo o DNS e adicionando a `eno2` livre do HubSoft. A `ether8` já fornece VLAN 100
-  native + VLAN 16 tagged; não exige mudança na RB3011 nem no DNS. Primeiro validar o DNS sozinho
-  atrás do switch; somente depois conectar `eno2`. A `eno1` fica na RB750 e mantém `.210`, RADIUS
-  `.214` e HubSoft `.16` durante o teste paralelo de `.13/24` numa bridge nova. Para concluir com
-  um cabo, ainda será necessário passar a VM `.16` pela tag 16 e transportar o gateway RADIUS
-  `.213/30`; só então remover `.210` e `eno1`. Plano completo e rollback:
-  `config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md`.
-- VMs privadas: decidir se mantêm as sub-redes atuais como secundárias na VLAN 100 ou se serão
-  renumeradas; para o RADIUS, renumerar exige revisar clientes e secrets antes.
+  native + VLAN 16 tagged. DNS foi validado antes da `eno2`; depois `vmbr1/.13` foi criada e
+  persistida. A VM `.16` passou para `tag=16`, o RADIUS `.214` para a mesma bridge untagged e o
+  gateway `.213/30` para `vlan100-servidores`. Aplicação e RADIUS foram validados; default route
+  passou a `.1`, `.210` foi removido e nenhuma VM ficou em `vmbr0`. Como o cabo não podia ser
+  retirado, a porta antiga `ether4` foi desativada na RB750; `eno1` confirmou `NO-CARRIER` e os
+  quatro testes finais passaram sem perda. Evidência:
+  `config/proxmox-hubsoft/teste-vmbr1-segundo-cabo-2026-08-05.txt`.
+- ✅ VMs privadas mantiveram as sub-redes atuais untagged na VLAN 100; gateways `.213`, `.37`,
+  `.41` e `.61` foram movidos para `vlan100-servidores`.
 - ~~`10.1.1.2` Zabbix `enp3s0f1` com função pendente~~ → ✅ usuário confirmou que não usa; config
   órfã, limpar depois em etapa controlada.
-- 🆕 Zabbix tem `enp4s0f0` e `enp4s0f1` livres; `enp4s0f0` pode receber um segundo cabo para
-  testar `.10/24` em paralelo pelo switch temporário, mantendo `enp3s0f0/.5` na RB750. Ainda não
-  mover VMs: `vmbr0` não é VLAN-aware e as redes privadas precisam ser tratadas separadamente.
-- ✅ Usuário escolheu reutilizar `enp3s0f1` (NIC 2) no segundo cabo; `10.1.1.2/24` já foi removido
-  ao vivo e `enp4s0f0/enp4s0f1` ficam como reserva. Bridge persistente aguarda link físico.
+- ✅ **Zabbix concluído:** `enp3s0f1/vmbr1` com `.10/24`; 8 VMs públicas em `tag=16`, 3 privadas
+  untagged; `.5` removido. `ether3` da RB750 desativada e `enp3s0f0` sem carrier. Evidência:
+  `config/proxmox-zabbix/teste-vmbr1-segundo-cabo-2026-08-05.txt`.
 - QinQ / POP / OLT
 
 ## Fontes

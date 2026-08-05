@@ -26,7 +26,7 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | Sistema/regra no MK antigo | IP(s) | Nome no Dude hoje | Ainda ativo? |
 |---|---|---|---|
 | ~~Hubsoft (billing/ERP)~~ | `177.72.104.8` | Smokeping | ✅ **Resolvido (2026-07-24): não é Hubsoft nem morto — é o Smokeping**, vivo, hospedado em `docker-netpal`. Não precisa de regra "Hubsoft"; precisa de regra própria pra Smokeping se ainda fizer sentido no novo firewall |
-| Hubsoft (billing/ERP) | `177.72.104.5` | Proxmox Zabbix | ✅ **confirmado vivo (usuário, 2026-07-24)** — coexiste com o Hubsoft de `.16` (VM `HUBSOFT`), duas instâncias/apontamentos distintos, não é duplicidade a limpar. ⚠️ **Achado de segurança:** a regra que libera essa app (`dst-port=!148`, sem origem restrita) abre **todas as portas** de `.5` pra internet inteira — e `.5` é o próprio hypervisor Proxmox. Não portar 1:1; restringir à porta real do Hubsoft com origem explícita (ver decisão #7/#12 em [03](03-decisoes-pendentes.md)) |
+| ~~Hubsoft (billing/ERP)~~ | `177.72.104.5` | Proxmox Zabbix | ❌ **premissa corrigida em 2026-08-05:** não havia HubSoft em `.5`; inspeção direta encontrou apenas Proxmox `8006` e SSH `45345`, com 80/443 recusados. `.5` saiu do hypervisor e ficou livre. A regra “Hubsoft” era resíduo amplo que expunha a gerência; não migrar |
 | Fusion Netpal (clientes elaborados) | `177.72.104.14` | Fusion - VoIP - PM CPV | provável ativo |
 | Fusion Netpal (clientes simples) | `177.72.104.25` | Fusion - VoIP - Painéis Simples | provável ativo |
 | Fusion Netpal (geral) | `177.72.104.18` | Fusion - VoIP - 0800 NETPAL | provável ativo |
@@ -36,7 +36,7 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | TIP VOIP | `177.72.104.13` | Zeus - TIP - VoIP | ✅ ativo (bate) — confirmado por consulta direta (2026-07-24) |
 | MADE4IT | `177.72.104.17` | Fusion - VoIP - PM MST | ✅ **confirmado por consulta direta (2026-07-24)** — nome do MK desatualizado, ativo como "Fusionpbx-PM-MST" |
 | OPA Suite (chat) | `177.72.104.30` | Opa ChatBot | ativo (bate) |
-| CallSys | `177.72.104.5` | Proxmox Zabbix | ❌ **morto (usuário, 2026-07-24) — não existe mais na rede.** Regra `LIBERA CALLSYS` (dst-port `!45345`) não migra |
+| CallSys | `177.72.104.5` | Proxmox Zabbix | ❌ **morto (usuário, 2026-07-24) — não existe mais na rede.** A porta `45345` era o SSH do hypervisor, não CallSys; regra `LIBERA CALLSYS` não migra |
 | Servidor sala | `177.72.104.16` | HubSoft | ✅ **confirmado por consulta direta (2026-07-24): é o Hubsoft real** — `.8` é sistema não relacionado (Smokeping, ver acima) |
 | The Dude (monitoramento) | `192.168.116.30` | RB DUDE | ✅ confirmado ativo (é a própria fonte do CSV) |
 | TS SIX | `192.168.66.14` | TS SIX | ✅ confirmado ativo (bate) |
