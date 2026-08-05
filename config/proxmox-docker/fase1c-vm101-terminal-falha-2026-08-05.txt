@@ -1,0 +1,3 @@
+root@proxmoxDockerCDNTV:~# qm terminal 101
+unable to find a serial interface
+root@proxmoxDockerCDNTV:~# eu nao tenho login

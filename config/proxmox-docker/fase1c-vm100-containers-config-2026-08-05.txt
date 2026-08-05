@@ -1,0 +1,8 @@
+# Config dos containers manuais (VM 100)
+
+unifi-controller: 177.72.104.2 (compose 1 - recriado OK)
+smokeping: 177.72.104.8 | Image: smokenetpal1:latest | Volumes: /Docker/smokeping/conf, /Docker/smokeping/data
+Wiki: 177.72.104.3 | Image: linuxserver/wikijs:latest
+DNS2-Recursivo-104.21: 177.72.104.21 | Image: dns_recursivo_2:latest | Cmd: /bin/systemd
+pdns-master1: Image nao capturada | Cmd: /usr/sbin/pdns_server | Env: PDNS_*
+pdns-slave: Image nao capturada | Cmd: /usr/sbin/pdns_server | Env: PDNS_*

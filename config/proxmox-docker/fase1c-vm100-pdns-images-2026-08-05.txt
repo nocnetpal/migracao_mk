@@ -1,0 +1,3 @@
+pdns-master1: Image pdns-master25051:latest | Port 85:8081 | IP nao capturado
+pdns-slave: Image pdns_slave_1:latest | Sem portas expostas | IP nao capturado
+IPs provaveis: master=.10, slave=.11 (baseado nos Env vars)

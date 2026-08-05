@@ -1,0 +1,3 @@
+root@docker-netpal:~# cd /data/compose/1/
+docker-compose up -d --force-recreate
+-bash: docker-compose: comando nao encontrado

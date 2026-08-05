@@ -1,0 +1,23 @@
+root@proxmoxDockerCDNTV:~# ip addr add 192.168.254.11/24 dev vmbr1
+root@proxmoxDockerCDNTV:~# ip addr show dev vmbr1
+7: vmbr1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 90:b1:1c:3d:02:c3 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.116.122/30 scope global vmbr1
+       valid_lft forever preferred_lft forever
+    inet 10.250.104.1/24 scope global vmbr1
+       valid_lft forever preferred_lft forever
+    inet 10.250.102.1/24 scope global vmbr1
+       valid_lft forever preferred_lft forever
+    inet 192.168.254.11/24 scope global vmbr1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::92b1:1cff:fe3d:2c3/64 scope link 
+       valid_lft forever preferred_lft forever
+root@proxmoxDockerCDNTV:~# ping -c 3 192.168.254.1
+PING 192.168.254.1 (192.168.254.1) 56(84) bytes of data.
+64 bytes from 192.168.254.1: icmp_seq=1 ttl=64 time=0.416 ms
+64 bytes from 192.168.254.1: icmp_seq=2 ttl=64 time=0.212 ms
+64 bytes from 192.168.254.1: icmp_seq=3 ttl=64 time=0.176 ms
+
+--- 192.168.254.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2050ms
+rtt min/avg/max/mdev = 0.176/0.268/0.416/0.105 ms

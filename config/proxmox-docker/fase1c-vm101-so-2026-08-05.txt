@@ -1,0 +1,3 @@
+# VM 101 CdnTV-Origin
+# SO: Ubuntu
+# Sem login de console - vamos montar o disco de fora e editar netplan

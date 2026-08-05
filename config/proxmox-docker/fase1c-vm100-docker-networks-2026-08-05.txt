@@ -1,0 +1,38 @@
+# VM 100 Docker-Netpal - redes Docker
+NETWORK ID     NAME                   DRIVER    SCOPE
+9e1a843bd3a5   IP-DNS-177.72.104.21   macvlan   local
+6ce4b849bd82   MACVLAN                macvlan   local
+d885c1ce6b62   MACVLAN-16-IPPUBLICO   null      local
+c0626ad87d12   MACVLAN-18-SEVERINO    macvlan   local
+b98da1034bcf   MACVLAN-38-SPEED       macvlan   local
+ebaebb9f3f26   MONSTA_17              null      local
+311655eca344   NTPServer-1            null      local
+bf0e5c8352ff   NTP_SERVER_15          null      local
+4095b5dab628   SEVERINO               null      local
+15a6c4c167f7   SpeedTest              null      local
+76b85a85e48a   bridge                 bridge    local
+6f0ffa8cbba4   host                   host      local
+2a90ef92b483   netbox_default         bridge    local
+aa8291a9a3b2   none                   null      local
+9dc4f9e32ea9   pdns_pdns              bridge    local
+5549dea660b0   phpipam_phpipam        bridge    local
+b5905b3670ce   portainer_internal     bridge    local
+8a6e261ad400   portainer_portainer    bridge    local
+3f76b49f5b70   webserver              bridge    local
+
+=== IP-DNS-177.72.104.21 ===
+Parent: ens18 | Driver: macvlan | Subnet: 177.72.104.0/27
+=== MACVLAN ===
+Parent: ens21 | Driver: macvlan | Subnet: 192.168.116.8/30
+=== MACVLAN-16-IPPUBLICO ===
+Parent: ens21 | Driver: null | Subnet: 
+=== MACVLAN-18-SEVERINO ===
+Parent: ens1 | Driver: macvlan | Subnet: 192.168.15.72/30
+=== MACVLAN-38-SPEED ===
+Parent: ens23 | Driver: macvlan | Subnet: 177.93.247.136/30
+
+Containers ativos:
+unifi-controller, smokeping, pdns-master1, pdns-slave, Wiki, DNS2-Recursivo-104.21 em IP-DNS-177.72.104.21
+NTP_SERVER em MACVLAN
+SEVERINO em MACVLAN-18-SEVERINO
+SpeedTest em MACVLAN-38-SPEED

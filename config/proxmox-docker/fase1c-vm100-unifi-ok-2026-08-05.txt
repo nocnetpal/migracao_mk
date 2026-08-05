@@ -1,0 +1,5 @@
+root@docker-netpal:/data/compose/1# docker compose up -d --force-recreate
+[+] Running 1/1
+ ⠿ Container unifi-controller  Started                                       0.6s
+root@docker-netpal:/data/compose/1# docker compose version
+Docker Compose version v2.7.0

@@ -1,0 +1,6 @@
+root@docker-netpal:~# find /root /home /opt /srv -name "docker-compose*.yml" -o -name "compose*.yml" 2>/dev/null
+/root/.vscode-server/extensions/humy2833.ftp-simple-0.7.6/node_modules/ftpimp/docker-compose.yml
+/root/certbot-unifi-backup-20260729-183126/compose/docker-compose.yml
+/root/portainer-backup-2026-07-02/compose/8/docker-compose.yml
+/root/portainer-backup-2026-07-02/compose/4/docker-compose.yml
+/root/portainer-backup-2026-07-02/compose/1/docker-compose.yml

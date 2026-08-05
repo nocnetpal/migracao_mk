@@ -1,0 +1,3 @@
+# Status VM 101 - CdnTV-Origin (mais importante)
+# Problema reportado pelo usuário: "ta foda"
+# Acoes de diagnostico a seguir

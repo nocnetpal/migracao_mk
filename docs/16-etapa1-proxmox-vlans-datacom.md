@@ -84,6 +84,20 @@ M3  Validar
 - [~] Dude `.5` → `.10` — **na virada** (noite HubSoft+Zabbix), não hoje
 - [x] Aviso equipe — **pulado** (usuário, 2026-07-27): não teremos
 
+## Progresso — 2026-08-05
+
+**Fase 1A (base RB3011):** ✅ concluída — `bridge-servidores` + `vlan100-servidores` + `vlan16-servidores` criadas, `192.168.254.1/24` up.
+
+**Fase 1B (trunk ether7):** ✅ concluída — `ether7` na `bridge-servidores`, PVID 100, VLAN 16 tagged. GATE `.122` + `.254.1` OK.
+
+**Fase 1C (Proxmox Docker):** 🟡 em andamento — VLAN-aware ativo, `.11/24` em paralelo, tag 16 nas VMs 101/103-107, rede macvlan da VM 100 recriada com parent `ens2` (net7/tag16). Todos os containers 177 pingando (`.2` `.3` `.8` `.10` `.11` `.21`).
+
+**Pendente:** virar default route `.11`, gravar em `/etc/network/interfaces`, remover `.122/30`.
+
+**Fase 2 (DNS):** ⏳ pendente.
+
+Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-*-2026-08-05.txt`
+
 ## Fora / later
 
 - VMs órfãs detalhe fino (cabem na 100 se RFC1918)

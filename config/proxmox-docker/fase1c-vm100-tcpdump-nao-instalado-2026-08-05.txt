@@ -1,0 +1,2 @@
+root@docker-netpal:~# tcpdump -i ens2 -n -c 10 arp or icmp
+-bash: tcpdump: comando nao encontrado

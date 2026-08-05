@@ -1,0 +1,7 @@
+root@docker-netpal:~# ip link set ens2 up
+root@docker-netpal:~# ip link show ens2
+81: ens2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether 62:57:f1:9b:d5:59 brd ff:ff:ff:ff:ff:ff
+    altname enp1s2
+root@docker-netpal:~# ip neigh show dev ens2
+# (vazio - sem ARP aprendido)

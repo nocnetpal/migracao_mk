@@ -40,30 +40,33 @@
 - [ ] Verificar: `vlan16-servidores` virou porta da `Bridge IP Publico`
 
 ### 1B. Trunk ether7 no RB3011
-- [ ] Colar `docker-m1-rb3011.rsc`
-- [ ] **GATE:** `/ping 192.168.116.122 count=5` → **deve responder**
+- [x] **CONCLUÍDO** — 2026-08-05
+- [x] Colar `docker-m1-rb3011.rsc`
+- [x] **GATE:** `/ping 192.168.116.122 count=5` → 5/5 OK
+- [x] **GATE:** `/ping 192.168.254.1 count=2` → 2/2 OK
+- [x] VLAN 16 corrigida para tagged em `ether7`
   - [ ] ✅ OK → segue para 1C
   - [ ] ❌ Falhou → colar `docker-rollback.rsc` e **PARAR A NOITE**
 
 ### 1C. Proxmox Docker (executar seguido, sem pausa — VMs públicas caem aqui)
-- [ ] Ativar VLAN-aware: editar `/etc/network/interfaces` — `vmbr1`: `bridge-vlan-aware yes` + `bridge-vids 2-4094`
-- [ ] **Preservar** `10.250.104.1/24` e `10.250.102.1/24` no vmbr1 (conferir com o .bak)
-- [ ] `ifreload -a` → conferir `cat /sys/class/net/vmbr1/bridge/vlan_filtering` = `1` (esperar flap breve dos taps)
-- [ ] IP novo em paralelo: `ip addr add 192.168.254.11/24 dev vmbr1`
-- [ ] `ping -c3 192.168.254.1` → OK
-- [ ] GUI: `https://192.168.254.11:8006` abre
-- [ ] `qm set` tag=16 nas VMs (MACs do `qm-set-lista.md`): 101, 103, 104, 105, 106, 107
-  - [ ] **Não tocar** net5/net6 (tags 18/38 — SEVERINO e SpeedTest)
-- [ ] Reboot/re-plug das VMs se a tag não hot-aplicar (validar com ping em cada)
-- [ ] **1C-macvlan (CRÍTICO):** VLAN 16 chegando ao parent macvlan da Docker-Netpal (VMID 100)
-  - [ ] Executar procedimento decidido em 0.11
-  - [ ] Validar: `ping 177.72.104.2` `.3` `.8` `.10` `.11` `.21`
-- [ ] Validar: `ping -c3 177.72.104.12` (OpenVPN2) → OK
-- [ ] Validar: `ping -c3 177.72.104.107` (CdnTV-Origin, VM 101) → OK
-- [ ] Só agora: `ip route replace default via 192.168.254.1`
-- [ ] Gravar `.11/24` + `gateway 192.168.254.1` em `/etc/network/interfaces` → `ifreload -a`
-- [ ] Remover IP velho: `ip addr del 192.168.116.122/30 dev vmbr1`
-- [ ] Conferir `10.250.104.1` e `10.250.102.1` ainda presentes no vmbr1
+- [x] Ativar VLAN-aware: editar `/etc/network/interfaces` — `vmbr1`: `bridge-vlan-aware yes` + `bridge-vids 2-4094`
+- [x] **Preservar** `10.250.104.1/24` e `10.250.102.1/24` no vmbr1 (conferir com o .bak)
+- [x] `ifreload -a` → conferir `cat /sys/class/net/vmbr1/bridge/vlan_filtering` = `1` (esperar flap breve dos taps)
+- [x] IP novo em paralelo: `ip addr add 192.168.254.11/24 dev vmbr1`
+- [x] `ping -c3 192.168.254.1` → OK
+- [x] GUI: `https://192.168.254.11:8006` abre
+- [x] `qm set` tag=16 nas VMs (MACs do `qm-set-lista.md`): 101, 103, 104, 105, 106, 107
+  - [x] **Não tocar** net5/net6 (tags 18/38 — SEVERINO e SpeedTest)
+- [x] Reboot/re-plug das VMs se a tag não hot-aplicar (validar com ping em cada)
+- [x] **1C-macvlan (CRÍTICO):** VLAN 16 chegando ao parent macvlan da Docker-Netpal (VMID 100)
+  - [x] Executar procedimento: `net7` adicionado, rede macvlan recriada com parent `ens2`
+  - [x] Validar: `ping 177.72.104.2` `.3` `.8` `.10` `.11` `.21` — todos OK
+- [ ] Validar: `ping -c3 177.72.104.12` (OpenVPN2) → pendente
+- [ ] Validar: `ping -c3 177.72.104.107` (CdnTV-Origin, VM 101) → pendente
+- [ ] Só agora: `ip route replace default via 192.168.254.1` — pendente
+- [ ] Gravar `.11/24` + `gateway 192.168.254.1` em `/etc/network/interfaces` → `ifreload -a` — pendente
+- [ ] Remover IP velho: `ip addr del 192.168.116.122/30 dev vmbr1` — pendente
+- [ ] Conferir `10.250.104.1` e `10.250.102.1` ainda presentes no vmbr1 — pendente
 
 ### 1D. Rollback lado Proxmox (ter pronto ANTES — usar só se necessário)
 ```

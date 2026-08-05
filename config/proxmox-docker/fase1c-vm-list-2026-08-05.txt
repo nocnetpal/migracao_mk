@@ -1,0 +1,40 @@
+root@proxmoxDockerCDNTV:~# qm list
+      VMID NAME                 STATUS     MEM(MB)    BOOTDISK(GB) PID       
+       100 Docker-Netpal        running    32235           1000.00 3044394   
+       101 CdnTV-Origin         running    16384            150.00 2780480   
+       102 CdnTV-Edge           running    24700            120.00 2834079   
+       103 OPA.SUIT             running    16984            500.00 2792494   
+       104 Fusion-Painel-Elaborados running    8492             200.00 2828379   
+       105 OpenVPN2             running    4096             500.00 2343      
+       106 Fusion-Painel-Simples running    4192             300.00 2820588   
+       107 APP-ETC-SCRIPTS      running    8196              60.00 554812    
+
+=== VM 100 ===
+net0: virtio=F6:EF:DA:C8:5B:0B,bridge=vmbr1
+net1: virtio=C6:8F:DA:94:E0:6D,bridge=vmbr2
+net2: virtio=1A:D7:AB:37:73:F6,bridge=vmbr3
+net3: virtio=5A:D9:BF:85:6A:44,bridge=vmbr15
+net4: virtio=62:57:F1:9B:D5:58,bridge=vmbr15
+net5: virtio=36:56:3A:7B:40:A9,bridge=vmbr3,tag=38
+net6: virtio=C2:BB:BB:23:3A:B3,bridge=vmbr3,tag=18
+
+=== VM 101 ===
+net0: virtio=2A:B7:2D:D8:6E:A2,bridge=vmbr1,firewall=1,queues=8,tag=16
+
+=== VM 102 ===
+net0: virtio=5E:68:F6:70:6E:0D,bridge=vmbr2,firewall=0,queues=8
+
+=== VM 103 ===
+net0: e1000=F6:C7:5C:8A:4A:A3,bridge=vmbr1,firewall=1,tag=16
+
+=== VM 104 ===
+net0: virtio=6E:26:1A:C9:19:CE,bridge=vmbr1,firewall=0,tag=16
+
+=== VM 105 ===
+net0: virtio=62:B2:A1:0A:B1:AE,bridge=vmbr1,firewall=1,tag=16
+
+=== VM 106 ===
+net0: virtio=0E:C8:34:76:59:4E,bridge=vmbr1,firewall=1,tag=16
+
+=== VM 107 ===
+net0: virtio=36:DC:89:9D:DA:5A,bridge=vmbr1,firewall=1,tag=16

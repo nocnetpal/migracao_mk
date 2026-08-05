@@ -1,0 +1,3 @@
+# Todos os containers 177 recriados na VLAN 16 OK
+# unifi-controller .2, Wiki .3, smokeping .8, pdns-master1 .10, pdns-slave .11, DNS2-Recursivo .21
+# Todos pingam e estao Up

@@ -1,0 +1,4 @@
+# VM 100 Docker-Netpal - erro ao subir containers
+# Rede antiga removida, nova criada com mesmo nome mas ID diferente
+# Containers ainda referenciam o ID da rede antiga (9e1a843bd3a5)
+# Erro: network 9e1a843bd3a5... not found
