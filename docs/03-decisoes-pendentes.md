@@ -651,8 +651,29 @@ VLAN 100 no `vmbr0 self`. Após adicionar a associação temporária, `tcpdump` 
 na `eno1` e o sniffer confirmou os mesmos quadros chegando à RB750 `ether4`. Ainda assim não houve
 resposta de `.1`; desativar hw-offload em `ether4/ether5` e declarar VLAN 100 explicitamente com
 `vlan-filtering=yes` na RB750 também não resolveu. Tudo foi novamente revertido e validado. A
-falha final está depois da entrada `ether4` da RB750 ou no handoff entre as bridges do RB3011; não
-há evidência suficiente para apontar um único equipamento sem captura adicional.
+~~falha final está depois da entrada `ether4` da RB750 ou no handoff entre as bridges do RB3011;
+não há evidência suficiente para apontar um único equipamento sem captura adicional.~~
+
+✅ **Causa isolada por captura no RB3011 (2026-08-05):** com `ether10 hw=no`, os ARPs VLAN 100
+chegaram até o RB3011 e foram decapsulados corretamente em `vlan100-rb750-test` (RX, sem tag,
+56 bytes). A porta virtual estava `learning=yes` e `forwarding=yes`, sem bridge filter, bridge NAT
+ou IP firewall. Porém, os mesmos quadros apareceram na `bridge-servidores` como **QinQ
+`vlan=16,100`**, com 64 bytes, e nunca chegaram à `vlan100-servidores`. O handoff VLAN 100 reverso
+entre `Bridge IP Publico` e `bridge-servidores` interage com o `vlan16-servidores` já existente
+entre as mesmas duas bridges, criando empilhamento das tags 16+100. Portanto, ~~hw-offload era a
+causa forte~~ ✅ offload e RB750 foram descartados como causa única; **não criar um segundo handoff
+VLAN entre essas bridges**. Rollback final confirmou RB3011 limpo, Proxmox novamente somente em
+`.210/30`, e gateway `.209`, RADIUS `.214` e HubSoft `.16` com 3/3 respostas. Evidência completa:
+[`config/proxmox-hubsoft/diagnostico-vlan100-preparacao-2026-08-05.txt`](../config/proxmox-hubsoft/diagnostico-vlan100-preparacao-2026-08-05.txt).
+
+🆕 **Alternativa temporária escolhida, ainda não executada (2026-08-05):** intercalar um switch
+gigabit não gerenciável na `ether8`, que já entrega VLAN 100 native e VLAN 16 tagged. O DNS volta
+ao switch e deve ser validado primeiro; depois a `eno2` livre do R720 HubSoft entra como segundo
+cabo. A `eno1` permanece na RB750 sustentando `.210`, RADIUS `.214` e HubSoft `.16` enquanto
+`.13/24` é testado em bridge separada. Não há mudança na RB3011 ou no DNS para inserir o switch.
+Migração das VMs e do gateway RADIUS `.213/30` é etapa posterior; somente no final `.210` e
+`eno1` saem. Plano e rollback:
+[`config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md`](../config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md).
 
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do

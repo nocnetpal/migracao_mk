@@ -186,6 +186,11 @@ Ver decisões #6, #9 e #12 em [03-decisoes-pendentes.md](03-decisoes-pendentes.m
 > ⛔ **Bloqueio operacional em 2026-08-05:** o Zabbix permanece com o próprio hypervisor em
 > `177.72.104.5/27`; `192.168.254.10/24` continua apenas reservado. O host ainda tem `vmbr0`
 > não VLAN-aware sobre `enp3s0f0` e uma interface separada `enp3s0f1` em `10.1.1.2/24`. Como o
-> transporte VLAN 100 pelo caminho compartilhado RB750→RB3011 não foi validado na tentativa do
-> HubSoft, o script `zabbix-m2-proxmox.sh` foi bloqueado com `exit 1`. Antes da virada, mapear o
-> caminho físico de `enp3s0f1` e validar VLAN 100 fim a fim sem remover `.5`.
+> transporte VLAN 100 pelo caminho compartilhado RB750→RB3011 produziu QinQ `16,100` no handoff
+> entre as bridges do RB3011, o script `zabbix-m2-proxmox.sh` foi bloqueado com `exit 1`. Não
+> repetir esse desenho: antes da virada, mapear `enp3s0f1` e montar a porta no novo L2 DM4170 sem
+> remover `.5` até a validação fim a fim.
+
+> 🆕 **HubSoft tem caminho temporário separado planejado:** `eno2` livre → switch não gerenciável
+> intercalado na RB3011 `ether8`; `eno1` permanece na RB750 até `.13`, VM `.16` e RADIUS `.214`
+> estarem validados no novo caminho. Esse arranjo não libera o Zabbix, que continua bloqueado.

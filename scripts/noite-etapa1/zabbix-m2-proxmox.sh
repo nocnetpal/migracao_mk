@@ -4,8 +4,8 @@
 # Hoje: 177.72.104.5/27 no vmbr0 — OBRIGATORIO sair
 set -euo pipefail
 
-echo "BLOQUEADO: Zabbix usa o mesmo caminho RB750/RB3011 ainda sem VLAN 100 validada." >&2
-echo "Nao alterar .5, vmbr0 ou tags das VMs antes de fechar o transporte L2 e o rollback." >&2
+echo "BLOQUEADO: caminho RB750/RB3011 produz QinQ 16,100 no handoff entre bridges." >&2
+echo "Nao alterar .5, vmbr0 ou tags antes da porta direta e validada no novo L2 DM4170." >&2
 exit 1
 
 echo "=== 1) VLAN-aware vmbr0 ==="

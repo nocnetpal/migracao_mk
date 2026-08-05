@@ -38,10 +38,16 @@ fase CCR/Datacom, conforme escopo.
 
 ⛔ **HubSoft/Zabbix bloqueados no caminho atual (2026-08-05):** tentativa controlada de estender
 a VLAN 100 pelo RB3011 `ether10` e pela RB750 foi revertida sem impacto. O diagnóstico corrigiu
-uma falha local do `vmbr0 self` e comprovou ARP tagged chegando à RB750 `ether4`, mas não fechou o
-caminho até a SVI `.1`. Testes com hw-offload desativado e VLAN filtering explícito na RB750 também
-falharam; todos os equipamentos voltaram ao estado original. Scripts M1/M2 agora abortam por
-segurança. **Não virar Zabbix `.5→.10` nem HubSoft `.210→.13` antes de validar o L2 fim a fim.**
+uma falha local do `vmbr0 self` e comprovou o caminho completo até a interface virtual no RB3011.
+Captura conclusiva mostrou o ARP entrando sem tag em `vlan100-rb750-test`, mas saindo na
+`bridge-servidores` como **QinQ `16,100`** (56→64 bytes), sem chegar à SVI `.1`: o segundo handoff
+entre `Bridge IP Publico` e `bridge-servidores` interage com o handoff VLAN 16 já existente e
+empilha as duas tags. ~~A causa provável era hw-offload/RB750.~~ ✅ **Causa L2 isolada; esse desenho
+não deve ser repetido.** Rollback total validado nos dois equipamentos. Scripts M1/M2 continuam
+bloqueados. **Plano temporário aprovado, ainda não executado:** intercalar switch gigabit não
+gerenciável na `ether8`, mantendo o DNS e ligando a `eno2` do HubSoft; `eno1` continua na RB750
+durante a transição. Isso entrega a VLAN 100 diretamente pela `bridge-servidores`, sem o handoff
+defeituoso. Zabbix `.10` continua aguardando o novo L2. Ver [16](16-etapa1-proxmox-vlans-datacom.md).
 
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)

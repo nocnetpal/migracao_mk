@@ -5,8 +5,10 @@
 # Pre-check 2026-08-05 confirmou dois bloqueios adicionais:
 # 1. ativar vlan-filtering tambem muda Zabbix, WireGuard e gerencia do NE8000;
 # 2. HUBSOFT-RADIUS .214 usa gateway .213/30, que tambem precisa viajar na VLAN 100.
+# Captura final: segundo handoff entre Bridge IP Publico e bridge-servidores
+# empilha QinQ 16,100. Este desenho nao deve ser repetido.
 
-:error "BLOQUEADO: VLAN100 via RB750/RB3011 falhou em 2026-08-05; nao aplicar este script"
+:error "BLOQUEADO: caminho RB750/RB3011 produz QinQ 16,100; migrar somente no novo L2 DM4170"
 
 # =============================================================================
 # (A) No RB750-WIREGUARD — NAO USAR AGORA

@@ -161,11 +161,25 @@ Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-
   organizar os IPs:** sem DM4170, CCR, recabeamento, tags ou mudança no RB750. Pré-check:
   `config/proxmox-hubsoft/precheck-migracao-vlan100-2026-08-05.txt`.
 - ❌ Tentativa de transportar VLAN 100 tagged por RB3011 `Bridge IP Publico` → RB750 flat →
-  HubSoft não alcançou `.1`; rollback completo e serviços antigos 3/3 OK. Não repetir sem
-  diagnóstico. Evidência: `config/proxmox-hubsoft/tentativa-vlan100-rollback-2026-08-05.txt`.
+  HubSoft não alcançou `.1`; rollback completo e serviços antigos 3/3 OK. Evidência inicial:
+  `config/proxmox-hubsoft/tentativa-vlan100-rollback-2026-08-05.txt`.
   Diagnóstico posterior corrigiu a emissão local (`vmbr0 self` precisava permitir VLAN 100) e
-  comprovou a tag na RB750 `ether4`, mas nem software bridge (`hw=no`) nem VLAN filtering explícito
-  na RB750 completaram o caminho. Segundo rollback também confirmado; zero mudança persistente.
+  comprovou o percurso até `vlan100-rb750-test` no RB3011. Captura conclusiva mostrou cada ARP
+  entrando sem tag (56 bytes), mas saindo na `bridge-servidores` como **QinQ `16,100`** (64 bytes),
+  sem chegar à SVI. O handoff VLAN 100 reverso interage com `vlan16-servidores`, já ligando as
+  mesmas bridges. ~~Faltava testar hw-offload/RB750.~~ ✅ **Causa isolada: segundo handoff entre as
+  bridges empilha tags. Não repetir.** Zabbix segue somente no novo L2 DM4170; HubSoft pode usar o
+  caminho temporário físico pela `ether8`, descrito abaixo.
+  Rollback final confirmou zero mudança persistente. Evidência completa:
+  `config/proxmox-hubsoft/diagnostico-vlan100-preparacao-2026-08-05.txt`.
+- 🟡 **Plano temporário aprovado, não executado:** intercalar switch gigabit não gerenciável na
+  `ether8`, mantendo o DNS e adicionando a `eno2` livre do HubSoft. A `ether8` já fornece VLAN 100
+  native + VLAN 16 tagged; não exige mudança na RB3011 nem no DNS. Primeiro validar o DNS sozinho
+  atrás do switch; somente depois conectar `eno2`. A `eno1` fica na RB750 e mantém `.210`, RADIUS
+  `.214` e HubSoft `.16` durante o teste paralelo de `.13/24` numa bridge nova. Para concluir com
+  um cabo, ainda será necessário passar a VM `.16` pela tag 16 e transportar o gateway RADIUS
+  `.213/30`; só então remover `.210` e `eno1`. Plano completo e rollback:
+  `config/proxmox-hubsoft/plano-switch-temporario-2026-08-05.md`.
 - VMs privadas: decidir se mantêm as sub-redes atuais como secundárias na VLAN 100 ou se serão
   renumeradas; para o RADIUS, renumerar exige revisar clientes e secrets antes.
 - `10.1.1.2` Zabbix `enp3s0f1`

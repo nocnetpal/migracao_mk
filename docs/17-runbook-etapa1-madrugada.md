@@ -17,7 +17,12 @@
 
 **Status em 2026-08-05:** ✅ Docker e DNS executados. Proxmox DNS concluído em
 `192.168.254.12/24`, VMs 101/102/103/105 na tag 16 e Unbound `.28/.58/.59` respondendo
-`NOERROR`. HubSoft/Zabbix continuam fora desta etapa.
+`NOERROR`. HubSoft/Zabbix continuam fora desta etapa. Captura no RB3011 comprovou que estender a
+VLAN 100 pelo caminho flat do RB750 cria QinQ `16,100` ao cruzar o handoff VLAN 16 existente;
+**não repetir os scripts antigos nem criar outro handoff entre as duas bridges**. Para o HubSoft,
+há plano temporário ainda não executado: switch não gerenciável intercalado na `ether8`, DNS
+validado primeiro e `eno2` do HubSoft como segundo cabo; `eno1` permanece na RB750 até concluir a
+migração. Zabbix continua aguardando o novo L2 DM4170/recabeamento.
 
 ---
 

@@ -1,0 +1,317 @@
+# Diagnostico VLAN 100 - preparacao temporaria no px-hubsoft - 2026-08-05
+# Saida bruta fornecida pelo usuario; bridge vlan show repetiu a faixa 2-4094
+# inteira em eno1/tap102i0, omitida abaixo apenas por ser expansao redundante.
+
+root@px-hubsoft:~# bridge vlan add dev vmbr0 vid 100 self
+root@px-hubsoft:~# ip link add link vmbr0 name vmbr0.100 type vlan id 100
+root@px-hubsoft:~# ip link set vmbr0.100 up
+root@px-hubsoft:~# ip addr add 192.168.254.13/24 dev vmbr0.100
+root@px-hubsoft:~# ip -d link show vmbr0.100
+23: vmbr0.100@vmbr0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 84:2b:2b:5a:45:55 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 0 maxmtu 65535
+    vlan protocol 802.1Q id 100 <REORDER_HDR> addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535
+
+Trecho relevante do bridge vlan show final:
+vmbr0             1 PVID Egress Untagged
+                  100
+
+Conclusao imediata: interface temporaria criada sem erro; VLAN 100 presente no
+bridge self e permitida em eno1. Ainda nao foi gerado trafego de teste.
+
+## Primeira captura fim a fim
+
+Capturas iniciadas pelo usuario:
+
+RB750:
+/tool sniffer quick interface="ether5 - Uplink GW Servidores" mac-protocol=vlan
+-- nenhum pacote exibido --
+
+RB3011:
+/tool sniffer quick interface="ether10 - RB750 Bridge" mac-protocol=vlan
+-- nenhum pacote exibido --
+
+Geracao no px-hubsoft:
+root@px-hubsoft:~# ip neigh flush dev vmbr0.100
+root@px-hubsoft:~# ping -I vmbr0.100 -c 3 -W 1 192.168.254.1
+PING 192.168.254.1 (192.168.254.1) from 192.168.254.13 vmbr0.100: 56(84) bytes of data.
+
+--- 192.168.254.1 ping statistics ---
+3 packets transmitted, 0 received, 100% packet loss, time 2036ms
+
+Observacao: o usuario tambem digitou por engano o comando /tool no shell Linux;
+retornou "-bash: /tool: No such file or directory" e nao causou alteracao.
+
+## Captura de controle no enlace fisico do px-hubsoft
+
+root@px-hubsoft:~# tcpdump -eni eno1 'vlan 100 and arp'
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eno1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+14:05:28.849205 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:05:29.857831 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:05:30.881831 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+
+Conclusao: origem L2 validada. Tres ARPs 802.1Q VLAN 100 sairam pela NIC
+fisica eno1, com MAC 84:2B:2B:5A:45:55 e origem 192.168.254.13.
+
+## Confirmacao dos nomes de interface da RB750
+
+[admin@RB750-WIREGUARD] > interface/print
+Flags: R - RUNNING; S - SLAVE
+#    NAME                           TYPE      ACTUAL-MTU  L2MTU  MAX-L2MTU  MAC-ADDRESS
+0  S ether1 - LIVRE                 ether           1500   1596       2026  DC:2C:6E:ED:23:18
+1 RS ether2 - NE8000 Gerencia       ether           1500   1596       2026  DC:2C:6E:ED:23:19
+2 RS ether3 - Proxmox Zabbix        ether           1500   1596       2026  DC:2C:6E:ED:23:1A
+3 RS ether4 - Proxmox HubSoft       ether           1500   1596       2026  DC:2C:6E:ED:23:1B
+4 RS ether5 - Uplink GW Servidores  ether           1500   1596       2026  DC:2C:6E:ED:23:1C
+5 R  bridge1 - Servidores           bridge          1500   1596             DC:2C:6E:ED:23:18
+
+Conclusao: nomes usados nas capturas anteriores conferem exatamente com o
+estado ao vivo; ether4 e ether5 estao running e possuem L2MTU 1596.
+
+## Captura em memoria na RB750 ether4
+
+Configuracao confirmada antes do teste:
+- filter-interface: ether4 - Proxmox HubSoft
+- filter-mac-protocol: vlan
+- filter-vlan: 100
+- memory-limit: 100KiB
+- memory-scroll: no
+- running: yes
+
+Apos nova geracao de ARP no px-hubsoft:
+[admin@RB750-WIREGUARD] > /tool/sniffer/stop
+[admin@RB750-WIREGUARD] > /tool/sniffer/packet/print detail
+-- nenhum pacote listado --
+
+Interpretacao provisoria: o sniffer da CPU nao observou o quadro na ether4.
+Isso ainda nao prova descarte na porta porque as portas podem estar com
+hardware offload pelo switch-chip.
+
+## Estado das portas e switch-chip da RB750
+
+ether4 - Proxmox HubSoft:
+- flag H, hw=yes
+- bridge=bridge1 - Servidores
+- pvid=1, frame-types=admit-all, ingress-filtering=yes
+- flood unicast desconhecido, multicast e broadcast habilitados
+
+ether5 - Uplink GW Servidores:
+- flag H, hw=yes
+- bridge=bridge1 - Servidores
+- pvid=1, frame-types=admit-all, ingress-filtering=yes
+- flood unicast desconhecido, multicast e broadcast habilitados
+
+Switch:
+- switch1, MediaTek-MT7621
+- ether2, ether3, ether4, ether5 e switch1-cpu running
+- mirror-source=none, mirror-target=none
+- /interface/ethernet/switch/vlan/print detail retornou erro de sintaxe; menu
+  nao esta disponivel nesse caminho/modelo.
+
+Conclusao: ether4 e ether5 encaminham com hardware offload no mesmo chip. Uma
+captura vazia na CPU nao demonstra descarte na porta fisica.
+
+## Teste com hardware offload desativado
+
+Safe Mode ativado com sucesso na RB750. Estado temporario:
+- ether4 - Proxmox HubSoft: hw=no
+- ether5 - Uplink GW Servidores: hw=no
+- sessao de administracao permaneceu ativa
+
+Sniffer em memoria novamente confirmado running=yes na ether4, com filtros
+mac-protocol=vlan e vlan=100. Apos multiplas rodadas de tres ARPs geradas no
+px-hubsoft, /tool/sniffer/packet/print detail continuou sem listar pacotes.
+
+Interpretacao provisoria: resta eliminar incompatibilidade dos filtros do
+sniffer com a representacao interna do quadro. Proximo teste deve filtrar
+somente pelo MAC de origem do px-hubsoft, sem filtro de VLAN/interface.
+
+## Tentativa por MAC com operador OR
+
+O filtro por MAC foi aceito, mas filter-interface vazio combinado com
+filter-operator-between-entries=or capturou todo o trafego da RB750. A memoria
+de 100KiB ficou preenchida por trafego Winbox/OSPF na wireguard1 e nao reteve
+os ARPs do inicio da captura. Resultado inconclusivo; repetir com operador
+AND, interface ether4 e MAC de origem simultaneamente.
+
+## Captura conclusiva na entrada ether4, hw=no
+
+Com operador AND, interface ether4 e MAC de origem do px-hubsoft, o sniffer
+capturou os tres quadros esperados:
+
+- time=6.33, direction=rx, src-mac=84:2B:2B:5A:45:55,
+  dst-mac=FF:FF:FF:FF:FF:FF, vlan=100,
+  interface=ether4 - Proxmox HubSoft, protocol=arp, size=60
+- time=7.332, mesmos campos, vlan=100, protocol=arp
+- time=8.356, mesmos campos, vlan=100, protocol=arp
+
+Conclusao: VLAN 100 entra corretamente na porta fisica ether4 da RB750. NIC,
+cabo Proxmox-RB750 e ingresso da RB750 estao eliminados como causa.
+
+## Captura conclusiva na saida ether5, hw=no
+
+O mesmo filtro AND foi aplicado na ether5. Os tres ARPs apareceram:
+
+- time=5.569, direction=tx, src-mac=84:2B:2B:5A:45:55,
+  dst-mac=FF:FF:FF:FF:FF:FF, vlan=100,
+  interface=ether5 - Uplink GW Servidores, protocol=arp, size=60
+- time=6.571, mesmos campos, vlan=100, protocol=arp
+- time=7.595, mesmos campos, vlan=100, protocol=arp
+
+Conclusao: a RB750 encaminha a VLAN 100 corretamente de ether4 para ether5
+quando processada pela bridge em software. O ponto de perda esta depois da
+saida ether5: enlace ate a RB3011, captura/offload da RB3011 ou processamento
+na ether10/Bridge IP Publico.
+
+## Restauracao da RB750
+
+Safe Mode encerrado. Estado final confirmado:
+- ether4 - Proxmox HubSoft: flag H, HW=yes
+- ether5 - Uplink GW Servidores: flag H, HW=yes
+
+A RB750 voltou ao estado original antes de continuar o diagnostico na RB3011.
+
+## Estado da RB3011 ether10 antes da captura
+
+ether10 - RB750 Bridge:
+- bridge=Bridge IP Publico
+- flag H, hw=yes
+- pvid=1, frame-types=admit-all, ingress-filtering=no
+- flood unicast desconhecido, multicast e broadcast habilitados
+
+Sniffer RouterOS 6:
+- memory-limit=100KiB, memory-scroll=yes
+- sem filtros ativos, running=no
+- oferece filter-interface e filter-mac-address, mas nao exibe filtro VLAN nem
+  filtros src/dst MAC separados nessa versao.
+
+Conclusao: captura comum tambem pode ficar invisivel por hardware offload na
+RB3011. Proximo teste deve usar hw=no temporario em Safe Mode.
+
+## Captura conclusiva na RB3011 ether10
+
+Com hw=no temporario em Safe Mode e filtro AND por interface+MAC, a RB3011
+capturou os tres ARPs esperados:
+
+- time=33.094, direction=rx, src-mac=84:2B:2B:5A:45:55,
+  dst-mac=FF:FF:FF:FF:FF:FF, vlan=100,
+  interface=ether10 - RB750 Bridge, protocol=arp, size=60
+- time=34.108, mesmos campos, vlan=100, protocol=arp
+- time=35.132, mesmos campos, vlan=100, protocol=arp
+
+Durante o teste a sessao RouterOS reconectou e o prompt voltou sem <SAFE>,
+indicando liberacao/rollback automatico do Safe Mode. Confirmar hw=yes antes
+de qualquer novo teste.
+
+Conclusao: caminho fisico completo validado ate a entrada ether10 da RB3011.
+O problema nao esta no Proxmox, cabo, RB750 ou enlace entre os roteadores. O
+descarte ocorre no processamento da RB3011 depois da ether10. Hipotese forte:
+o handoff virtual vlan100-rb750 nao recebeu quadros enquanto ether10 operava
+com hardware offload; a tentativa anterior desativou offload apenas na RB750.
+
+## Estado atual da bridge-servidores antes do teste final
+
+- Portas: ether7 Docker e ether8 DNS, ambas PVID 100.
+- VLAN 100: bridge-servidores tagged; ether7+ether8 untagged.
+- VLAN 16: bridge-servidores+ether7+ether8 tagged.
+- vlan100-servidores running, VLAN ID 100 sobre bridge-servidores.
+- Enderecos ativos na vlan100-servidores: 192.168.116.121/30,
+  192.168.115.137/30 e gateway 192.168.254.1/24.
+- vlan16-servidores running.
+- Nenhuma interface vlan100-rb750 temporaria remanescente.
+
+Conclusao: estado limpo e coerente; Docker/DNS permanecem funcionais. Teste
+final pode criar handoff novo sem duplicar objeto anterior.
+
+## Teste final com offload desativado na RB3011
+
+Foi recriado temporariamente, dentro de Safe Mode:
+
+- vlan100-rb750-test: VLAN ID 100 sobre Bridge IP Publico;
+- porta vlan100-rb750-test na bridge-servidores, PVID 100;
+- vlan100-rb750-test como untagged na entrada estatica da VLAN 100;
+- ether10 - RB750 Bridge configurada com hw=no.
+
+O estado corrente da tabela VLAN confirmou vlan100-rb750-test em
+CURRENT-UNTAGGED. Mesmo assim, o Proxmox continuou sem resolver ARP:
+
+- 192.168.254.13 -> 192.168.254.1: INCOMPLETE;
+- 4 pacotes transmitidos, nenhuma resposta.
+
+Evidencias na RB3011 durante o teste:
+
+- sniffer em vlan100-rb750-test capturou os tres ARP requests;
+- direction=rx, protocolo ARP, origem 84:2B:2B:5A:45:55;
+- destino FF:FF:FF:FF:FF:FF, tamanho 56, fp=no;
+- contador de vlan100-rb750-test registrou RX sem drops;
+- nenhuma entrada ARP para 192.168.254.13;
+- a MAC do Proxmox aparecia somente na Bridge IP Publico/ether10, nao na
+  bridge-servidores;
+- bridge filter e bridge NAT vazios;
+- use-ip-firewall=no, use-ip-firewall-for-vlan=no e fast-path desativado;
+- porta virtual ativa, PVID 100, ingress-filtering=no, broadcast-flood=yes e
+  horizon=none.
+
+Conclusao corrigida: ~~o hardware offload da ether10 era a causa forte do
+descarte~~. O offload nao e a causa unica. Os quadros VLAN 100 chegam e sao
+decapsulados pela interface vlan100-rb750-test, mas nao sao aprendidos nem
+encaminhados pela bridge-servidores. O ponto de descarte foi reduzido ao
+ingresso da porta virtual na bridge-servidores.
+
+A sessao original caiu antes do monitoramento operacional da porta. O Safe
+Mode foi recuperado com unroll. Rollback confirmado:
+
+- vlan100-rb750-test removida;
+- porta virtual removida da bridge-servidores;
+- VLAN 100 novamente untagged somente em ether7 e ether8;
+- ether10 novamente hw=yes e com offload ativo;
+- Safe Mode liberado.
+
+## Captura conclusiva: empilhamento QinQ 16,100
+
+O handoff foi recriado uma ultima vez em Safe Mode. O monitor operacional da
+porta vlan100-rb750-test confirmou:
+
+- status=in-bridge;
+- learning=yes;
+- forwarding=yes;
+- role=designated-port.
+
+Captura simultanea em vlan100-rb750-test, bridge-servidores e
+vlan100-servidores durante tres ARPs do Proxmox:
+
+- em vlan100-rb750-test: direction=rx, ARP sem tag, size=56;
+- em bridge-servidores: direction=tx, vlan=16,100, size=64;
+- nenhuma entrega em vlan100-servidores;
+- mesma origem 84:2B:2B:5A:45:55 e destino broadcast nos tres pares.
+
+O aumento de 8 bytes e a indicacao vlan=16,100 comprovam duas tags. O handoff
+VLAN 100 reverso interage com o handoff vlan16-servidores ja existente entre
+bridge-servidores e Bridge IP Publico. Em vez de entregar o ARP a SVI VLAN
+100, o desenho cria empilhamento QinQ 16,100 entre as duas bridges.
+
+Conclusao final: nao repetir esse handoff. O caminho atual nao permite anexar
+HubSoft/Zabbix a bridge-servidores por uma segunda interface VLAN entre as
+mesmas bridges. O caminho seguro permanece porta direta/recabeamento no novo
+L2 do DM4170, quando o RB750 sair.
+
+## Rollback final validado
+
+RB3011:
+
+- vlan100-rb750-test ausente;
+- porta temporaria ausente;
+- VLAN 100 current-untagged somente em ether7 e ether8;
+- ether10 novamente hw=yes e com offload ativo;
+- equipamento fora de Safe Mode.
+
+Proxmox HubSoft:
+
+- 192.168.254.13/24 e vmbr0.100 removidos;
+- associacao VLAN 100 self removida de vmbr0;
+- vmbr0 somente em 192.168.115.210/30 e VLAN 1 PVID untagged;
+- 192.168.115.209: 3/3, 0% de perda;
+- RADIUS 192.168.115.214: 3/3, 0% de perda;
+- HubSoft 177.72.104.16: 3/3, 0% de perda.
+
+Nenhuma alteracao temporaria permaneceu nos equipamentos.
