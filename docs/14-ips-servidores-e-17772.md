@@ -18,8 +18,8 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 
 | # | Equipamento | IP(s) | Hoje pendura em | Notas |
 |---|---|---|---|---|
-| 1 | Proxmox Docker/CDNTV (Dell R420) | `192.168.116.122/30` → alvo **VLAN 100** privado | RB3011 ether7 | VMs/containers na §1.1 |
-| 2 | Proxmox DNS (HP 360 G7) | `192.168.115.138/30` → alvo **VLAN 100** privado | RB3011 ether8 | VMs na §1.2 |
+| 1 | Proxmox Docker/CDNTV (Dell R420) | ✅ `192.168.254.11/24`, **VLAN 100** | RB3011 ether7 | Concluído 2026-08-05; VMs/containers na §1.1 |
+| 2 | Proxmox DNS (HP 360 G7) | ✅ `192.168.254.12/24`, **VLAN 100** | RB3011 ether8 | Concluído 2026-08-05; VMs na §1.2 |
 | 3 | Proxmox Zabbix/Zeus (HP DL360 G7) | **`177.72.104.5` → sai do `/27`** → VLAN 100 privado | RB750 p3 | Sem gerência privada hoje; VMs na §1.3 |
 | 4 | Proxmox HubSoft (Dell R720) | `192.168.115.210/30` → alvo **VLAN 100** privado | RB750 p4 | VMs na §1.4 |
 
@@ -37,7 +37,7 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 
 | Host/VM/container | IP | Tipo |
 |---|---|---|
-| **hypervisor** | `192.168.116.122/30` | gerência privada |
+| **hypervisor** | ~~`192.168.116.122/30`~~ → ✅ `192.168.254.11/24` | gerência privada, VLAN 100 |
 | OpenVPN2 | `177.72.104.12` (+ `10.254.0.30`) | VM pública |
 | Fusion-Painel-Elaborados | `177.72.104.22` | VM pública |
 | APP-ETC-SCRIPTS | `177.72.104.23` | VM pública |
@@ -51,7 +51,7 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 | smokeping | `177.72.104.8` | container |
 | pdns-master1 | `177.72.104.10` | container |
 | pdns-slave | `177.72.104.11` | container |
-| DNS2-Recursivo-104.21 | `177.72.104.21` | container |
+| ~~DNS2-Recursivo-104.21~~ | `177.72.104.21` | ✅ removido intencionalmente em 2026-08-05; não migra |
 | NTP_SERVER | `192.168.116.10` | container (origem NTP da rede) |
 | SEVERINO | `192.168.15.74` | container (VLAN 18) |
 | SpeedTest | `177.93.247.138` | container — bloco `177.93`, não `177.72` |
@@ -60,10 +60,10 @@ Régua Volt (RB2011 p4) — **estragada, não migra**.
 
 | Host/VM | IP | Tipo |
 |---|---|---|
-| **hypervisor** | `192.168.115.138/30` | gerência privada |
+| **hypervisor** | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` | gerência privada, VLAN 100 |
 | OLT-CLOUD | `177.72.104.24` | VM pública |
 | API-ZAP | `177.72.104.26` | VM pública |
-| NS-UNBOUND | `177.72.104.28` **e** `177.72.104.58` | VM pública (dois IPs, um host) |
+| NS-UNBOUND | `177.72.104.28/27` + `.58/32` + `.59/32` | VM pública (três IPs, um host; `.58`/`.59` secundários) |
 | AUTOMACOES | `177.72.104.29` | VM pública |
 
 ### 1.3 Proxmox Zabbix — hypervisor + VMs
@@ -131,14 +131,14 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.18` | ocupado | Fusion-0800-Netpal |
 | `.19` | ocupado | VPN WireGuard (next-hop `10.30.0.0/30`, `10.150.150.0/24`) |
 | `.20` | ocupado | SFTP-OPA-CHAT |
-| `.21` | ocupado | DNS2 Recursivo (`docker-netpal`) |
+| `.21` | **desocupado** | ~~DNS2 Recursivo~~ removido intencionalmente em 2026-08-05; não recriar na migração |
 | `.22` | ocupado | Fusion-Painel-Elaborados |
 | `.23` | ocupado | APP-ETC-SCRIPTS |
 | `.24` | ocupado | OLT-CLOUD |
 | `.25` | ocupado | Fusion-Painel-Simples |
 | `.26` | ocupado | API-ZAP |
 | `.27` | ocupado | RRFlow (RR FlowSpec AS 52828 + NetStream `:3055`) |
-| `.28` | ocupado | NS-UNBOUND (mesmo host que `.58`) |
+| `.28` | ocupado | NS-UNBOUND (mesmo host que os loopbacks `.58` e `.59`) |
 | `.29` | ocupado | AUTOMACOES |
 | `.30` | ocupado | OPA.SUIT / Opa ChatBot |
 | `.31` | broadcast | prefixo `/27` |
@@ -159,7 +159,7 @@ Não é o `/21` BGP inteiro do NE8000 — só o que toca servidores/enlaces do t
 | `177.72.104.56/30` | Prefixo DNS (rota desabilitada no MK); filtro OSPF |
 | `177.72.104.57` | Firewall accept — **sem ARP (2026-07-24), provável residual** |
 | `177.72.104.58` | DNS loopback — mesmo host NS-UNBOUND que `.28` |
-| `177.72.104.59` | DNS loopback listado — **sem ARP, provável residual** |
+| `177.72.104.59` | ✅ DNS loopback `/32` — mesmo host NS-UNBOUND que `.28`/`.58`; confirmado em 2026-08-05 |
 | `177.72.104.60/30` | Pantano⇒Juca Ana — migrou pro NE8000 (`.61`); órfão disabled no MK a limpar |
 | `177.72.104.66` | CGNAT-1 Jardim Formoso |
 | `177.72.104.102` | CGNAT-2 Jardim Formoso |

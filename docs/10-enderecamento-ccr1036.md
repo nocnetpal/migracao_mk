@@ -36,9 +36,9 @@ de portas só previa gerência para 1:
 
 | Cluster | IP de gerência (hypervisor) | VMs — **públicas** | VMs — **privadas** |
 |---|---|---|---|
-| Proxmox Docker | `192.168.116.122/30` ✅ no plano (`ether3`) | OpenVPN-2 `177.72.104.12`, Fusion Elaborados `.22`, Fusion Painéis Simples `.25`, Aplicações `.23`, Opa ChatBot `.30` | — |
+| Proxmox Docker | ~~`192.168.116.122/30`~~ → ✅ `192.168.254.11/24` (VLAN 100) | OpenVPN-2 `177.72.104.12`, Fusion Elaborados `.22`, Fusion Painéis Simples `.25`, Aplicações `.23`, Opa ChatBot `.30` | — |
 | **Proxmox HubSoft** | `192.168.115.210/30` ⚠️ **fora do plano** | HubSoft `177.72.104.16` | **Radius HubSoft `192.168.115.214`** ⚠️ |
-| **Proxmox DNS** | `192.168.115.138/30` ⚠️ **fora do plano** | OLT Cloud `177.72.104.24`, DNS Master `.58`, Automações `.29` | — |
+| **Proxmox DNS** | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` (VLAN 100) | OLT Cloud `177.72.104.24`, DNS Master `.28/.58/.59`, Automações `.29`, API-ZAP `.26` | — |
 | Proxmox Zabbix | ⚠️ nenhum IP de gerência identificado no Dude (`ether5` já previa "mgmt privada nova", consistente) | Zabbix `.6`, Fusion PM CPV `.14`, Fusion 0800 `.18`, Zeus TIP `.13`, "Proxmox Zabbix" `.5`, DOCS Cloud `.7`, Servidor VPN `.9`, Fusion PM MST `.17`, SFTP OPA `.20` | Dude VLSUL `192.168.17.38` ⚠️, Dude PM CPV `192.168.17.42` ⚠️, Servidor Monsta `192.168.115.62` ⚠️ |
 
 ### ⚠️ VMs privadas não cabem no `/30` de gerência do hypervisor
@@ -204,15 +204,17 @@ add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-po
 ## O que não muda nos servidores (gerência)
 
 - **TS SIX** continua `192.168.66.14/28` — só o gateway passa de `192.168.66.1` (MK) para o NE8000.
-- **Proxmox Docker/CDNTV** continua `192.168.116.122/30` — gateway passa para o NE8000.
+- ~~**Proxmox Docker/CDNTV** continua `192.168.116.122/30`.~~ → ✅ migrou para
+  `192.168.254.11/24` na VLAN 100 em 2026-08-05; gateway ainda no RB3011 e depois passa ao NE8000.
 - **DNS recursivo** continua `10.200.255.254/30` — gateway passa para o NE8000.
 - **OLT CPV** continua `192.168.115.42/30` — gateway passa para o NE8000.
-- **Proxmox Zabbix/Callcenter** ganha uma IP privado novo em `vlan999` para gerência; o IP
+- **Proxmox Zabbix/Callcenter** ganha um IP privado novo na VLAN 100 para gerência; o IP
   público `177.72.104.5/6` migra para a **segunda NIC** (VLAN16 / rede de acesso).
 - 🆕 **Proxmox HubSoft** continua `192.168.115.210/30` — gateway passa para o NE8000. VM HubSoft
   pública `177.72.104.16` segue por segunda NIC (VLAN16), sem passar pela CCR1036.
-- 🆕 **Proxmox DNS** continua `192.168.115.138/30` — gateway passa para o NE8000. VMs públicas
-  (OLT Cloud `.24`, DNS Master `.58`, Automações `.29`) seguem por segunda NIC (VLAN16).
+- ~~🆕 **Proxmox DNS** continua `192.168.115.138/30`.~~ → ✅ migrou para
+  `192.168.254.12/24` na VLAN 100 em 2026-08-05; gateway ainda no RB3011 e depois passa ao NE8000.
+  VMs públicas (`.24`, `.26`, `.29`, `.28/.58/.59`) seguem na VLAN 16.
 
 ## Subinterfaces que o NE8000 precisa criar (no link com a CCR1036)
 
@@ -220,11 +222,9 @@ add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-po
 interface GigabitEthernet0/1/X.10   -> 10.200.255.253/30   (DNS recursivo)
 interface GigabitEthernet0/1/X.66   -> 192.168.66.1/28      (TS SIX)
 interface GigabitEthernet0/1/X.109  -> 192.168.115.41/30    (OLT CPV)
-interface GigabitEthernet0/1/X.116  -> 192.168.116.121/30   (Proxmox Docker/CDNTV)
-interface GigabitEthernet0/1/X.999  -> 192.168.254.1/24     (gerência Zabbix/Callcenter)
+interface GigabitEthernet0/1/X.100  -> 192.168.254.1/24     (gerência dos Proxmox)
 interface GigabitEthernet0/1/X.2000 -> <NE8000-P2P>/<mask>  (p2p CCR1036 — IPs a definir)
 interface GigabitEthernet0/1/X.???  -> a definir            (🆕 gerência Proxmox HubSoft, 192.168.115.210/30)
-interface GigabitEthernet0/1/X.???  -> a definir            (🆕 gerência Proxmox DNS, 192.168.115.138/30)
 ```
 
 A VLAN 16 (pública) sobe pelo DM4170 até o NE8000 **e** até a CCR (`177.72.104.4` no mesmo

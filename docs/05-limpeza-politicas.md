@@ -40,7 +40,7 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | Servidor sala | `177.72.104.16` | HubSoft | ✅ **confirmado por consulta direta (2026-07-24): é o Hubsoft real** — `.8` é sistema não relacionado (Smokeping, ver acima) |
 | The Dude (monitoramento) | `192.168.116.30` | RB DUDE | ✅ confirmado ativo (é a própria fonte do CSV) |
 | TS SIX | `192.168.66.14` | TS SIX | ✅ confirmado ativo (bate) |
-| DNS NetPal (x3, incl. loopbacks) | `177.72.104.28/58/59` | DNS MASTER (só `.58`) | ✅ **`.28` e `.58` confirmados por consulta direta (2026-07-24): é o mesmo host, VM `NS-UNBOUND`** (não são dois sistemas). `.59` segue sem confirmação em nenhuma fonte |
+| DNS NetPal (x3, incl. loopbacks) | `177.72.104.28/58/59` | DNS MASTER (só `.58`) | ✅ `.28/27`, `.58/32` e `.59/32` confirmados diretamente na mesma VM `NS-UNBOUND`; `.59` é IP secundário/loopback (confirmação QEMU Agent + usuário, 2026-08-05) |
 | Belluno (parceiro externo) | lista `BELLUNO` (5 IPs/redes) | — | ? |
 | SixTelecom (parceiro externo) | lista `SIXTELECOM` (5 IPs/redes) | — | ? |
 | CGNAT | `177.93.242.0/24` | — | ✅ consistente com CGNAT do NE8000 ([06](06-ne8000-bgp-core.md)) |
@@ -52,7 +52,7 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | 🆕 (sem nome no MK) | `177.72.104.24` | OLT CLOUD | novo — incluir |
 | 🆕 (sem nome no MK) | `177.72.104.29` | AUTOMACOES | ✅ confirmado por consulta direta (2026-07-24) — função exata segue aberta (não é o destino da notificação netwatch, ver decisão #6) |
 | 🆕 (sem nome no MK) | `177.72.104.26` | API-ZAP | ✅ **identidade resolvida (2026-07-24)** — ~~provável destino da notificação HTTP da decisão #6~~ descartado: o script `dude` chama `api.focuschat.com.br` direto, função real segue desconhecida |
-| 🆕 (sem regra no MK) | `177.72.104.2`, `.3`, `.10`, `.11`, `.21` | UniFi Controller, Wiki, PowerDNS master/slave, DNS2 Recursivo | 🆕 achados por consulta direta (2026-07-24) — nunca tiveram regra de firewall própria no MK, mas existem no `/27`. Incluir na lista final de zonas se precisarem de acesso de fora |
+| 🆕 (sem regra no MK) | `177.72.104.2`, `.3`, `.10`, `.11` | UniFi Controller, Wiki, PowerDNS master/slave | 🆕 achados por consulta direta (2026-07-24) — nunca tiveram regra de firewall própria no MK, mas existem no `/27`. `.21` DNS2 Recursivo foi removido intencionalmente em 2026-08-05 e não migra |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.12` | OpenVPN - 2 | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.19` | VPN - WireGuard | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |
 

@@ -7,10 +7,14 @@
 
 /interface bridge port add bridge=bridge-servidores \
   interface="ether8 - Proxmox DNS" pvid=100
-/interface bridge vlan add bridge=bridge-servidores vlan-ids=100 \
-  untagged="ether8 - Proxmox DNS"
-/interface bridge vlan add bridge=bridge-servidores vlan-ids=16 \
-  tagged="ether8 - Proxmox DNS"
+
+# VLANs 100/16 ja existem por causa do Docker: atualizar, nao duplicar.
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=100] \
+  tagged=bridge-servidores \
+  untagged="ether7 - Proxmox Docker CDNTV,ether8 - Proxmox DNS"
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=16] \
+  tagged="bridge-servidores,ether7 - Proxmox Docker CDNTV,ether8 - Proxmox DNS" \
+  untagged=""
 
 :do {
   /ip address set [find address="192.168.115.137/30"] interface=vlan100-servidores

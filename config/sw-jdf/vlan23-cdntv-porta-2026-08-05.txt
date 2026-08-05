@@ -1,0 +1,23 @@
+# Coleta ao vivo - SW_JDF - 2026-08-05 05:31 -03
+# Comandos somente de leitura executados pelo usuario.
+
+<SW_JDF>display vlan 23
+VID  Type    Ports
+23   common  UT:XGE0/0/14(U)
+             TG:XGE0/0/1(U) XGE0/0/11(D)
+
+VID  Status  Property  MAC-LRN  Statistics  Description
+23   enable  default   enable   disable     VLAN 0023
+
+<SW_JDF>display mac-address vlan 23
+MAC Address    VLAN/VSI/BD  Learned-From  Type
+048c-16cc-2fbc 23/-/-       XGE0/0/1      dynamic
+2ab7-2dd8-6ea2 23/-/-       XGE0/0/14     dynamic
+5e68-f670-6e0d 23/-/-       XGE0/0/14     dynamic
+c68f-da94-e06d 23/-/-       XGE0/0/14     dynamic
+Total items displayed = 4
+
+# Mapeamento confirmado:
+# XGE0/0/14 UP untagged = segundo cabo enp8s0f0 do Proxmox Docker/CDNTV
+# XGE0/0/1  UP tagged   = uplink ativo ate NE8000 Gi0/1/8.23
+# XGE0/0/11 DOWN tagged = membro configurado, fora do caminho ativo

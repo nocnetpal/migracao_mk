@@ -1,0 +1,64 @@
+# Fase 2 DNS - Proxmox + VMs tag 16 - 2026-08-05
+
+Host:
+- vmbr0 vlan_filtering=1
+- bridge-ports=enp3s0f0 (enp3s0f1 desconectada removida da config alvo)
+- IP temporario novo 192.168.254.12/24 adicionado em paralelo
+- IP/gateway antigos 192.168.115.138/30 via .137 ainda mantidos
+- ping .137: 3/3 OK
+- ping 192.168.254.1: 3/3 OK
+
+VMs alteradas ao vivo para vmbr0 tag=16:
+- 101 OLT-CLOUD .24: 3/3 OK
+- 102 API-ZAP .26: 3/3 OK
+- 103 AUTOMACOES .29: 3/3 OK
+- 105 NS-UNBOUND .28: 3/3 OK
+- 105 NS-UNBOUND .58/32: 3/3 OK
+- 105 NS-UNBOUND .59/32: 3/3 OK
+
+Teste funcional DNS apos tag:
+- consultas UDP/53 chegam e recebem resposta em .28, .58 e .59
+- os tres enderecos retornam status SERVFAIL para google.com A, resposta imediata
+- ANSWER=0; flags qr rd ra; query time 0 ms
+
+Conclusao provisoria:
+- Transporte L2/VLAN 16 e alcance ao daemon DNS estao OK.
+- Resolver interno/upstream retorna SERVFAIL.
+- Nao existe baseline `dig` pre-mudanca, apenas ping; causa ainda nao atribuida.
+- Manter .138/.137 e diagnosticar dentro da VM 105 antes da virada final do host.
+
+Diagnostico interno VM 105 ns-netpal:
+- unbound-checkconf: sem erros em /etc/unbound/unbound.conf
+- unbound.service: active
+- rota IPv4: default via 177.72.104.1; .28/27 connected
+- dig local @127.0.0.1: SERVFAIL imediato
+- dig externo @8.8.8.8: NOERROR, google.com resolvido em 15 ms
+- logs desde 2026-08-04 (antes da Fase 2) repetem:
+  `udp connect failed: Invalid argument for fe80::225:90ff:fee9:ed76 port 53`
+
+Conclusao refinada:
+- Falha do Unbound e preexistente, nao causada pela tag 16.
+- O daemon tenta usar um DNS IPv6 link-local sem escopo/interface, causando SERVFAIL.
+- Localizar a origem desse endereco na configuracao antes de corrigir ou encerrar a migracao.
+
+Testes adicionais:
+- `dig +trace google.com`: completou por IPv4 ate ns3.google.com; IPv6 sem rota teve fallback.
+- Unbound efetivo: do-ip4=yes, do-ip6=yes, prefer-ip6=no; validator+iterator ativos.
+- `dig @127.0.0.1 google.com +cdflag`: NOERROR com resposta A imediata.
+
+Conclusao de causa:
+- `+cdflag` ignora validacao DNSSEC e resolve; portanto o SERVFAIL vem do validador/trust anchor.
+- Ausencia de rota IPv6 e os erros fe80 sao ruido/problema paralelo, nao a causa do SERVFAIL.
+- Verificar `/var/lib/unbound/root.key` antes de qualquer correcao persistente.
+
+Correcao final (2026-08-05 06:25-06:33):
+- A hipotese de trust anchor/DNSSEC acima nao foi confirmada como causa raiz.
+- Unbound configurado com `do-ip6: no`, pois o host nao possui rota IPv6.
+- Servico reiniciado; `unbound-checkconf -o do-ip6` retornou `no`.
+- `dig @127.0.0.1 google.com A`: NOERROR em 3 ms.
+- `dig` externo em .28, .58 e .59: NOERROR.
+- Erros IPv6 restantes no journal pertenciam ao PID antigo, antes do restart.
+- A resolucao voltou apos `do-ip6: no` + restart; nao foi isolado se o fator
+  decisivo foi o transporte IPv6, a limpeza do estado/cache no restart ou ambos.
+- Estado final do host: somente 192.168.254.12/24, default via 192.168.254.1.
+- Evidencia final: `fase2-concluida-2026-08-05.txt`.

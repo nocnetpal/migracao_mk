@@ -1,7 +1,10 @@
 # Rollback DNS — RB3011
 
-/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=100 untagged~"ether8"]
-/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=16 tagged~"ether8"]
+# Preservar as entradas VLAN usadas pelo Docker; retirar somente ether8 das listas.
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=100] \
+  tagged=bridge-servidores untagged="ether7 - Proxmox Docker CDNTV"
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=16] \
+  tagged="bridge-servidores,ether7 - Proxmox Docker CDNTV" untagged=""
 /interface bridge port remove [find bridge=bridge-servidores interface~"ether8"]
 
 :do {

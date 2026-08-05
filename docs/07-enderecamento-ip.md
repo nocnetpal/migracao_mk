@@ -36,12 +36,12 @@
 | `.24` | Accept `443,80,45345,21` — ✅ **"OLT CLOUD"** (Dude, Web Server) | firewall filter |
 | `.25` | Fusion Netpal — clientes simples — ✅ plausível ("Fusion - VoIP - Painéis Simples" no Dude) | firewall filter |
 | `.27` | Accept sem nome — **mesmo IP usado pelo NE8000 como Route-Reflector interno** (`177.72.104.27`, AS 52828) e destino do NetStream export; ✅ confirmado no Dude como **"RRFlow"** — não é coincidência, é o mesmo host/função. Ver decisão #8/#9 em [03](03-decisoes-pendentes.md). | firewall filter, [06-ne8000-bgp-core.md](06-ne8000-bgp-core.md), [11](11-cruzamento-dude-devices.md) |
-| `.21` | 🆕 **Novo (2026-07-24):** DNS2 Recursivo (`DNS2-Recursivo-104.21`, `docker-netpal`) — dá nome à própria rede macvlan (`IP-DNS-177.72.104.21`) onde vive boa parte dos containers deste host | consulta direta ao Docker |
+| `.21` | ~~DNS2 Recursivo (`DNS2-Recursivo-104.21`)~~ → ✅ **removido intencionalmente pelo usuário (2026-08-05), não é mais usado e não migra.** A rede macvlan ainda se chama historicamente `IP-DNS-177.72.104.21`, mas os outros containers continuam nela e o nome não indica ocupação do IP | consulta direta + validação pós-migração |
 | `.28` | DNS NetPal; gateway das rotas `.56/30`, `.58/32`, `.59/32` — ✅ **confirmado por consulta direta (2026-07-24): é a VM `NS-UNBOUND` (`proxmox-dns`)** | DNS_AUT, /ip route |
 | `.29` | ✅ **"AUTOMACOES"** (Dude, Web Server) — ✅ **confirmado por consulta direta (2026-07-24)**. ~~Possível relação com a decisão #6~~ → a notificação netwatch/`dude` na verdade não usa nenhum host local (vai direto pra `api.focuschat.com.br`); relação com `.26`/API-ZAP não confirmada, função exata de `AUTOMACOES` segue aberta | firewall filter |
 | `.30` | OPA Suite (chat) — porta `45345` restrita à lista `REDE LIBERADA_OPA_SUITE` — ✅ confirmado ("Opa ChatBot" no Dude); ✅ **confirmado por consulta direta (2026-07-24)** | firewall filter |
 | `.58` | DNS NetPal — loopback — ✅ confirmado ("DNS MASTER" no Dude) **e por consulta direta: é o mesmo host `NS-UNBOUND` que responde por `.28`** — não são dois sistemas, é um só com dois IPs | DNS_AUT |
-| `.59` | DNS NetPal — loopback — ainda sem confirmação (nem Dude, nem nos 4 clusters Proxmox consultados); `/ip arp print` no RB3011 (2026-07-24) também não retornou entrada — indício de residual/morto | DNS_AUT |
+| `.59` | ~~Sem ARP, possível residual/morto~~ → ✅ **confirmado em 2026-08-05:** IP secundário/loopback `/32` da VM 105 `NS-UNBOUND`, interface `ens18:1`. Não aparece em ARP próprio porque o RB3011 possui rota `177.72.104.59/32` via `.28` | DNS_AUT + QEMU Agent |
 | `.52/30`, `.60/30` | Enlaces ponto-a-ponto anunciados na OSPF area1 | /routing ospf network |
 | `.56/30` | Rota de DNS (regra desabilitada); único prefixo aceito pelo filtro de rota OSPF de saída | /ip route, /routing filter |
 | `.105.217` | Accept sem nome — ✅ **"GW CC BCP" / "GW Escritório BCP"** (Dude) | firewall filter |
@@ -60,7 +60,7 @@
 > `config/proxmox-*/`. Todas as identidades ⚠️ (nome do firewall não batia com o Dude) foram
 > confirmadas como sendo o nome do Dude, não o do firewall — o RB3011 nunca foi atualizado. Além
 > disso, apareceram **8 sistemas dentro do `/27` que nunca tinham regra de firewall própria** (`.2`,
-> `.3`, `.8` recorrigido, `.10`, `.11`, `.21`, `.26` recorrigido) — o `07` original só enxergava o
+> `.3`, `.8` recorrigido, `.10`, `.11`, ~~`.21`~~ (removido em 2026-08-05), `.26` recorrigido) — o `07` original só enxergava o
 > que tinha regra de firewall, e esses ficaram de fora por nunca precisarem de uma.
 
 ### Sistemas fora do `/27`, mas no mesmo bloco público maior (achados 2026-07-24)
@@ -70,13 +70,17 @@ Consulta direta ao cluster Proxmox Docker revelou hosts com IP público **fora**
 
 | IP | Serviço | Observação |
 |---|---|---|
-| `177.72.104.107` | CdnTV-Origin (`docker-netpal` cluster) | Fora do `/27`; caminho de rede até aqui **não é o mesmo** da "Bridge IP Publico" do RB3011 — a confirmar como chega na rede hoje |
-| `177.72.104.108` | CdnTV-Edge | Idem |
-| `177.72.104.109` | Uma das interfaces da própria VM `Docker-Netpal` | Idem |
+| `177.72.104.107` | CdnTV-Origin (`docker-netpal` cluster) | ✅ caminho confirmado em 2026-08-05: `vmbr2` sem tag → `enp8s0f0` → VLAN 23 da rede de acesso → NE8000 `Gi0/1/8.23` (`.105/29`) |
+| `177.72.104.108` | CdnTV-Edge | ✅ mesmo caminho dedicado da `.107`: `vmbr2` sem tag; não pertence à VLAN 16 |
+| `177.72.104.109` | Uma das interfaces da própria VM `Docker-Netpal` | ✅ mesma `vmbr2` sem tag; caminho CDN/VLAN 23 |
 | `177.93.247.138` | SpeedTest (rede macvlan `MACVLAN-38-SPEED`) | Está no **segundo bloco público** (`177.93.240.0/21`), não no `/27` |
 
-Esses hosts não fazem parte do escopo da migração do RB3011 (não estão na `Bridge IP Publico`), mas
-valem registro por estarem no mesmo cluster físico que outros sistemas relevantes.
+Esses hosts não fazem parte do escopo da migração do RB3011 (não estão na `Bridge IP Publico`). A
+rede é `177.72.104.104/29`, terminada diretamente no NE8000 (`177.72.104.105/29`) pela VLAN 23. No
+Proxmox, `.107`, `.108` e `.109` saem pela NIC física dedicada `enp8s0f0`, através da `vmbr2`
+untagged, até o **SW_JDF `XGE0/0/14` untagged**; o `XGE0/0/1` leva a VLAN 23 tagged ao NE8000.
+ARP e tabela MAC confirmaram os três MACs em 2026-08-05. Portanto, **não aplicar `tag=16` nessas
+interfaces e não mover esse segundo cabo para o DM4170**.
 
 ### Blocos maiores
 

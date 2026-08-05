@@ -90,13 +90,66 @@ M3  Validar
 
 **Fase 1B (trunk ether7):** ✅ concluída — `ether7` na `bridge-servidores`, PVID 100, VLAN 16 tagged. GATE `.122` + `.254.1` OK.
 
-**Fase 1C (Proxmox Docker):** ✅ concluída — VLAN-aware ativo, `.11/24` em paralelo, tag 16 nas VMs 101/103-107, rede macvlan da VM 100 recriada com parent `ens2` (net7/tag16). Todos os containers 177 pingando (`.2` `.3` `.8` `.10` `.11` `.21`).
+**Fase 1C (Proxmox Docker):** ✅ concluída — VLAN-aware ativo e `.11/24`; tag 16 nas VMs
+`103`-`107` e na NIC pública `/27` da VM 100; rede macvlan recriada com parent `ens2`
+(`net7/tag16`). Containers ativos pingando (`.2` `.3` `.8` `.10` `.11`). ~~`.21`~~ foi removido
+intencionalmente pelo usuário e não migra (confirmação 2026-08-05).
+
+**Correção CDN TV (2026-08-05 05:25):** ~~VM 101 com `tag=16` na `vmbr1`~~ → ✅ corrigida.
+`CdnTV-Origin` (`.107`, VM 101) e `CdnTV-Edge` (`.108`, VM 102) ficam ambas na **`vmbr2` sem
+tag**, pela NIC dedicada `enp8s0f0`. Elas pertencem à rede `177.72.104.104/29`, gateway
+`177.72.104.105` no NE8000 `Gi0/1/8.23` (VLAN 23), e não à VLAN 16. VMs 101/102 estão `running`,
+MACs aprendidos nos taps corretos e `.105`/`.107`/`.108` responderam 5/5. Coleta:
+`config/proxmox-docker/cdntv-vm101-vm102-pos-alteracao-2026-08-05.txt`.
+
+**NE8000/L2 (2026-08-05 05:30):** `display vlan 23` no `BGP_NETPAL` retornou "VLAN does not
+exist" e a tabela MAC ficou vazia — ✅ comportamento esperado, pois a tag 23 termina numa
+**subinterface L3 dot1q** (`Gi0/1/8.23`), não numa VLAN/bridge L2 local do NE8000. A porta física
+do segundo cabo deve ser localizada no switch L2 a montante, não no NE8000. Evidência:
+`config/ne8000/check-vlan23-cdntv-2026-08-05.txt`.
+
+**Caminho L2 confirmado (2026-08-05 05:31):** ✅ `enp8s0f0` → SW_JDF `XGE0/0/14` **untagged
+VLAN 23** → SW_JDF `XGE0/0/1` **tagged** → NE8000 `Gi0/1/8.23`. ARP no NE8000 e tabela MAC no
+SW_JDF bateram exatamente para `.107`, `.108` e `.109`. O membro tagged `XGE0/0/11` está DOWN e
+não faz parte do caminho ativo. Como a rede de acesso está fora do corte, `XGE0/0/14` fica
+intocada; só o cabo `eno1`/RB3011 ether7 migra depois ao DM4170. Evidência:
+`config/sw-jdf/vlan23-cdntv-porta-2026-08-05.txt`.
 
 **Fase 1C-final:** ✅ concluída — default route virada para `.1`, IP velho `.122/30` removido, NAT VLAN 100 adicionado no RB3011 (`192.168.254.0/24` na address-list `NAT`). Internet OK (`ping 8.8.8.8`).
 
 **NE8000:** ✅ validado — configuração atual salva em `config/ne8000/bgp_netpal-2026-08-05.txt`.
 
-**Fase 2 (DNS):** ⏳ pendente.
+**Fase 2 (DNS):** ✅ concluída em 2026-08-05; detalhes abaixo.
+
+**Fase 2/M1 RB3011 (2026-08-05):** ✅ ether8 movida para `bridge-servidores`, PVID 100; VLAN 100
+untagged e VLAN 16 tagged; gateway antigo `.137/30` temporariamente em `vlan100-servidores`.
+Proxmox DNS `.138` respondeu 5/5 e alcançou `.254.1` 3/3. Safe Mode validado/confirmado. Evidência:
+`config/rb3011/fase2-dns-m1-2026-08-05.txt`.
+
+**Fase 2/M2 parcial (2026-08-05):** ✅ `vmbr0` VLAN-aware, `.12/24` ativo em paralelo e VMs
+101/102/103/105 com tag 16; todos os IPs `.24`, `.26`, `.29`, `.28`, `.58` e `.59` respondem.
+~~🚨 **Gate funcional:** DNS UDP/53 é alcançável nos três IPs da VM 105, mas retorna `SERVFAIL`
+imediato para `google.com`; manter `.138/.137` e não concluir.~~ → ✅ **resolvido
+operacionalmente:** como o host não tem rota IPv6, foi aplicado `do-ip6: no` e o Unbound foi
+reiniciado. `.28`, `.58` e `.59` passaram a responder `NOERROR`. A hipótese intermediária de
+falha no trust anchor/DNSSEC não foi confirmada; também não foi isolado se o fator decisivo foi a
+remoção das tentativas IPv6, a limpeza de estado/cache pelo reinício ou ambos.
+
+**Fase 2/M2 final (2026-08-05 06:33):** ✅ `/etc/network/interfaces` persistido com somente
+`192.168.254.12/24`, gateway `192.168.254.1`, `vmbr0` VLAN-aware e porta `enp3s0f0`; o IP antigo
+`.138/30` e gateway `.137` foram removidos. Gateway local 3/3, internet 3/3 e DNS recursivo
+`NOERROR`. As quatro VMs seguem `running`, em `tag=16`, e todos os seis IPs responderam sem perda.
+Evidências: `config/proxmox-dns/fase2-vms-tag16-validacao-2026-08-05.txt` e
+`config/proxmox-dns/fase2-concluida-2026-08-05.txt`.
+
+**Validação final Docker/CDNTV (2026-08-05):** host `.11`, gateway/NAT, VMs 100–107, VLAN 16,
+CDN `.105`/`.107`/`.108`/`.109`, NTP `192.168.116.10` e internet estão ✅ OK. ~~A falha de `.21`
+foi tratada inicialmente como bloqueio~~ → ✅ **reclassificada:** usuário confirmou que removeu
+intencionalmente o `DNS2-Recursivo-104.21` e não o usa mais; não recriar/não migrar. Os cinco
+containers ativos da mesma macvlan responderam. Baseline DNS (`.138`, `.24`, `.26`, `.28`, `.58`,
+`.29`) também respondeu sem perda. **Fase 2 liberada.** Evidências:
+`config/proxmox-docker/validacao-pos-cdntv-2026-08-05.txt` e
+`config/rb3011/validacao-docker-cdntv-e-baseline-dns-2026-08-05.txt`.
 
 Dumps: `config/rb3011/fase1b-*-2026-08-05.txt` · `config/proxmox-docker/fase1c-*-2026-08-05.txt` · `config/ne8000/bgp_netpal-2026-08-05.txt`
 

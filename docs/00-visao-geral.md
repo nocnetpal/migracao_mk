@@ -27,6 +27,15 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 **runbook madrugada:** [17](17-runbook-etapa1-madrugada.md).
 SW_JDF: 100 livre · 16 = IP_PUBLICO.
 
+✅ **Docker/CDNTV + Proxmox DNS concluídos (2026-08-05):** hosts `.11` e `.12` somente na VLAN
+100, VMs públicas na VLAN 16, NAT e internet OK. CDN dedicada `.107`/`.108`/`.109` segue pela
+VLAN 23. No DNS, as VMs `.24`, `.26`, `.29` e `NS-UNBOUND` `.28/.58/.59` estão `running`, com
+`tag=16`; o Unbound responde `NOERROR` nos três IPs após desabilitar transporte IPv6 sem rota.
+O IP antigo `.138/30` foi removido e a configuração `.12/24` + gateway `.1` está persistida.
+`.21` DNS2-Recursivo foi removido intencionalmente e não migra. Restam o export final do RB3011,
+testes funcionais das aplicações e atualizações de monitoramento; HubSoft/Zabbix ficam para a
+fase CCR/Datacom, conforme escopo.
+
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)
 - ✅ Decisões fechadas: DHCP trivial (1 escopo); natureza das VPNs (L2TP sem criptografia +
@@ -40,7 +49,7 @@ SW_JDF: 100 livre · 16 = IP_PUBLICO.
 - 📝 Plano de corte ([04](04-plano-migracao.md)): QinQ em janela futura; **agora** prioridade =
   servidores 177 ([15](15-plano-migracao-servidores-177.md)) — Etapa A em andamento/documentada
 - ⏳ Principais bloqueios restantes: NAT ✅ CCR no `/27` (`.4` VLAN 16); DST-NAT Dude/TS SIX
-  (`.1` vs `.4`); decisão #12 (portas/VLANs Proxmox HubSoft/DNS). Sistemas vivos
+  (`.1` vs `.4`); decisão #12 agora restrita a HubSoft/Zabbix (Docker e DNS concluídos). Sistemas vivos
   ([05](05-limpeza-politicas.md), passo 1) conscientemente adiado.
   ~~Confirmações DmOS (SVI sobre QinQ)~~ ✅ **caiu (decisão #13, 2026-07-24)** — DM4170 fica só L2.
   ~~MTU nos dois trechos~~ ✅ **estratégia fechada (2026-07-24)**: jumbo frame máximo de cada

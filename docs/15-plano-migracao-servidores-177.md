@@ -121,10 +121,11 @@ Numeração sugerida nas 24× GE SFP (ajustar no rack). Uplink 10GE usa as XS, n
 | Porta GE (placeholder) | Destino (Etapa B) | Meio | VLAN access / tagged |
 |---|---|---|---|
 | GE1 | RRFlow `177.72.104.27` | SFP-RJ45 | VLAN 16 (pública) |
-| GE2 | Proxmox Docker/CDNTV | SFP-RJ45 | gerência `vlan116` (+ tagged VLAN 16 na 2ª NIC do host) |
-| GE3 | Proxmox Zabbix `177.72.104.5` | SFP-RJ45 | `vlan999` + VLAN 16 |
-| GE4 | Proxmox HubSoft | SFP-RJ45 | VLAN HubSoft (decisão #12) + VLAN 16 VMs |
-| GE5 | Proxmox DNS | SFP-RJ45 | VLAN DNS (decisão #12) + VLAN 16 VMs |
+| GE2 | Proxmox Docker/CDNTV — `eno1` | SFP-RJ45 | native VLAN 100 (gerência `.11`) + tagged VLAN 16 (VMs/containers do `/27`) |
+| Não ocupa DM4170 | Proxmox Docker/CDNTV — `enp8s0f0` | permanece no SW_JDF `XGE0/0/14` | **access/untagged VLAN 23**, rede CDN `177.72.104.104/29`; não juntar ao trunk 100/16 |
+| GE3 | Proxmox Zabbix `177.72.104.5` | SFP-RJ45 | native VLAN 100 (alvo `.10`) + VLAN 16 VMs |
+| GE4 | Proxmox HubSoft | SFP-RJ45 | native VLAN 100 (alvo `.13`) + VLAN 16 VMs |
+| GE5 | Proxmox DNS | SFP-RJ45 | native VLAN 100 (gerência `.12`, já migrada) + VLAN 16 VMs |
 | GE6 | TS SIX `192.168.66.14` | SFP-RJ45 | `vlan66` |
 | GE7 | Dude `192.168.116.30` | SFP-RJ45 | gerência Dude (confirmar VLAN) |
 | GE8 | OLT CPV mgmt | SFP-RJ45 | `vlan109` |
@@ -135,6 +136,12 @@ Numeração sugerida nas 24× GE SFP (ajustar no rack). Uplink 10GE usa as XS, n
 | — | QinQ acesso | — | **fora desta fase** |
 
 Régua Volt: **não migra**. WireGuard `.19`: física a confirmar ([14](14-ips-servidores-e-17772.md)).
+
+> ✅ **Caminho físico CDN TV confirmado (2026-08-05):** o segundo cabo do Dell R420
+> (`enp8s0f0`) está no SW_JDF `XGE0/0/14` untagged VLAN 23. O uplink ativo é `XGE0/0/1` tagged
+> até o NE8000 `Gi0/1/8.23` (`177.72.104.105/29`). Como a rede de acesso não é tocada, esse cabo
+> **permanece no SW_JDF**; não ocupa porta do DM4170 e não entra no corte do RB3011. Validar
+> `.105`, `.107`, `.108` e `.109`, mas não recabear nem reconfigurar VLAN 23.
 
 ### A.7 Critério de pronto (Etapa A)
 
@@ -165,7 +172,7 @@ Só depois do critério de pronto da Etapa A **e** dos bloqueadores abaixo.
 Ordem sugerida (menor risco → maior):
 
 1. RRFlow `177.72.104.27` (validar FlowSpec/NetStream no novo caminho na hora)
-2. Proxmox Docker/CDNTV (+ containers 177)
+2. Proxmox Docker/CDNTV (+ containers 177); preservar separadamente o segundo cabo/VLAN 23 da CDN
 3. Proxmox Zabbix (`.5` + VMs 177)
 4. Proxmox HubSoft (`.16`)
 5. Proxmox DNS (`.24` `.26` `.28`/`.58` `.29`)

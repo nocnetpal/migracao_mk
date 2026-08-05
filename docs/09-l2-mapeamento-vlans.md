@@ -21,13 +21,14 @@
 | **Transporte** | Tag existe só em L2 na rede de acesso/trunk — nenhuma SVI a criar |
 | **✝ Não migra** | Morta (sem IP/sem bridge) ou tecnologia que morre com o MK |
 
-## 1. VLANs de serviço / servidores (5)
+## 1. VLANs de serviço / servidores
 
 | VLAN | Nome | Hoje | Destino L2 | L3 | Obs |
 |---|---|---|---|---|---|
 | 16 | IP PUBLICO | sfp1 → slave da `Bridge IP Publico` | tag 16: rede de acesso → DM4170 → **sobe em L2 ao NE8000** | **NE8000** `.1/27` (decisão #9B) | A bridge morre; vira VLAN comum de trânsito. Servidores locais que precisarem de IP público usam **segunda NIC** na VLAN 16 (rede de acesso), não passam pela CCR1036 |
 | 15 | NTP SERVER | sfp1 (simples) | tag 15: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | |
 | 18 | SERVERINO | sfp1 (simples) | tag 18: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | |
+| 23 | SERVIDOR CDN TV | Proxmox `enp8s0f0`/`vmbr2` → **SW_JDF `XGE0/0/14` untagged** → `XGE0/0/1` tagged | **preservar no SW_JDF; fora do DM4170** | **NE8000** `Gi0/1/8.23`, `177.72.104.105/29` | `.107` Origin, `.108` Edge, `.109` Docker-Netpal; **não misturar com VLAN 16** e não aplicar tag no Proxmox |
 | 1066 | GERADOR MST | sfp1 (simples) | tag 1066: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | Único DHCP vivo (`192.168.90.0/24`) — escopo migra junto (decidir onde na config do NE8000) |
 | 10 | SERVIDOR DNS RECURSIVO | taggeada sobre `ether8` | porta tagged na **CCR1036** + tag 10 no link CCR1036↔NE8000 | NE8000 | Gerência privada do servidor local |
 
@@ -135,6 +136,10 @@ da `ether1` ("REGUA VOLT"), e a **VLAN 28** (link MK↔NE8000, que deixa de exis
   **e** DM4170 ↔ NE8000; MSS-clamp equivalente no NE8000 (hoje é mangle no MK).
 - **Gerência do Datacom antigo** (hoje `192.168.15.49/30` via EoIP): precisa de VLAN/caminho novo
   — provavelmente pendurar na VLAN de gerência nova.
+- **Segundo cabo do Proxmox Docker/CDNTV:** ✅ identificado como SW_JDF `XGE0/0/14`,
+  access/untagged VLAN 23; deve permanecer intocado. O cabo `eno1` é outro enlace, com VLAN 100
+  nativa + VLAN 16 tagged, e é o único do host que migra do RB3011 ao DM4170. Tratar ambos como um
+  único trunk quebra a CDN TV.
 - 🆕 **Dimensionamento do NE8000** (decisão #13): confirmar que ele comporta +30 subinterfaces/
   adjacências OSPF novas (27 QinQ + 3 simples) além das que já tem hoje para os POPs.
 

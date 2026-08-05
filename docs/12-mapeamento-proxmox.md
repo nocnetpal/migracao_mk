@@ -42,8 +42,8 @@ gerência) ainda têm o caminho de rede **não confirmado**.
 | Fusion - VoIP - Elaborados - Full (`Fusion-Painel-Elaborados`) | `177.72.104.22` ✅ | `6E:26:1A:C9:19:CE` | VM pública |
 | Aplicações /etc/scripts (`APP-ETC-SCRIPTS`) | `177.72.104.23` ✅ | `36:DC:89:9D:DA:5A` | VM pública |
 | Opa ChatBot (`OPA.SUIT`) | `177.72.104.30` ✅ | `F6:C7:5C:8A:4A:A3` | VM pública |
-| 🆕 CdnTV-Origin | `177.72.104.107` | `2A:B7:2D:D8:6E:A2` | VM pública — **fora do `/27`**, ver [07](07-enderecamento-ip.md) |
-| 🆕 CdnTV-Edge | `177.72.104.108` | `5E:68:F6:70:6E:0D` | VM pública — **fora do `/27`** |
+| 🆕 CdnTV-Origin | `177.72.104.107` | `2A:B7:2D:D8:6E:A2` | VM pública — **fora do `/27`**; ✅ `vmbr2` sem tag, rede CDN/VLAN 23 |
+| 🆕 CdnTV-Edge | `177.72.104.108` | `5E:68:F6:70:6E:0D` | VM pública — **fora do `/27`**; ✅ `vmbr2` sem tag, rede CDN/VLAN 23 |
 
 MAC de fabricante **Dell** no hypervisor — consistente com ser hardware físico real, não uma VM.
 
@@ -65,7 +65,7 @@ direta dos containers (`docker-mapear-containers.sh`) revelou:
 | `Wiki` | macvlan | `177.72.104.3` | 🆕 novo — já citado genericamente na "escala real" do [07](07-enderecamento-ip.md) |
 | `pdns-master1` | macvlan | `177.72.104.10` | 🆕 novo — stack PowerDNS separada da "DNS NetPal" |
 | `pdns-slave` | macvlan | `177.72.104.11` | 🆕 novo |
-| `DNS2-Recursivo-104.21` | macvlan | `177.72.104.21` | 🆕 novo — dá nome à rede macvlan do host |
+| ~~`DNS2-Recursivo-104.21`~~ | macvlan | `177.72.104.21` | ✅ removido intencionalmente pelo usuário em 2026-08-05; não migra |
 | `SEVERINO` | macvlan tag `18` | `192.168.15.74` | Resolve a interface `vmbr3` tag 18 da VM |
 | `SpeedTest` | macvlan tag `38` | `177.93.247.138` | Resolve a interface `vmbr3` tag 38 — está no **segundo bloco público** (`177.93.240.0/21`) |
 | `netbox-*` (4 containers), `phpipam-*` (3), `portainer`, `Nginx_Netpal`, `webserver` | redes Docker internas (172.x.x.x) | — | Ferramentas de gestão/infra (IPAM, proxy, dashboards) — não expõem IP público direto, sem impacto na migração do RB3011 |
@@ -78,7 +78,7 @@ adivinhar por MAC). Dump bruto em
 
 | Interface (VM) | MAC | Bridge (Proxmox) | Rede Docker (parent) |
 |---|---|---|---|
-| `ens18` | `F6:EF:DA:C8:5B:0B` | `vmbr1` | `IP-DNS-177.72.104.21` (macvlan) — os 6 containers com IP `177.72.104.x` (smokeping, pdns-master1, pdns-slave, unifi-controller, Wiki, DNS2-Recursivo) saem por aqui |
+| `ens18` | `F6:EF:DA:C8:5B:0B` | `vmbr1` | `IP-DNS-177.72.104.21` (nome histórico da macvlan) — 5 containers ativos: smokeping, pdns-master1, pdns-slave, unifi-controller e Wiki; DNS2 `.21` removido |
 | `ens21` | `5A:D9:BF:85:6A:44` | `vmbr15` (1) | `MACVLAN` — rede do `NTP_SERVER` (`192.168.116.10`) |
 | `ens1` | `C2:BB:BB:23:3A:B3` | `vmbr3` tag `18` | `MACVLAN-18-SEVERINO` — já confirmado antes |
 | `ens23` | `36:56:3A:7B:40:A9` | `vmbr3` tag `38` | `MACVLAN-38-SPEED` — já confirmado antes |
@@ -158,9 +158,9 @@ VMs estão no mesmo `vmbr0` sem VLAN tag** — público e privado juntos no mesm
 
 | Host/VM | IP | MAC (fabricante) | Tipo |
 |---|---|---|---|
-| **Proxmox DNS** (hypervisor) | `192.168.115.138/30` ✅ **confirmado por `ip addr` direto no host (2026-07-24)** | Hewlett Packard | gerência privada — ⚠️ fora do plano da CCR1036 (decisão #12) |
+| **Proxmox DNS** (hypervisor) | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` (VLAN 100, concluído em 2026-08-05) | Hewlett Packard | gerência privada; gateway `192.168.254.1`; IP e gateway antigos removidos |
 | OLT CLOUD (`OLT-CLOUD`) | `177.72.104.24` ✅ | `BC:24:11:89:AD:23` | VM pública (Web Server) |
-| DNS MASTER / NetPal (`NS-UNBOUND`) | `177.72.104.28` **e** `177.72.104.58` ✅ | `BC:24:11:E7:B0:75` | VM pública — 🆕 **um único host com dois IPs**, não dois sistemas |
+| DNS MASTER / NetPal (`NS-UNBOUND`) | `177.72.104.28/27` + `.58/32` + `.59/32` ✅ | `BC:24:11:E7:B0:75` | VM pública — **um único host com três IPs**; `.58`/`.59` são secundários/loopbacks |
 | AUTOMACOES | `177.72.104.29` ✅ | `BC:24:11:BF:0B:B5` | VM pública (Web Server) |
 | 🆕 API-ZAP | `177.72.104.26` | `BC:24:11:50:14:F9` | VM pública — **resolve o mistério do `.26`**. ~~Provável destino da notificação da decisão #6~~ descartado (2026-07-24): o script `dude` do RB3011 chama `api.focuschat.com.br` direto, sem host local — função real de API-ZAP segue desconhecida |
 
@@ -172,13 +172,13 @@ VMs estão no mesmo `vmbr0` sem VLAN tag** — público e privado juntos no mesm
 | Item | Status |
 |---|---|
 | Gerência do cluster Docker na CCR1036 | ✅ no plano (`ether3`) |
-| Gerência dos clusters HubSoft e DNS na CCR1036 | ❌ faltam porta/VLAN (decisão #12) |
+| Gerência dos clusters HubSoft e DNS | DNS ✅ concluído em `192.168.254.12/24`; HubSoft ❌ adiado para CCR/Datacom (decisão #12) |
 | Gerência do cluster Zabbix | ✅ confirmado standalone, sem gerência privada hoje (checklist da decisão #12) |
 | VMs privadas fora do `/30` de gerência (Radius HubSoft, Dude VLSUL, Dude PM CPV, Servidor Monsta) | ✅ IPs confirmados por consulta direta — ❌ caminho de rede (VLAN dedicada) ainda não definido |
-| VMs públicas (19 no total, incluindo CdnTV-Origin/Edge) | ✅ modelo definido: segunda NIC/bridge direto na VLAN 16, sem passar pela CCR1036 |
+| VMs públicas (19 no total) | ✅ regra geral: VLAN 16 sem passar pela CCR1036; **exceção confirmada:** CdnTV `.107`/`.108` e `.109` usam a rede própria `/29` pela `vmbr2` untagged/VLAN 23 |
 | Separação público/privado nos hosts HubSoft e Zabbix | ❌ hoje não existe — todas as VMs dividem o mesmo `vmbr0` sem VLAN. Precisam de bridge VLAN-aware + tag por VM pra caber no modelo de gerência privada/pública do desenho alvo |
 | Separação público/privado no host Docker/CDNTV | ✅ **já existe parcialmente** — usa VLAN tag (`18`, `38`) em parte das interfaces macvlan; não é o mesmo problema do HubSoft/Zabbix |
 | 🆕 Sistemas descobertos sem relação com o RB3011 (NetBox, phpIPAM, Portainer, PowerDNS, NTP server, UniFi, Wiki, Smokeping, API-ZAP) | ✅ identificados — impacto na migração é indireto (definem a origem real do NTP; a notificação da decisão #6 não depende de nenhum deles — vai direto pra `api.focuschat.com.br`), mas não mudam o desenho de rede do DM4170/CCR1036 |
-| 🆕 `.107`, `.108`, `.109` (CdnTV) e `177.93.247.138` (SpeedTest) | ⚠️ fora do `/27` da migração — caminho de rede até esses hosts ainda não confirmado, provavelmente não faz parte do escopo do corte |
+| 🆕 `.107`, `.108`, `.109` (CdnTV) e `177.93.247.138` (SpeedTest) | ✅ CDN confirmado fora do `/27`: `.107`/`.108`/`.109` usam `vmbr2`/`enp8s0f0` untagged até a VLAN 23 no NE8000; SpeedTest continua em caminho próprio |
 
 Ver decisões #6, #9 e #12 em [03-decisoes-pendentes.md](03-decisoes-pendentes.md).

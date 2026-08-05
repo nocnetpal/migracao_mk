@@ -95,8 +95,10 @@ IPs accept sem nome":
 ~~provável destino da notificação da decisão #6~~ descartado (2026-07-24): a notificação vai
 direto pra internet, não pra `.26`; função real de API-ZAP segue desconhecida. Seguem sem identificação em qualquer fonte
 (Dude, firewall antigo, consulta direta aos 4 clusters Proxmox **e** `/ip arp print` no RB3011,
-que não retornou nenhuma entrada para os três): `.57`, `.59`, `.105.221` — indício mais forte
-agora de resíduo morto, mas não definitivo.
+que não retornou nenhuma entrada para os três): `.57`, ~~`.59`~~, `.105.221`. `.59` foi
+✅ **resolvido em 2026-08-05:** loopback `/32` da VM `NS-UNBOUND`, roteado via `.28`, portanto
+sem ARP próprio por desenho; não era residual. Para `.57` e `.105.221`, permanece o indício de
+resíduo morto, mas não definitivo.
 
 ## 🚨 Duas VPNs adicionais, fora do RB3011 — impacto na decisão #5
 
@@ -149,5 +151,6 @@ atual. Não é um caso de nomenclatura desatualizada como os demais desta págin
       fonte de verdade — em especial confirmar se `.8` (Hubsoft antigo) está mesmo morto.
 - [ ] Confirmar se `.12` (OpenVPN-2) e `.19` (WireGuard) são "VPN de equipe" (decisão #5) ou
       serviços à parte que só precisam de firewall/NAT preservado.
-- [ ] Identidade final de `.26`, `.57`, `.59`, `.105.221` (sem nome em nenhuma fonte).
+- [ ] Identidade final de `.57`, `.105.221` (sem nome em nenhuma fonte). `.26` = API-ZAP e
+  `.59` = loopback da VM NS-UNBOUND, ambos resolvidos por consulta direta aos Proxmox.
 - [x] ~~Confirmar identidade de "Callcenter"~~ — ✅ sistema novo, a implantar (não existe hoje).

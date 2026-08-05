@@ -589,9 +589,16 @@ diretamente, não só inferidos pelo Dude.**
   server da rede toda, UniFi Controller, Wiki) em **redes macvlan com VLAN tag** (`18`, `38`) —
   diferente do padrão achatado do HubSoft/Zabbix. Ver [12](12-mapeamento-proxmox.md) para o
   inventário completo.
+  🆕 **Atualização operacional (usuário, 2026-08-05):** `DNS2-Recursivo-104.21`
+  (`177.72.104.21`) foi removido intencionalmente e não é mais usado — **não recriar/não migrar**.
+  O nome histórico da rede Docker `IP-DNS-177.72.104.21` pode permanecer, pois os outros cinco
+  containers ativos ainda usam essa macvlan; o nome da rede não significa que o IP `.21` esteja
+  ocupado.
 - **DNS**: 4 VMs confirmadas, incluindo a resolução de `.26` (API-ZAP, ver decisão #6 acima) e a
   descoberta de que `.28`+`.58` (antes tratados como possivelmente 2 sistemas) são o mesmo host
-  (`NS-UNBOUND`).
+  (`NS-UNBOUND`). 🆕 **Complemento confirmado diretamente em 2026-08-05:** `.59/32` também é IP
+  secundário/loopback da mesma VM `NS-UNBOUND`; a rota do RB3011 via `.28` explica a ausência de
+  ARP próprio para `.59`.
 
 **Conclusão sobre a hipótese "VLAN, não troca física" (generalização):** ✅ correto pra
 HubSoft/Zabbix (achatado, sem VLAN nenhuma) — ❌ **não generaliza** pro Docker/CDNTV, que já usa
@@ -608,6 +615,14 @@ VLAN 100 — nenhum hypervisor com IP no `/27`. ✅ **Subnet fechada: `192.168.2
 (`.1` GW · `.10` Zabbix · `.11` Docker · `.12` DNS · `.13` HubSoft). Docker/DNS/HubSoft saem
 dos `/30`; Zabbix sai do `.5`. IP público/fixo só nas VMs (`tag=16`). Ver [16](16-etapa1-proxmox-vlans-datacom.md).
 HubSoft+Zabbix na **mesma madrugada** (mesmo RB750).
+
+✅ **Execução Docker + DNS concluída (2026-08-05):** Docker está em `.11/24` e DNS em `.12/24`,
+ambos somente na VLAN 100, com gateway `.1`; os `/30` antigos `.122` e `.138` foram removidos dos
+hosts. No Proxmox DNS, as VMs 101/102/103/105 estão `running` e com `tag=16`; `.24`, `.26`, `.29`
+e `.28/.58/.59` respondem sem perda. O `NS-UNBOUND` voltou a resolver com `NOERROR` após desativar
+o transporte IPv6 sem rota (`do-ip6: no`). A pendência operacional da decisão #12 fica restrita a
+HubSoft `.13` e Zabbix `.10`, adiados para CCR/Datacom. Evidência:
+[`config/proxmox-dns/fase2-concluida-2026-08-05.txt`](../config/proxmox-dns/fase2-concluida-2026-08-05.txt).
 
 🆕 **Achado que resolve parte da pendência HubSoft (2026-07-24):** `/interface bridge host print`
 no RB3011 mostrou que os MACs do cluster HubSoft aparecem aprendidos no **mesmo `ether10` do

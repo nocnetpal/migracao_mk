@@ -1,0 +1,78 @@
+# Coleta ao vivo - Proxmox Docker/CDNTV - 2026-08-05 05:25 -03
+# Comandos somente de leitura executados pelo usuario.
+
+hostname: proxmoxDockerCDNTV
+kernel: 5.13.19-2-pve
+
+=== VM 101 ===
+boot: order=scsi0;net0
+cores: 8
+cpu: host
+memory: 16384
+name: CdnTV-Origin
+net0: virtio=2A:B7:2D:D8:6E:A2,bridge=vmbr2,firewall=0,queues=8
+onboot: 1
+ostype: l26
+status: running
+
+=== VM 102 ===
+boot: order=scsi0;net0
+cores: 8
+cpu: host
+memory: 24700
+name: CdnTV-Edge
+net0: virtio=5E:68:F6:70:6E:0D,bridge=vmbr2,firewall=0,queues=8
+onboot: 1
+ostype: l26
+status: running
+
+=== BRIDGES E INTERFACES ===
+vmbr1 UP 192.168.254.11/24 10.250.104.1/24 10.250.102.1/24
+vmbr2 UP somente link-local IPv6
+enp8s0f0 UP LOWER_UP; master vmbr2; MTU 1500
+tap101i0 UP; master vmbr2
+tap102i0 UP; master vmbr2
+
+bridge vlan show (linhas relevantes):
+enp8s0f0  1 PVID Egress Untagged
+vmbr2      1 PVID Egress Untagged
+tap101i0   1 PVID Egress Untagged
+tap102i0   1 PVID Egress Untagged
+
+=== MACS NAS BRIDGES ===
+5e:68:f6:70:6e:0d dev tap102i0 master vmbr2
+2a:b7:2d:d8:6e:a2 dev tap101i0 master vmbr2
+
+=== CONFIGURACAO PERSISTENTE RELEVANTE ===
+auto vmbr1
+iface vmbr1 inet static
+        up ip addr add 10.250.104.1/24 dev vmbr1
+        up ip addr add 10.250.102.1/24 dev vmbr1
+        down ip addr del 10.250.104.1/24 dev vmbr1
+        down ip addr del 10.250.102.1/24 dev vmbr1
+        address 192.168.254.11/24
+        gateway 192.168.254.1
+        bridge-ports eno1
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+auto vmbr2
+iface vmbr2 inet static
+        bridge-ports enp8s0f0
+        bridge-stp off
+        bridge-fd 0
+
+=== TESTES A PARTIR DO HYPERVISOR ===
+177.72.104.105: 5 transmitidos, 5 recebidos, 0% perda; media 0.245 ms
+177.72.104.107: 5 transmitidos, 5 recebidos, 0% perda; media 0.472 ms
+177.72.104.108: 5 transmitidos, 5 recebidos, 0% perda; media 0.560 ms
+
+=== QEMU AGENT ===
+VM 101: sem resposta do QEMU Agent
+VM 102: sem resposta do QEMU Agent
+
+Nota: a saida integral de `bridge vlan show` listou VID 2-4094 na vmbr1/eno1,
+coerente com `bridge-vids 2-4094`. Acima foram preservadas as linhas relevantes
+para o caminho dedicado CDNTV (vmbr2/enp8s0f0/tap101i0/tap102i0).
