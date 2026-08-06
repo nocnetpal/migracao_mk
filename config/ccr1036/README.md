@@ -16,7 +16,11 @@
   drop final.
 - IPv6 desativado; MAC server, MAC Winbox e descoberta limitados a `MGMT`.
 - Servicos desnecessarios, inclusive `reverse-proxy`, desativados.
-- Export criado no equipamento: `ccr-base-ativa-2026-08-06.rsc`.
+- Export criado no equipamento: `ccr-base-ativa-2026-08-06.rsc`; export pre-corte completo
+  (estado final) salvo no repo: `ccr1036-pre-corte-2026-08-06.rsc`.
+- `09-gerencia-remota.rsc`: winbox/ssh passam a aceitar bancada (`192.168.88.0/24`) + `/27`
+  publico + NOC (`177.93.244.165`), com as regras de input correspondentes (sem elas o
+  `INPUT - DROP FINAL` bloqueia). Desabilita `ovpn-server1`, que estava habilitado no export.
 - `04-acesso-roteado-redes-privadas.rsc`: address-lists (`ORIGENS-GERENCIA`, `REDES-PRIVADAS`),
   3 regras (forward gerencia->privadas, input OSPF do NE8000, forward UDP/123 NTP) e cliente NTP
   da CCR para `192.168.116.10` — aplicados e validados no Terminal.
