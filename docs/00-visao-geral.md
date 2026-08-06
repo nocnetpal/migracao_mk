@@ -38,19 +38,33 @@ endurecidos; chain `forward` validada (established/related, DST-NAT futuro, priv
 drop final); IPv6 desativado e acesso MAC restrito à gerência. WireGuard não configurado, somente
 pós-migração. Evidências em [`config/ccr1036/`](../config/ccr1036/).
 
+✅ **CCR1036 100% pronta em bancada (2026-08-06, scripts 01–09):** além da base acima — OSPF
+completo (6 interface-templates: VLAN 16 ptp+MD5 `auth-id=1` com o NE8000; VLANs 100/15/66/109/116
+passivas), VLAN 15/NTP (`192.168.116.9/30` + cliente NTP), VLANs privadas restantes (66 TS SIX
+`192.168.66.1/28`, 109 OLT CPV `192.168.115.41/30`, 116 Dude `192.168.116.29/30`), firewall de
+acesso roteado (gerência `.19`/NOC/clientes WG → privadas; OSPF só de `.1`; UDP/123), DST-NAT
+Dude/TS SIX na `.4` (decisão #9 fechada), SRC-NAT de TS SIX/Dude, gerência remota (winbox/ssh:
+bancada + `/27` + NOC com regras de input) e backup pré-corte salvo
+(`ccr1036-pre-corte-2026-08-06.rsc`). Sintaxe real do firmware 7.23.3 diverge da doc oficial:
+`auth-key` (não `authentication-key`) e `passive` como flag pura. ~~vlan10 (DNS recursivo)~~ e
+~~vlan999 (Callcenter)~~ **removidas do plano pelo usuário**. Tudo que resta depende do trunk
+ligado (OSPF FULL, NTP) e do NE8000 — **toda a config do NE8000 ficou para o dia da migração**
+(decisão do usuário), inclusive o bloqueio do banco Docker já desenhado.
+
 ✅ **Caminho do NAT fechado (2026-08-06):** a CCR será o **gateway L3 das redes privadas**
 recebidas no trunk do DM4170, começando pela VLAN 100 (`192.168.254.1/24`). Fluxo:
 privado→CCR→SRC-NAT `.4`→VLAN 16→DM4170→NE8000 `.1`. Não precisa de PBR no NE8000.
 
-📋 **Acesso roteado às redes privadas desenhado, ainda não aplicado (2026-08-06):** liberar na CCR somente as origens
+✅ **Acesso roteado às redes privadas aplicado (2026-08-06):** liberadas na CCR somente as origens
 `177.72.104.19/32` (servidor WireGuard), `177.93.244.165/32` (NOC) e `10.150.150.0/24`
-(clientes WireGuard). OSPF será formado entre NE8000 `.1` e CCR `.4` sobre a VLAN 16; a regra
-planejada aceita protocolo OSPF exclusivamente de `.1`. Demais origens caem no drop final.
+(clientes WireGuard). OSPF formado entre NE8000 `.1` e CCR `.4` sobre a VLAN 16 (adjacência só
+valida com o trunk ligado); a regra aceita protocolo OSPF exclusivamente de `.1`. Demais origens
+caem no drop final.
 
-📋 **VLAN 15/NTP desenhada, ainda não aplicada (2026-08-06):** o NTP `192.168.116.10/30` é um
-container na VM Docker (`ens21`→`vmbr15`→`enp8s0f1.15`), portanto a CCR assumirá o gateway
-`192.168.116.9/30` e anunciará `192.168.116.8/30` passivamente no OSPF. Toda a rede NetPal deve
-alcançar UDP/123; prefixos de origem ainda precisam ser consolidados.
+✅ **VLAN 15/NTP aplicada (2026-08-06):** o NTP `192.168.116.10/30` é um
+container na VM Docker (`ens21`→`vmbr15`→`enp8s0f1.15`); a CCR assumiu o gateway
+`192.168.116.9/30` e anuncia `192.168.116.8/30` passivamente no OSPF. UDP/123 liberado na CCR
+com origem irrestrita de propósito; falta a liberação equivalente no NE8000 (dia da migração).
 
 ✅ **Os 4 Proxmox concluídos (2026-08-05):** hosts `.10`–`.13` somente na VLAN 100, VMs públicas
 na VLAN 16, NAT e internet OK. CDN dedicada `.107`/`.108`/`.109` segue pela
@@ -89,8 +103,9 @@ para `vlan100-servidores`. A porta antiga `ether3` da RB750 foi desativada e `en
   chega à CCR pelo trunk **DM4170↔CCR**, enquanto o NE8000 mantém `.1/27` pelo trunk
   **DM4170↔NE8000**. ✅ **Topologia simplificada em 2026-08-06:** não haverá link direto
   CCR↔NE8000; todo o tráfego da CCR passa pelo trunk com o DM4170.
-  ~~`/32` via P2P~~ e ~~`10.254.254.x`~~ descartados.
-  Pendência: DST-NAT Dude/TS SIX (`.1` vs `.4`)
+   ~~`/32` via P2P~~ e ~~`10.254.254.x`~~ descartados.
+   ~~Pendência: DST-NAT Dude/TS SIX (`.1` vs `.4`)~~ ✅ **fechada (2026-08-06): DST-NAT na CCR
+   `.4`** (decisão #9); quem acessa de fora passa a usar `177.72.104.4`.
 - ✅ **Sequência da VPN definida em 2026-08-06:** WireGuard na CCR somente **depois de toda a
   migração concluída e validada**. Não entra na configuração de bancada nem na janela inicial.
 - 🆕 **Desenho alvo definido pelo usuário (2026-07-23, corrigido 2026-08-06):** saem **RB3011 +
@@ -101,9 +116,11 @@ para `vlan100-servidores`. A porta antiga `ether3` da RB750 foi desativada e `en
   geo-allowlist BRASIL). Trabalho na ordem: físico → L2 → L3 — ver [02](02-arquitetura-alvo.md)
 - 📝 Plano de corte ([04](04-plano-migracao.md)): QinQ em janela futura; **agora** prioridade =
   servidores 177 ([15](15-plano-migracao-servidores-177.md)) — Etapa A em andamento/documentada
-- ⏳ Principais bloqueios restantes: NAT ✅ CCR no `/27` (`.4` VLAN 16); DST-NAT Dude/TS SIX
-  (`.1` vs `.4`); decisão #12 ✅ concluída para os 4 Proxmox. Sistemas vivos
-  ([05](05-limpeza-politicas.md), passo 1) conscientemente adiado.
+- ⏳ Principais bloqueios restantes: ~~NAT~~ ✅ CCR no `/27` (`.4` VLAN 16); ~~DST-NAT Dude/TS
+  SIX (`.1` vs `.4`)~~ ✅ **fechada: DST-NAT na CCR `.4` (2026-08-06)**; decisão #12 ✅ concluída
+  para os 4 Proxmox. **CCR 100% pronta; restante é só dia da migração** (trunk → OSPF FULL + NTP;
+  toda a config do NE8000, inclusive bloqueio do banco Docker, combinada para a janela). Sistemas
+  vivos ([05](05-limpeza-politicas.md), passo 1) conscientemente adiado.
   ~~Confirmações DmOS (SVI sobre QinQ)~~ ✅ **caiu (decisão #13, 2026-07-24)** — DM4170 fica só L2.
   ~~MTU nos dois trechos~~ ✅ **estratégia fechada (2026-07-24)**: jumbo frame máximo de cada
   equipamento. ~~Dimensionamento do NE8000~~ ✅ **confirmado (2026-07-24): capacidade livre.**
