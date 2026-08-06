@@ -209,8 +209,11 @@ senhas em texto claro — e, pior, **ambos os profiles PPP têm `use-encryption=
 Ver [07-enderecamento-ip.md](07-enderecamento-ip.md).
 
 **Status:** natureza do serviço esclarecida (L2TP sem criptografia + OpenVPN com certificado).
-✅ **Destino definido (2026-07-23):** a **Mikrotik CCR1036** nova, ligada diretamente ao NE8000,
-hospeda a VPN de equipe recriada (redesenho, não porte — sem mschap1, criptografia obrigatória).
+~~✅ Destino definido para recriar L2TP/OpenVPN na CCR durante a migração.~~ → 🆕 **Sequência
+corrigida pelo usuário em 2026-08-06:** nenhuma VPN será configurada agora na CCR. O serviço novo
+será **WireGuard**, implantado somente **depois de toda a migração concluída e validada**. A
+configuração de bancada e a janela inicial não incluem interface, chaves, peer, porta ou firewall
+de WireGuard. PPTP continua descartado.
 
 🆕 **Atenção ao escopo, achado do cruzamento com o Dude ([11](11-cruzamento-dude-devices.md)):**
 existem **outras duas VPNs** na rede, hospedadas em servidores Proxmox à parte (não no RB3011) —
@@ -357,20 +360,43 @@ mesmo modelo dos servidores (VLAN 16), com IP `177.72.104.4`. **Não** é host-r
 por link privado separado.
 
 - NE8000: dono/gateway do `177.72.104.0/27` (SVI VLAN 16)
-- CCR: `177.72.104.4` na VLAN 16 (via DM4170 ou link que carregue a VLAN 16) — SRC-NAT/DST-NAT
-  usam `.4`
+- CCR: `177.72.104.4` na VLAN 16, ✅ **confirmado em 2026-08-06 pelo trunk DM4170↔CCR** —
+  SRC-NAT/DST-NAT usam `.4`; o NE8000 mantém `.1/27` no mesmo domínio L2 pelo trunk
+  DM4170↔NE8000
+- ~~Link direto CCR↔NE8000 como trânsito separado~~ → ❌ **descartado em 2026-08-06**. A CCR tem
+  somente o trunk com o DM4170; por ele chegam a VLAN 16, as redes privadas e o caminho até o
+  NE8000
 - ~~rota `/32` via P2P `10.254.254.x`~~ → ❌ **descartado** (usuário 2026-07-27): primeiro
   rejeitou o `10.254.254.x`, depois definiu CCR **dentro** do `/27` (não `/32` isolado)
 
 Mesmo padrão L2 dos hosts `.9`/`.12`/`.27` no broadcast do bloco — o NE8000 alcança `.4` por ARP
 na VLAN 16.
 
+✅ **Caminho do tráfego privado fechado (usuário, 2026-08-06):** a CCR é o **gateway L3 das redes
+privadas de servidores** recebidas pelo trunk do DM4170, incluindo VLAN 100
+`192.168.254.0/24` com gateway `192.168.254.1`. Assim o tráfego passa naturalmente pelo SRC-NAT
+na CCR e sai como `.4` pela VLAN 16 no mesmo trunk até o gateway `.1` no NE8000. Não há PBR nem
+gateway privado no NE8000 para essas redes locais.
+
+📋 **Acesso roteado e OSPF desenhados, ainda não aplicados (usuário, 2026-08-06):** OSPF entre NE8000 `.1` e CCR `.4`
+diretamente sobre o `/27`/VLAN 16, área `0.0.0.1`; VLANs privadas anunciadas passivamente pela
+CCR. Como a VLAN 16 é compartilhada, a CCR aceita protocolo OSPF somente da origem `.1`. Acesso
+encaminhado às redes privadas fica restrito a `177.72.104.19/32`, `177.93.244.165/32` e
+`10.150.150.0/24`; não liberar o `/27` inteiro.
+
+📋 **VLAN 15/NTP reclassificada para a CCR (desenho confirmado, configuração pendente):** o NTP
+`192.168.116.10/30` roda em container dentro da VM Docker, pela cadeia
+`ens21`→`vmbr15`→`enp8s0f1.15`. A CCR assume `192.168.116.9/30`, anuncia
+`192.168.116.8/30` passivamente no OSPF e permite UDP/123 para toda a rede roteada NetPal. A lista
+exata de prefixos de origem ainda precisa ser consolidada antes da regra de firewall.
+
 **Ainda aberto (DST-NAT):** port-forwards Dude/TS SIX hoje no `.1` — passam pro `.4` (quem acessa
 de fora atualiza) ou o NE8000 também roteia `.1/32` pra CCR? A confirmar. Ver
 [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
 
 **Status:** ✅ **Opção B** (NE8000 dono do `/27`) + ✅ **CCR dentro do `/27` com `.4` na
-VLAN 16** (2026-07-27). Pendência restante: DST-NAT Dude/TS SIX no `.1` vs `.4`.
+VLAN 16** (2026-07-27) + ✅ caminho L2 via DM4170 + gateways privados na CCR (2026-08-06).
+Pendência restante: DST-NAT Dude/TS SIX no `.1` vs `.4`.
 
 ## 10. ~~Possível sobreposição no `177.72.104.60/30`~~ (enlace Juca Ana) — ✅ resolvido
 
@@ -464,9 +490,10 @@ tem em paralelo (`Gi0/1/8.719 MK_POP_PANTANO`, `.778 MK_POP_JUCA_ANA` etc.)?
 
 **✅ Decidido (usuário, 2026-07-24): Opção B — DM4170 fica só em L2.** Nenhuma SVI no DM4170:
 ele faz apenas QinQ termination (traduz outer+inner tag em VLANs simples) e entrega tudo — as ~50
-VLANs de acesso **e** as VLANs simples de serviço (15 NTP, 18 SERVERINO, 1066 GERADOR MST) — como
-trunk 802.1q pro NE8000, que passa a terminar **todas** como subinterface roteada (SVI + OSPF
-area1 onde aplicável). Isso **elimina o bloqueio técnico nº1** (SVI sobre tag interna QinQ no
+VLANs de acesso e as VLANs simples de serviço — como trunks 802.1q aos roteadores. ~~15 NTP,
+18 SERVERINO e 1066 GERADOR terminariam todas no NE8000.~~ → **Refinado em 2026-08-06:** 18/1066
+seguem no NE8000; VLAN 15/NTP e redes privadas locais terminam na CCR. Isso **elimina o bloqueio
+técnico nº1** (SVI sobre tag interna QinQ no
 DmOS) — deixa de ser pré-requisito do corte.
 
 **Efeitos em cascata (a propagar):**
@@ -474,14 +501,14 @@ DmOS) — deixa de ser pré-requisito do corte.
   reescrever para refletir DM4170 = só L2.
 - [04-plano-migracao.md](04-plano-migracao.md) — remover confirmação DmOS da lista de
   pré-requisitos; mapa função→destino muda "Roteamento inter-VLAN" pro NE8000.
-- [09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md) — toda a coluna "Destino L3" das VLANs
-  QinQ e das VLANs de serviço simples muda de DM4170 para NE8000.
+- [09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md) — VLANs QinQ e simples de acesso vão ao
+  NE8000; redes privadas locais vão à CCR.
 - [08-vlans-e-portas.md](08-vlans-e-portas.md) — a pendência "confirmar com a Datacom" deixa de
   bloquear.
-- ~~Cresce a lista de subinterfaces/adjacências OSPF do NE8000 (de ~dezenas hoje para +27 QinQ + 3
-  simples) — dimensionar se o NE8000 tem capacidade de subinterfaces/OSPF neighbors de sobra.~~ →
+- ~~Cresce a lista de subinterfaces/adjacências OSPF do NE8000 (estimativa original: +27 QinQ + 3
+  simples; refinada para +27 QinQ + 2 simples) — dimensionar capacidade.~~ →
   ✅ **confirmado (usuário, 2026-07-24): capacidade livre**, sem restrição de licença/hardware
-  pras +30 subinterfaces novas. Deixa de ser bloqueio do plano de corte.
+  para essa ordem de grandeza. Deixa de ser bloqueio do plano de corte.
 - Decisão #3 (redundância/HA) fica mais urgente — o NE8000 concentra ainda mais função crítica.
 
 **Status:** ✅ **fechada — Opção B (2026-07-24).**

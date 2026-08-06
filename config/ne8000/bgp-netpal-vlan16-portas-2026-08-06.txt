@@ -1,0 +1,184 @@
+Warning: The initial password poses security risks.
+The password needs to be changed. Change now? [Y/N]:n
+Info: The max number of VTY users is 21, the number of current VTY users online is 1, and total number of terminal users online is 1.
+      The current login time is 2026-08-06 09:59:53-03:00.
+      The last login time is 2026-08-05 05:30:19-03:00 from 177.72.104.19 through SSH.
+<BGP_NETPAL>display current-configuration | include sysname
+Info: It will take a long time if the content you search is too much or the string you input is too long, you can press CTRL_C to break.
+sysname BGP_NETPAL
+<BGP_NETPAL>display ip interface brief
+*down: administratively down
+!down: FIB overload down
+^down: standby
+(l): loopback
+(s): spoofing
+(d): Dampening Suppressed
+(E): E-Trunk down
+(td): transceiver unmatch down
+The number of interface that is UP in Physical is 105
+The number of interface that is DOWN in Physical is 0
+The number of interface that is UP in Protocol is 92
+The number of interface that is DOWN in Protocol is 13
+
+Interface                         IP Address/Mask      Physical   Protocol VPN 
+100GE0/3/0                        unassigned           up         down     --  
+100GE0/3/0.2602                   172.19.236.6/30      up         up       --  
+100GE0/3/0.2706                   172.19.246.22/30     up         up       --  
+Eth-Trunk1.400                    177.72.104.65/30     up         up       --  
+Eth-Trunk2.400                    177.72.104.101/30    up         up       --  
+Ethernet0/0/0                     unassigned           up         down     --  
+GigabitEthernet0/1/2(10G)         unassigned           up         down     --  
+GigabitEthernet0/1/2.198(10G)     10.91.91.1/30        up         up       --  
+GigabitEthernet0/1/7(10G)         unassigned           up         down     --  
+<BGP_NETPAL>isplay current-configuration | include 177.72.104
+            ^
+Error: Unrecognized command found at '^' position.
+<BGP_NETPAL>display arp all | include 177.72.104
+Info: It will take a long time if the content you search is too much or the string you input is too long, you can press CTRL_C to break.
+IP ADDRESS      MAC ADDRESS     EXPIRE(M) TYPE        INTERFACE   VPN-INSTANCE
+                                          VLAN/CEVLAN PVC
+----------------------------------------------------------------------------------------
+177.72.104.65   f4b7-8d04-5bac            I -         Eth-Trunk1.400   
+177.72.104.64   Incomplete      1         D-0         Eth-Trunk1.400   
+177.72.104.66   3029-52e8-2694  15        D-0         Eth-Trunk1.400   
+177.72.104.101  f4b7-8d04-5bac            I -         Eth-Trunk2.400   
+177.72.104.100  Incomplete      1         D-0         Eth-Trunk2.400   
+177.72.104.102  3029-5247-4dc6  19        D-0         Eth-Trunk2.400   
+177.72.104.54   048c-16cc-2fbc            I -         GE0/1/8.28       
+177.72.104.52   Incomplete      1         D-10        GE0/1/8.28       
+177.72.104.53   c4ad-34f9-f175  20        D-10        GE0/1/8.28       
+177.72.104.49   048c-16cc-2fbc            I -         GE0/1/8.24       
+177.72.104.48   Incomplete      1         D-10        GE0/1/8.24       
+177.72.104.50   d4ca-6d70-ba26  17        D-10        GE0/1/8.24       
+177.72.104.61   048c-16cc-2fbc            I -         GE0/1/8.198      
+177.72.104.62   e48d-8c1b-157d  1         D-10        GE0/1/8.198      
+177.72.104.37   048c-16cc-2fbc            I -         GE0/1/8.197     
+177.72.104.38   0855-317c-db2e  3         D-10        GE0/1/8.197      
+177.72.104.113  048c-16cc-2fbc            I -         GE0/1/8.36       
+177.72.104.112  Incomplete      1         D-10        GE0/1/8.36       
+177.72.104.115  Incomplete      1         D-10        GE0/1/8.36       
+177.72.104.116  b8cb-29b4-8c96  3         D-10        GE0/1/8.36       
+<BGP_NETPAL>isplay vlan 16
+            ^
+Error: Unrecognized command found at '^' position.
+<BGP_NETPAL>display interface description
+PHY: Physical
+*down: administratively down
+^down: standby
+(l): loopback
+(s): spoofing
+(E): E-Trunk down
+(b): BFD down
+(B): Bit-error-detection down
+(e): ETHOAM down
+(d): Dampening Suppressed
+(p): port alarm down
+(ld): loop-detect trigger down
+(c): CFM down
+Interface                     PHY     Protocol Description                     
+100GE0/3/0                    up      down                                     
+100GE0/3/0.2602               up      up       ADYLNET_POA_100GE               
+100GE0/3/0.2706               up      up       ADYLNET_TDAI_100GE              
+Eth-Trunk1.400                up      up                                       
+Eth-Trunk2.400                up      up       CGNAT-NETPAL2-OUTSIDE           
+Eth0/0/0                      up      down                                     
+GE0/1/2(10G)                  up      down     TRUNK_BGP_LUCFIBRA              
+GE0/1/2.198(10G)              up      up       BGP_LUCFIBRA                    
+GE0/1/7(10G)                  up      down     BGP_RL_CDN_NETFLIX_GLOBO        
+GE0/1/7.4053(10G)             up      up                                       
+GE0/1/8(10G)                  up      down                                     
+GE0/1/8.2(10G)                up      down                                     
+GE0/1/8.6(10G)                up      down                                     
+GE0/1/8.10(10G)               up      up       GERENCIA_SW6730_JDF_5720CDN     
+GE0/1/8.20(10G)               up      up       SW_5720PWW                      
+GE0/1/8.23(10G)               up      up       SERVIDOR_CDN_TV                 
+GE0/1/8.24(10G)               up      up       VPN_JDF                         
+GE0/1/8.25(10G)               up      down     QINQ_OLT_CPV                    
+GE0/1/8.26(10G)               up      down     QINQ_OLT_FSB                    
+GE0/1/8.28(10G)               up      up       GERENCIA_GW_SERVIDORES_HUAWEI_NE8000
+GE0/1/8.31(10G)               up      up       GERENCIA_SW_GGV                 
+GE0/1/8.33(10G)               up      up       GERENCIA_SW_BCP                 
+GE0/1/8.34(10G)               up      up       GW_ESCRITORIO_BCP               
+GE0/1/8.35(10G)               up      up       SW_FSB                          
+GE0/1/8.36(10G)               up      up       GERENCIA_GOOGLE_GGC             
+GE0/1/8.38(10G)               up      up       SERVIDOR_SPEEDTEST_CPV          
+GE0/1/8.40(10G)               up      up       GERENCIA_SW_OLT_GW_POP_PSLD     
+GE0/1/8.41(10G)               up      up       GERENCIA_SW_OLT_CCB             
+GE0/1/8.42(10G)               up      up       GERENCIA_SW_OLT_CASCA           
+GE0/1/8.43(10G)               up      up       GERENCIA_SW_MST                 
+GE0/1/8.45(10G)               up      up       SW_OSR                          
+GE0/1/8.46(10G)               up      down                                     
+GE0/1/8.49(10G)               up      up       CLIENTES_IP_PUBLICO_MST         
+GE0/1/8.50(10G)               up      up       JEEP_TRILHA_SEDE                
+GE0/1/8.51(10G)               up      up       CLIENTES_IP_PUBLICO_CPV         
+GE0/1/8.52(10G)               up      up       CLIENTES_IP_PUBLICO_PWW         
+GE0/1/8.53(10G)               up      down                                     
+GE0/1/8.55(10G)               up      up       DANIEL_PSLD                     
+GE0/1/8.61(10G)               up      up       COOPERATIVA_RIZICOLA_PITANGUEIRAS_LTDA_ROTA_1_CTO_351
+GE0/1/8.62(10G)               up      up       COOPERATIVA_RIZICOLA_PITANGUEIRAS_LTDA_ROTA_2_CTO_352
+GE0/1/8.63(10G)               up      up       VL_SUL_ROTA_PWW                 
+GE0/1/8.64(10G)               up      up       VL_SUL_ROTA_CPV                 
+GE0/1/8.89(10G)               up      up       RB_CARLOS_MIGUEL_(LEONILDO_COLARES)
+GE0/1/8.90(10G)               up      up       GERENCIA_RB_BRIGADA_MILITAR     
+GE0/1/8.91(10G)               up      up       RB_CONSEPRO_TRILHOS             
+GE0/1/8.92(10G)               up      up       RB_CC_PWW_E_BRIDGE_CC_PWW       
+GE0/1/8.93(10G)               up      up       VL_SUL_MATRIZ                   
+GE0/1/8.94(10G)               up      up       RB_CARLOS_MIGUEL_(ESCRITORIO)   
+GE0/1/8.95(10G)               up      up       RB_CARLOS_MIGUEL_(CASA)         
+GE0/1/8.96(10G)               up      up       RB_CARLOS_MIGUEL_(OFICINA)      
+GE0/1/8.97(10G)               up      up       RB_HOTSPOT_CAMPING_LAGOA_BCP    
+GE0/1/8.98(10G)               up      up       RB_CARLOS_MIGUEL_(GUARITA)      
+GE0/1/8.99(10G)               up      up       RB_CARLOS_MIGUEL_(QUIOSQUE)     
+GE0/1/8.195(10G)              up      down     LITORAL ALARMES E SISTEMAS DE SEGURANCA LTDA
+GE0/1/8.196(10G)              up      up       RB_CARLOS_MIGUEL_(QUIOSQUE)     
+GE0/1/8.197(10G)              up      up       GW_SERVIDORES_VPN_BCP           
+GE0/1/8.198(10G)              up      up       JUCA_ANA_IP_PUBLICO             
+GE0/1/8.211(10G)              up      up                                       
+GE0/1/8.300(10G)              up      up       EDD_TIM_MST                     
+GE0/1/8.350(10G)              up      up       DUDE TESTE                      
+GE0/1/8.701(10G)              up      up       GW_POP_CASCA                    
+GE0/1/8.706(10G)              up      up       MK_POP_TRAVESSA_SANTOS          
+GE0/1/8.707(10G)              up      up       OLGA_MARIA-ROUTER_ESCRITORIO    
+GE0/1/8.708(10G)              up      up       MK_POP_SERRARIA_CRS_SERRARIA_e_RADIOS_POVOS
+GE0/1/8.709(10G)              up      up       MK_POP_CONDESSA_e_RADIOS        
+GE0/1/8.710(10G)              up      up       MK_POP_RODRIGO                  
+GE0/1/8.711(10G)              up      up       MK_POP_FORQUILHA                
+GE0/1/8.712(10G)              up      up       MK_POP_CASCA-RADIOS_M_QUITERIA_e_BARROS
+GE0/1/8.713(10G)              up      up       MK_POP_SOLIDAO                  
+GE0/1/8.718(10G)              up      up       MK_POP_VALIM                    
+GE0/1/8.719(10G)              up      up       MK_POP_PANTANO                  
+GE0/1/8.720(10G)              up      up       MK_POP_POVOS                    
+GE0/1/8.721(10G)              up      up       MK_POP_FAZ_CARDOSO              
+GE0/1/8.723(10G)              up      up       MK_POP_BUTIAS                   
+GE0/1/8.724(10G)              up      up       MK_POP_HOTEL_TVR                
+GE0/1/8.726(10G)              up      up       MK_POP_BUTIATUVA                
+GE0/1/8.727(10G)              up      up       MK_POP_FSB_VILA                 
+GE0/1/8.729(10G)              up      up       MK_POP_PANGARE                  
+GE0/1/8.731(10G)              up      up       MK_POP_CAVALHADA                
+GE0/1/8.732(10G)              up      up       MK_POP_OLHOS_D_AGUA             
+GE0/1/8.733(10G)              up      up       MK_POP_CAMPO_DA_HONRA           
+GE0/1/8.735(10G)              up      up       MK_POP_TAPERA                   
+GE0/1/8.738(10G)              up      up       MK_POP_JB_SLD_101_e_RADIOS      
+GE0/1/8.739(10G)              up      up       MK_POP_ABELHA                   
+GE0/1/8.740(10G)              up      up       MK_POP_CENTRO_COMERCIAL         
+GE0/1/8.745(10G)              up      up       MK_POP_FAZ_NOVA                 
+GE0/1/8.746(10G)              up      up       MK_POP_LIMOEIRO                 
+GE0/1/8.747(10G)              up      up       MK_POP_RANCHO_VELHO             
+GE0/1/8.749(10G)              up      up       MK_POP_BOA_ESPERANCA            
+GE0/1/8.750(10G)              up      up       MK_POP_LAGOA_DO_BACUPARI        
+GE0/1/8.753(10G)              up      up       MK_POP_BACUPARI                 
+GE0/1/8.761(10G)              up      up       MK_POP_CACIMBAS                 
+GE0/1/8.764(10G)              up      up       MK_POP_MARIA_QUITERIA           
+GE0/1/8.765(10G)              up      up       MK_POP_FSB_e_RADIOS             
+GE0/1/8.769(10G)              up      up       MK_POP_MADEIRA                  
+GE0/1/8.772(10G)              up      up       MK_POP_TIO_JOCA_e_CRS_TJOCA     
+GE0/1/8.775(10G)              up      up       MK_POP_AGUAPE                   
+GE0/1/8.776(10G)              up      up       MK_POP_TARUMA                   
+GE0/1/8.777(10G)              up      up       MK_POP_CENTRO_TVR               
+GE0/1/8.778(10G)              up      up       MK_POP_JUCA_ANA                 
+GE0/1/8.1612(10G)             up      up       16123_SJNET_INSTALACOES_DE_REDES_LTDA
+GE0/1/8.5162(10G)             up      down     COOPERATIVA_RIZICOLA_PITANGUEIRAS_LTDA_ROTA_2_352
+Loop0                         up      up(s)                                    
+NULL0                         up      up(s)                                    
+VE0/2/21.1014                 up      up       CGNAT-NETPAL                    
+<BGP_NETPAL>

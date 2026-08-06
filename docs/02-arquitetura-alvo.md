@@ -2,7 +2,8 @@
 
 > **Atualizado em 2026-07-23** — desenho definido pelo usuário: saem RB3011 ("GW Servidores") e
 > RB2011 ("RB Bridge Servidores"); entram **Datacom DM4170** (no lugar do RB3011) e
-> **Mikrotik CCR1036** ligada diretamente ao NE8000. O bloco `177.72.104.0/27` vai para o
+> **Mikrotik CCR1036** ligada ao DM4170 por trunk. ~~Ligação direta ao NE8000~~ descartada em
+> 2026-08-06. O bloco `177.72.104.0/27` vai para o
 > **NE8000** (decisões #9/#8 fechadas) — mas **só como IP público + firewall; o NAT (SRC-NAT/DST-NAT)
 > vai para a CCR1036**, correção do usuário em 2026-07-23 sobre a decisão #1. Firewall redesenhado
 > enxuto e legível, **sem** a geo-allowlist `BRASIL` ([05](05-limpeza-politicas.md)). Estrutura
@@ -17,22 +18,23 @@
 > 🆕 **Correção do usuário (2026-07-24):** os servidores locais **não penduram mais direto na
 > CCR1036**. Todos entram no **DM4170** (que passa a ser o ponto físico único de agregação —
 > POPs + servidores), e o DM4170 tem **duas saídas**: uma pro NE8000 (já existia) e uma nova pra
-> **CCR1036**. A CCR1036 mantém seu link com o NE8000 — agora explicitamente **para ganhar um IP
-> público próprio**, necessário pro NAT funcionar (mecanismo da decisão #9).
+> **CCR1036**. ✅ **Correção final confirmada pelo usuário em 2026-08-06:** não haverá link direto
+> CCR↔NE8000. A CCR tem um único uplink, o trunk com o DM4170; por ele recebe a VLAN 16 com
+> `177.72.104.4/27`, as redes privadas e o caminho até o gateway `.1` no NE8000.
 
 ```
                       Internet / Core (AS 52828)
                                 │
                             NE8000 ── core BGP/OSPF (produção), CGNAT de assinantes,
-                            │  │     terminação QinQ dos POPs (INTACTO — não mexer)
-                            │  │     + ganha: /27 (IP público), firewall de servidores
-                            │  │     + 🆕 ganha: SVI + OSPF area1 de TODAS as VLANs de
-                            │  │     acesso (decisão #13 — DM4170 não roteia nada)
-                  10GE      │  │        10GE — 🆕 só pra CCR1036 ganhar
-                  (novo)    │  │        IP público (NAT)
-                            │  │
-                        DM4170 ─┴─ CCR1036 ── NAT (SRC-NAT/DST-NAT) + VPN de equipe
-                    (só L2: QinQ  🆕 novo   (recriada) + automações (backup, netwatch→API)
+                            │        terminação QinQ dos POPs (INTACTO — não mexer)
+                            │        + ganha: /27 (IP público), firewall de servidores
+                            │        + 🆕 ganha: SVI + OSPF area1 de TODAS as VLANs de
+                            │        acesso (decisão #13 — DM4170 não roteia nada)
+                  10GE      │
+                  (novo)    │
+                            │
+                        DM4170 ─── CCR1036 ── NAT (SRC-NAT/DST-NAT)
+                    (só L2: QinQ   trunk     WireGuard só pós-migração
                      termination,  link
                      nenhuma SVI)
                     │         │
@@ -53,8 +55,8 @@
 | 2 | Rede de acesso ↔ DM4170 (trunk QinQ) | o **mesmo cabo** que hoje termina na `sfp1` do RB3011 muda para o DM4170 na janela (1GE hoje) | troca de cabo no corte |
 | 3 | NE8000 ↔ DM4170 (núcleo) | SFP+ 10GE, direto | **novo** |
 | 4 | 🆕 Servidores locais → **DM4170** | portas GE ópticas do DM4170, cada servidor numa VLAN de gerência privada própria (tagged) | 🆕 recabeamento no corte — muda de destino (era CCR1036) |
-| 5 | 🆕 **DM4170 ↔ CCR1036** | trunk 802.1q novo — carrega as VLANs de gerência privada dos servidores locais | **novo** |
-| 6 | NE8000 ↔ CCR1036 | 🆕 10GE, direto (SFP+) — corrigido 2026-07-24 (era 1GE) | **novo** — propósito esclarecido: dar à CCR1036 um IP público próprio pro NAT |
+| 5 | 🆕 **DM4170 ↔ CCR1036** | trunk 802.1q novo — carrega VLAN 16 (`.4/27`) + VLANs privadas dos servidores | **novo** — caminho do IP público confirmado em 2026-08-06 |
+| 6 | ~~NE8000 ↔ CCR1036 direto~~ | — | ❌ descartado em 2026-08-06; CCR sai somente pelo DM4170 |
 
 ### ⚠️ Questões físicas em aberto
 
@@ -87,9 +89,10 @@
 ## 2. Camada L2
 
 > ✅ **Decisão #13 fechada (usuário, 2026-07-24): DM4170 fica só em L2** — nenhuma SVI nele.
-> Ele só termina o QinQ (traduz outer+inner tag em VLANs simples) e entrega tudo — as ~50 VLANs
-> de acesso **e** as 3 VLANs simples de serviço (15 NTP, 18 SERVERINO, 1066 GERADOR MST) — como
-> trunk 802.1q pro **NE8000**, que passa a terminar **todas** como subinterface roteada (SVI +
+> Ele só termina o QinQ (traduz outer+inner tag em VLANs simples) e entrega as ~50 VLANs de acesso
+> e as VLANs simples ao roteador responsável. O **NE8000** termina as VLANs de acesso e as simples
+> 18 SERVERINO/1066 GERADOR; ✅ a **VLAN 15 NTP foi reclassificada em 2026-08-06 para a CCR**, pois
+> o serviço `.10` é container local no Docker. Cada destino termina como subinterface roteada +
 > OSPF area1 onde aplicável) — mesmo padrão que o NE8000 já usa hoje pras VLANs de POP em
 > paralelo (`Gi0/1/8.719 MK_POP_PANTANO`, `.778 MK_POP_JUCA_ANA` etc.). **Isso elimina o
 > bloqueio técnico nº1** (SVI sobre tag interna QinQ no DmOS) — deixa de ser pré-requisito do
@@ -98,8 +101,8 @@
 > [decisão #13](03-decisoes-pendentes.md#13--dm4170-faz-l3-svi-sobre-qinq-ou-fica-só-l2-empurrando-o-roteamento-pro-ne8000).
 >
 > ✅ **Detalhado em [09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md)** — as 60 VLANs do
-> RB3011 classificadas uma a uma: 27 QinQ + 3 simples migram para SVIs no **NE8000** (via trunk
-> L2 pelo DM4170), 2 de servidor ficam na CCR1036, 16 viram só transporte no DM4170, 11 não
+> RB3011 classificadas uma a uma: 27 QinQ + 2 simples migram para SVIs no **NE8000** (via trunk
+> L2 pelo DM4170); VLAN 15 e redes privadas locais terminam na CCR1036; 16 viram só transporte, 11 não
 > migram, +3 VLANs novas a criar. Resumo:
 
 **Trunk rede de acesso ↔ DM4170 (herda o papel da `sfp1` do MK) — DM4170 é passagem, não termina nada:**
@@ -112,27 +115,26 @@
   já era L2 nesse trecho mesmo antes da decisão #13. A "Bridge IP Publico" vira uma VLAN comum de
   trânsito. Servidores locais que precisarem de IP público (ex.: Proxmox Zabbix/CDNTV) usam uma
   **segunda NIC** conectada à VLAN 16 na rede de acesso — **não passam pela CCR1036**.
-- **VLANs simples de serviço** (15 NTP, 18 SERVERINO, 1066 GERADOR MST): também atravessam o
-  DM4170 em L2 e terminam como SVI no **NE8000** (mudou da decisão #13 — antes seriam SVI no
-  DM4170).
+- **VLANs simples de serviço:** 18 SERVERINO e 1066 GERADOR atravessam o DM4170 em L2 e terminam
+  no **NE8000**. ~~VLAN 15 NTP no NE8000~~ → ✅ reclassificada para a **CCR** em 2026-08-06:
+  gateway `192.168.116.9/30` do container Docker `.10`, rede passiva no OSPF CCR↔NE8000.
 - **MTU**: ✅ **decidido (usuário, 2026-07-24) — usar o jumbo frame máximo suportado por cada
   equipamento** nos trunks rede de acesso ↔ DM4170 **e** DM4170 ↔ NE8000 (o QinQ precisa sobreviver
   a um salto L2 a mais até ser terminado), em vez de replicar o valor exato do RB3011 (l2mtu 1600
   → 1596/1592 na `sfp1`). Número concreto de cada equipamento fica pra hora de configurar.
 
 **Links novos:**
-- **NE8000 ↔ DM4170**: trunk 802.1q com as ~50 VLANs QinQ + 3 simples de serviço + VLAN 16 (L2).
+- **NE8000 ↔ DM4170**: trunk 802.1q com as ~50 VLANs QinQ + VLANs simples destinadas ao NE8000 +
+  VLAN 16 (L2).
   O DM4170 **não participa de nenhuma adjacência OSPF** (decisão #13 — é só L2, sem SVI); cada
   VLAN vira uma subinterface roteada diretamente no NE8000, que fala OSPF com os POPs do outro
   lado do trunk (o DM4170 só encaminha os frames). Não reutilizar a VLAN 28 do MK, que morre com ele.
-- 🆕 **DM4170 ↔ CCR1036** (correção do usuário, 2026-07-24): trunk 802.1q novo, carrega as VLANs
-  de **gerência privada** dos servidores locais (`vlan10`, `vlan66`, `vlan109`, `vlan116`,
-  `vlan999`) — os servidores plugam fisicamente no **DM4170** (não mais direto na CCR1036); o
-  DM4170 só encaminha essas VLANs em L2 até a CCR1036, que é quem termina/roteia. **Nenhuma VLAN
-  pública** passa por este link.
-- **NE8000 ↔ CCR1036**: link separado, sem VLANs de servidor — serve só pra dar à CCR1036 um
-  **IP público próprio**, necessário pro NAT funcionar (mecanismo da decisão #9), e pro
-  tráfego de VPN/automações que precisa sair pra internet.
+- 🆕 **DM4170 ↔ CCR1036**: trunk 802.1q novo, carrega a **VLAN 16** (`177.72.104.4/27`) e as VLANs
+  privadas dos servidores locais (`vlan10`, `vlan66`, `vlan109`, `vlan116`, `vlan999`) — caminho
+  L2 do IP público confirmado pelo usuário em 2026-08-06. Os servidores plugam fisicamente no
+  DM4170; o switch só encaminha essas VLANs até a CCR1036.
+- ~~**NE8000 ↔ CCR1036 direto**~~: ❌ descartado em 2026-08-06. Todo o caminho da CCR até o
+  NE8000 passa em L2 pelo DM4170.
 - **VLAN de gerência** padronizada (modelo da ACL `IPV4_NOC_NETPAL` — passo 3 do
   [05](05-limpeza-politicas.md)).
 
@@ -144,11 +146,11 @@ bridges `EOIP-NOC`/`loopNETPAL` (lista completa no [09](09-l2-mapeamento-vlans.m
 | Função | Equipamento | Detalhe |
 |--------|-------------|---------|
 | Dono do `177.72.104.0/27` + firewall de servidores | **NE8000** | `.1` (e as demais) na subinterface da VLAN 16; as ~24 sub-redes de gerência da antiga bridge vão como secundárias ou são redesenhadas. Hosts com IP público dedicado (Hubsoft, Fusion, VOIP etc.) seguem direto, sem NAT. Política nova enxuta por zonas, sem geo-allowlist ([05](05-limpeza-politicas.md)) |
-| 🆕 NAT (SRC-NAT/DST-NAT) | **CCR1036** | ✅ Corrigido (usuário, 2026-07-23) — **não fica no NE8000**. SRC-NAT das redes privadas e DST-NAT (Dude `:18291`, TS SIX `:15389`) rodam na CCR1036, usando `177.72.104.4` (definido 2026-07-24). Mecanismo de roteamento até a CCR1036 ainda **a definir** — ver decisão #9 em [03](03-decisoes-pendentes.md) e [10](10-enderecamento-ccr1036.md) |
+| 🆕 Gateway das redes privadas + NAT | **CCR1036** | CCR termina as VLANs privadas locais (VLAN 100 = `192.168.254.1/24` e demais redes a consolidar), portanto o tráfego atravessa naturalmente o SRC-NAT e sai como `177.72.104.4/27` pela VLAN 16 no mesmo trunk DM4170↔CCR. Sem PBR no NE8000. DST-NAT Dude/TS SIX ainda depende de `.1` vs `.4` |
 | 🆕 Roteamento das VLANs de acesso (QinQ, enlaces /30 de POP, gerências de OLT/SW) + VLANs simples de serviço + OSPF area1 | **NE8000** (decisão #13, 2026-07-24 — antes seria o DM4170) | SVIs QinQ + SVIs simples; herda as adjacências OSPF dos POPs (mesmo padrão que já usa hoje pra `MK_POP_*`); redistribute connected/static (ou anúncios explícitos — oportunidade de limpeza); DM4170 só entrega o trunk 802.1q, **não termina nada** |
 | Adjacência(s) OSPF de acesso | NE8000 ↔ POPs (via trunk L2 do DM4170) | Mesma chave MD5 da area1 (estratégia: decisão #11); DM4170 é só L2 nesse caminho, não participa da adjacência |
 | Rotas estáticas `10.8.0.0/21`, `10.254.0.0/22`, `10.30.0.0/30`, `10.150.150.0/24` | NE8000 | **viram resolução connected** quando o `/27` subir (next-hops `.9`/`.12`/`.19` são hosts do /27) — revisar se ainda fazem sentido |
-| VPN de equipe (L2TP+OpenVPN recriados) | **CCR1036** | Redesenho limpo: sem mschap1, criptografia obrigatória, certs novos ou CA exportada |
+| VPN de equipe | **CCR1036, pós-migração** | WireGuard somente depois de toda a migração concluída; não entra na bancada nem na janela inicial |
 | ~~Automações (backup FTP, netwatch→API)~~ | — | ✅ **Descartadas (usuário, 2026-07-24)** — as duas, não migram. Não entram na config nova |
 | DHCP (`VLAN1066 - GERADOR MST`, 1 escopo) | DM4170 ou NE8000 | Trivial — decidir na config |
 | FlowSpec/NetStream (`177.72.104.27`) | NE8000 | RR fica **diretamente conectado** — validar sessão BGP e fluxo `:3055` no corte |
@@ -157,12 +159,12 @@ bridges `EOIP-NOC`/`loopNETPAL` (lista completa no [09](09-l2-mapeamento-vlans.m
 
 | Equipamento | Papel hoje | Destino |
 |---|---|---|
-| RB3011 "GW Servidores" | Agregação L3 (~50 VLANs QinQ), NAT, firewall, VPNs | **sai** — funções divididas entre DM4170 (QinQ termination + agregação física dos servidores, **só L2**), NE8000 (SVIs QinQ + OSPF + /27 + firewall — decisão #13) e CCR1036 (**NAT** + VPN/automações + roteamento da gerência dos servidores) |
+| RB3011 "GW Servidores" | Agregação L3 (~50 VLANs QinQ), NAT, firewall, VPNs | **sai** — funções divididas entre DM4170 (QinQ termination + agregação física, só L2), NE8000 (SVIs de acesso + OSPF + `/27` + firewall público) e CCR1036 (gateways privados + NAT; WireGuard pós-migração). Automações não migram |
 | RB2011 "RB Bridge Servidores" | Bridge L2 dos servidores (TS SIX, Dude, RRFlow, CGNAT-1 mgmt) | **sai** — absorvido pelo DM4170 (decisão #2, 2026-07-24) |
 | 🆕 RB750 "RB Bridge 750" | Bridge L2 (gerência NE8000, Proxmox Zabbix, Proxmox HubSoft) | **sai** — 3º MK descoberto na topologia física (2026-07-24), também absorvido pelo DM4170 |
 | Rede de acesso (agregação L2/QinQ) | Transporta todas as VLANs dos sites | **⛔ fora do escopo** — nenhuma alteração |
 | Datacom DM4170 | — | **entra**: substitui **os 3 MKs** (RB3011 + RB2011 + RB750) fisicamente — decisão #2 (2026-07-24): absorve **toda** a agregação de servidores direto, sem bridge intermediária. **Só faz L2** (decisão #13) — QinQ termination + switching dos ~10 servidores locais, nenhuma SVI. Variante **24GX+12XS** (24× GE SFP + 12× 10GE SFP+, todo óptico). ⚠️ **~8 servidores em cobre → precisam de transceiver SFP-RJ45 (1000BASE-T)** — item de compra (ver decisão #2). [Datasheet](datacom-dm4170-datasheet.pdf) |
-| **Mikrotik CCR1036** (variante **8G-2S+**, decidida 2026-07-24) | — | **entra**: **NAT** (corrigido 2026-07-23, IP público `177.72.104.4` definido 2026-07-24) + VPN de equipe + roteamento da **gerência privada** dos servidores (recebida via trunk do DM4170, não mais por portas RJ45 diretas). ~~Automações~~ descartadas (decisão #6). Precisa de link próprio com o NE8000 pra ganhar o IP público do NAT — mecanismo de rota a definir, [10](10-enderecamento-ccr1036.md) |
+| **Mikrotik CCR1036** (variante **8G-2S+**, decidida 2026-07-24) | — | **entra**: gateway das redes privadas + NAT com `177.72.104.4/27`, tudo por um único trunk com o DM4170. Sem link direto com o NE8000. WireGuard só pós-migração. ~~Automações~~ descartadas (decisão #6) |
 | NE8000 "BGP_NETPAL" | Core BGP/OSPF, CGNAT assinantes, terminação QinQ de POPs | **fica e ganha**: `/27` (IP público) + firewall de servidores + 🆕 **SVI/OSPF de todas as VLANs de acesso** (decisão #13 — o que seria do DM4170). **NAT não fica aqui** (vai para a CCR1036). O que já existe (QinQ `MK_POP_*`) **não se mexe** |
 
 > 🚨 **Dimensionamento** (mantido da revisão anterior): a GW Servidores tem **101 endereços em
@@ -183,4 +185,4 @@ bridges `EOIP-NOC`/`loopNETPAL` (lista completa no [09](09-l2-mapeamento-vlans.m
 - ~~Redundância/HA (decisão #3 — não discutido~~ → ✅ **decidido (2026-07-24): sem redundância.**
   Desenho alvo mantém pontos únicos: 1 NE8000, 1 DM4170, 1 CCR1036 — aceito conscientemente, mesmo
   com o NE8000 concentrando ainda mais função crítica pela decisão #13.
-- Confirmação do papel da CCR1036 nas automações (decisão #6).
+- ~~Confirmação do papel da CCR1036 nas automações~~ → ✅ automações descartadas (decisão #6).

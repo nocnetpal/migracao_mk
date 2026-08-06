@@ -1,6 +1,14 @@
 # Endereçamento da CCR1036
 
-> Fonte: `docs/Devices.csv` (export do The Dude). Escopo: VPN de equipe, automações, **gerência**
+> ✅ **Base de bancada concluída em 2026-08-06:** CCR1036-8G-2S+ r2 em RouterOS/RouterBOOT
+> `7.23.3 stable`, identity `CCR-GW_PRIV_SERVIDORES-VPN_WG`. `ether1-MGMT` usa temporariamente
+> `192.168.88.1/24`; `sfp1-TRUNK-DM` é o único uplink alvo; `sfp2-RESERVA` fica desativada. VLAN 16,
+> `.4/27`, VLAN 100 `.1/24`, default via `.1` e SRC-NAT estão pré-criados e ✅ **habilitados por
+> decisão do usuário em 2026-08-06**. Sem SFP conectado, continuam isolados em bancada. Não
+> conectar o trunk à produção enquanto o RB3011 ainda usar `192.168.254.1`. Scripts e validações em
+> [`config/ccr1036/`](../config/ccr1036/).
+
+> Fonte: `docs/Devices.csv` (export do The Dude). Escopo: VPN de equipe, **gerência**
 > dos servidores locais **e, 🆕 desde 2026-07-23, NAT** (SRC-NAT/DST-NAT — correção do usuário
 > sobre a decisão #1/#9 em [03-decisoes-pendentes.md](03-decisoes-pendentes.md)).
 >
@@ -8,8 +16,10 @@
 > CCR1036 sem nenhum IP público, com o tráfego público dos servidores saindo por uma segunda NIC
 > direto na VLAN 16 (rede de acesso) — **essa parte segue valendo para os servidores que já têm
 > IP público próprio**. O que muda: a função de **tradução de endereço** (SRC-NAT/DST-NAT) agora
-> roda aqui, o que exige que ao menos um IP público do `177.72.104.0/27` seja **roteado até a
-> CCR1036** através do link privado com o NE8000.
+> roda aqui. ~~Isso exigiria rotear um IP público pelo link privado com o NE8000.~~ ✅ **Caminho
+> confirmado em 2026-08-06:** a CCR recebe diretamente `177.72.104.4/27` na VLAN 16 pelo trunk
+> DM4170↔CCR, no mesmo domínio L2 do gateway `.1` no NE8000. As automações antigas foram
+> descartadas pela decisão #6 e não entram na CCR.
 >
 > ✅ **IP definido (usuário, 2026-07-24): `177.72.104.4`.** ✅ **Modelo (2026-07-27): CCR
 > dentro do `/27`** (VLAN 16), igual aos servidores — sem rota `/32` por P2P privado.
@@ -18,9 +28,9 @@
 > Toda a agregação física de servidores passa a ser no **DM4170** (que tem 24 portas GE ópticas
 > de sobra e passa a ser o ponto físico único — POPs + servidores). O DM4170 entrega essas VLANs
 > de gerência privada (`vlan10`, `vlan66`, `vlan109`, `vlan116`, `vlan999` etc.) pra CCR1036 num
-> **trunk 802.1q novo** (não mais porta-a-porta). A CCR1036 passa a ter só **duas portas em uso**:
-> o trunk pro DM4170 e o link pro NE8000 (esse último, exclusivamente pra ganhar IP público pro
-> NAT). Isso **derruba a demanda por portas RJ45** que motivava a variante 12G-4S — ver nota na
+> **trunk 802.1q novo** (não mais porta-a-porta). ✅ **Correção final de 2026-08-06:** a CCR1036
+> passa a ter só **uma porta de uplink em uso**, o trunk pro DM4170; não haverá link direto com o
+> NE8000. Isso **derruba a demanda por portas RJ45** que motivava a variante 12G-4S — ver nota na
 > seção de portas abaixo. Todo o resto deste documento (endereçamento IP dos servidores, NAT,
 > VPN) **continua igual**; só o **meio físico de acesso** aos servidores mudou.
 
@@ -77,17 +87,26 @@ endereçamento da CCR1036/NE8000 para esses clusters.**
 
 ## Alocação de portas e VLANs (reais)
 
-> 🆕 A CCR1036: trunk com o DM4170 (VLANs de gerência **+ VLAN 16** com `177.72.104.4`) e,
-> opcionalmente, link direto com o NE8000 se ainda for útil pra VPN/outro — **não** é mais o
-> caminho do IP de NAT (NAT está na VLAN 16). As VLANs de gerência seguem tagged no trunk.
+> 🆕 A CCR1036 tem somente o trunk com o DM4170: VLANs privadas + VLAN 16 com
+> `177.72.104.4/27`. Não existe link direto CCR↔NE8000 no alvo.
+>
+> ✅ **Decisão L3 de 2026-08-06:** a CCR termina as VLANs privadas locais e é o gateway delas.
+> Começa pela VLAN 100 (`192.168.254.1/24`); as demais abaixo mantêm seus IPs de gateway ao
+> migrarem do RB3011 para a CCR. Isso coloca a CCR naturalmente no caminho do SRC-NAT.
+>
+> 📋 **Acesso roteado desenhado, ainda não aplicado (2026-08-06):** OSPF com NE8000 `.1` sobre a própria VLAN 16, área
+> `0.0.0.1`; redes privadas passivas. Firewall planejado permite acesso às redes privadas somente de
+> `177.72.104.19/32`, `177.93.244.165/32` e `10.150.150.0/24`, além dos retornos estabelecidos.
 
 | VLAN (no trunk DM4170↔CCR1036) | Dispositivo (Dude) | IP / rede hoje | Porta no DM4170 | Gateway no alvo | Observação |
 |---|---|---|---|---|---|
-| `vlan66` | **TS SIX** | `192.168.66.14/28` | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.66.1/28` | DST-NAT `:15389` continua apontando pra cá |
-| `vlan116` | **Proxmox Docker - CDNTV** | `192.168.116.122/30` | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.116.121/30` | Gerência em **vmbr1**; tráfego público tag 16 (Etapa 1) |
-| `vlan10` | **DNS recursivo** | `10.200.255.254/30` | porta GE dedicada (SFP-RJ45) | NE8000 `10.200.255.253/30` | Nome não consta no Dude; IP vem do `/ip address` do RB3011 |
-| `vlan999` | **Proxmox Zabbix** / **Callcenter** | mgmt privada nova | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.254.1/24` | IP público `.5` sai da gerência; VMs 177 tag 16 |
-| `vlan109` | **OLT CPV** | `192.168.115.42/30` | porta GE dedicada (SFP-RJ45) | NE8000 `192.168.115.41/30` | Gerência da OLT |
+| `vlan100` | **4 Proxmox** | `192.168.254.10`–`.13/24` | portas GE dos hosts | **CCR `192.168.254.1/24`** | Primeira VLAN privada preparada na CCR |
+| `vlan15` | **NTP container Docker** | `192.168.116.10/30` | Docker `enp8s0f1.15` via porta do Proxmox | **CCR `192.168.116.9/30`** | Toda a NetPal consulta UDP/123; desenhada, ainda não configurada |
+| `vlan66` | **TS SIX** | `192.168.66.14/28` | porta GE dedicada (SFP-RJ45) | **CCR `192.168.66.1/28`** | DST-NAT `:15389` continua apontando pra cá |
+| `vlan116` | **Dude / legado local** | `192.168.116.28/30` etc. | porta GE dedicada (SFP-RJ45) | **CCR (IP atual do RB3011 a consolidar)** | Não confundir com Proxmox Docker, já migrado para VLAN 100 |
+| `vlan10` | **DNS recursivo** | `10.200.255.254/30` | porta GE dedicada (SFP-RJ45) | **CCR `10.200.255.253/30`** | IP vem do RB3011 |
+| `vlan109` | **OLT CPV** | `192.168.115.42/30` | porta GE dedicada (SFP-RJ45) | **CCR `192.168.115.41/30`** | Gerência da OLT |
+| `vlan999` | **Callcenter futuro** | a definir | porta futura | **CCR, a definir** | Não é a VLAN dos Proxmox; gerência deles está na VLAN 100 |
 | ✅ `vlan210` | ~~Proxmox HubSoft~~ | — | — | — | ~~substituído~~ → modelo 2 VLANs: **100**+**16** ([16](16-etapa1-proxmox-vlans-datacom.md), 2026-07-27) |
 | ✅ `vlan138` | ~~Proxmox DNS~~ | — | — | — | idem — gerência na **100**, público na **16** |
 
@@ -96,8 +115,8 @@ endereçamento da CCR1036/NE8000 para esses clusters.**
 > fechar a lista de material (ver [02-arquitetura-alvo.md](02-arquitetura-alvo.md), questão física
 > nº2).
 >
-> ✅ **Variante decidida (usuário, 2026-07-24): 8G-2S+.** Com só 2 portas físicas em uso (trunk +
-> NE8000), a demanda de RJ45 que justificava a 12G-4S caiu bastante — a 8G-2S+ (mais barata) cobre
+> ✅ **Variante decidida (usuário, 2026-07-24): 8G-2S+.** Com só 1 uplink físico em uso (trunk
+> DM4170), a demanda de RJ45 que justificava a 12G-4S caiu bastante — a 8G-2S+ cobre
 > com folga.
 
 > ✅ **Esclarecido (usuário, 2026-07-23):** "Callcenter" não aparece no Dude porque **ainda não
@@ -155,8 +174,8 @@ Internet → NE8000 (GW .1 do 177.72.104.0/27, VLAN16)
 |---|---|
 | IP público / NAT | `177.72.104.4` na **VLAN 16** (dentro do `/27`) |
 | Gateway | NE8000 `177.72.104.1` (dono do `/27`) |
-| Link adicional NE8000↔CCR (se existir) | ⛔ só se precisar de algo além da VLAN 16 — **não** usar ~~`10.254.254.x`~~ |
-| Pool VPN (OpenVPN) | `10.7.0.0/24` (mesma faixa usada hoje) |
+| Link adicional NE8000↔CCR | ❌ não existe no desenho final (2026-08-06) |
+| VPN WireGuard | ⏳ endereçamento a definir somente pós-migração |
 
 ## Config RouterOS de exemplo (com IPs reais)
 
@@ -178,21 +197,12 @@ Internet → NE8000 (GW .1 do 177.72.104.0/27, VLAN16)
 /ip address add address=177.72.104.4/27 interface=vlan16-ip-publico comment="NAT CCR"
 /ip route add dst-address=0.0.0.0/0 gateway=177.72.104.1
 
-# OpenVPN (exemplo — certs precisam ser gerados/emitidos)
-/interface ovpn-server server set enabled=yes port=1194 mode=ip require-client-certificate=yes cipher=aes256 auth=sha512
-/ppp profile add name=profile-ovpn local-address=10.7.0.1 remote-address=pool-ovpn use-encryption=yes
-/ip pool add name=pool-ovpn ranges=10.7.0.2-10.7.0.254
-/ppp secret add name=bruno     profile=profile-ovpn password=***
-/ppp secret add name=isaac    profile=profile-ovpn password=***
-/ppp secret add name=leonardo profile=profile-ovpn password=***
-/ppp secret add name=vpnbruno profile=profile-ovpn password=***
+# VPN não entra nesta configuração. WireGuard somente pós-migração.
 
 # Firewall mínimo
 /ip firewall filter
 add chain=input action=accept connection-state=established,related,untracked comment="ESTABLISHED"
 add chain=input action=accept src-address=177.93.244.165 comment="GERENCIA NOC"
-add chain=input action=accept protocol=tcp dst-port=1194 comment="OpenVPN"
-add chain=input action=accept protocol=udp dst-port=1194 comment="OpenVPN"
 add chain=input action=drop comment="DROP ALL"
 
 /ip firewall nat
@@ -203,29 +213,33 @@ add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-po
 
 ## O que não muda nos servidores (gerência)
 
-- **TS SIX** continua `192.168.66.14/28` — só o gateway passa de `192.168.66.1` (MK) para o NE8000.
+- **TS SIX** continua `192.168.66.14/28` — gateway `192.168.66.1` passa do RB3011 para a CCR.
 - ~~**Proxmox Docker/CDNTV** continua `192.168.116.122/30`.~~ → ✅ migrou para
-  `192.168.254.11/24` na VLAN 100 em 2026-08-05; gateway ainda no RB3011 e depois passa ao NE8000.
-- **DNS recursivo** continua `10.200.255.254/30` — gateway passa para o NE8000.
-- **OLT CPV** continua `192.168.115.42/30` — gateway passa para o NE8000.
+  `192.168.254.11/24` na VLAN 100 em 2026-08-05; gateway passa do RB3011 para a CCR.
+- **DNS recursivo** continua `10.200.255.254/30` — gateway passa para a CCR.
+- **OLT CPV** continua `192.168.115.42/30` — gateway passa para a CCR.
 - **Proxmox Zabbix/Callcenter** ganha um IP privado novo na VLAN 100 para gerência; o IP
   público `177.72.104.5/6` migra para a **segunda NIC** (VLAN16 / rede de acesso).
-- 🆕 **Proxmox HubSoft** continua `192.168.115.210/30` — gateway passa para o NE8000. VM HubSoft
-  pública `177.72.104.16` segue por segunda NIC (VLAN16), sem passar pela CCR1036.
+- **Proxmox HubSoft** migrou para `192.168.254.13/24` na VLAN 100; gateway passa à CCR. VM HubSoft
+  pública `177.72.104.16` segue na VLAN 16, sem NAT.
 - ~~🆕 **Proxmox DNS** continua `192.168.115.138/30`.~~ → ✅ migrou para
-  `192.168.254.12/24` na VLAN 100 em 2026-08-05; gateway ainda no RB3011 e depois passa ao NE8000.
+  `192.168.254.12/24` na VLAN 100 em 2026-08-05; gateway passa do RB3011 para a CCR.
   VMs públicas (`.24`, `.26`, `.29`, `.28/.58/.59`) seguem na VLAN 16.
 
-## Subinterfaces que o NE8000 precisa criar (no link com a CCR1036)
+## Interfaces privadas que a CCR precisa criar (no trunk com o DM4170)
 
 ```text
-interface GigabitEthernet0/1/X.10   -> 10.200.255.253/30   (DNS recursivo)
-interface GigabitEthernet0/1/X.66   -> 192.168.66.1/28      (TS SIX)
-interface GigabitEthernet0/1/X.109  -> 192.168.115.41/30    (OLT CPV)
-interface GigabitEthernet0/1/X.100  -> 192.168.254.1/24     (gerência dos Proxmox)
-interface GigabitEthernet0/1/X.2000 -> <NE8000-P2P>/<mask>  (p2p CCR1036 — IPs a definir)
-interface GigabitEthernet0/1/X.???  -> a definir            (🆕 gerência Proxmox HubSoft, 192.168.115.210/30)
+vlan10  -> 10.200.255.253/30   (DNS recursivo)
+vlan15  -> 192.168.116.9/30    (NTP container Docker .10)
+vlan66  -> 192.168.66.1/28     (TS SIX)
+vlan100 -> 192.168.254.1/24    (gerência dos 4 Proxmox)
+vlan109 -> 192.168.115.41/30   (OLT CPV)
+demais redes privadas do RB3011 -> consolidar antes de gerar a configuração final
 ```
+
+VLAN 15 confirmada pelo mapeamento do Docker: container `.10` em macvlan `ens21`, NIC da VM em
+`vmbr15`, cujo bridge-port físico é `enp8s0f1.15`. A rede precisa ser anunciada no OSPF para toda
+a NetPal; permitir somente UDP/123 conforme a lista de prefixos internos a consolidar.
 
 A VLAN 16 (pública) sobe pelo DM4170 até o NE8000 **e** até a CCR (`177.72.104.4` no mesmo
 broadcast). Servidores com IP público próprio também usam VLAN 16; gerência privada segue nas

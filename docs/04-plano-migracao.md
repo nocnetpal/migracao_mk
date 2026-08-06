@@ -37,31 +37,32 @@
       configurar.
 - [x] ~~Esclarecer a sobreposição do `177.72.104.60/30`~~ → ✅ **investigado (2026-07-24, decisão
       #10):** não é conflito real — NE8000 não tem interface nesse /30, statement OSPF inerte.
-- [ ] 🆕 **Mecanismo de NAT na CCR1036**: 🟡 IP público **definido (`177.72.104.4`, 2026-07-24)** —
-      falta só desenhar como roteá-lo até a CCR1036 via NE8000 (decisão #9 corrigida em
-      [03](03-decisoes-pendentes.md))
+- [x] 🆕 **Mecanismo de NAT na CCR1036**: `.4/27` chega pela VLAN 16 no trunk DM4170↔CCR; a CCR
+      é o gateway das redes privadas (VLAN 100 `.1/24` e demais), portanto o tráfego atravessa o
+      SRC-NAT sem PBR no NE8000. Definido em 2026-08-06; falta teste integrado
 - [x] ~~🆕 **Dimensionamento do NE8000** (decisão #13): confirmar capacidade para +30
       subinterfaces/adjacências OSPF novas~~ → ✅ **confirmado (usuário, 2026-07-24): capacidade
       livre**, sem restrição de licença/hardware.
 - [ ] Passo 1 da limpeza: quais sistemas ainda estão vivos ([05](05-limpeza-politicas.md)) — 🟡
       conscientemente adiado (2026-07-24), voltar depois de fechar o resto
-- [ ] Destino das VPNs (L2TP+OpenVPN) — 🆕 as automações (backup FTP, netwatch→API) **não entram
-      mais aqui**: decisão #6 fechada, as duas foram descartadas (usuário, 2026-07-24), não migram
+- [x] Destino/ordem da VPN: **WireGuard na CCR somente pós-migração** (usuário, 2026-08-06).
+      L2TP/OpenVPN não serão recriados na bancada nem na janela inicial. As automações também não
+      migram (decisão #6)
 - [ ] Solução de acesso do NOC (o EoIP morre com o Mikrotik — e já está down)
 
 ## Mapa função → destino
 
 | Função hoje no RB3011 | Destino | Situação |
 |---|---|---|
-| Roteamento inter-VLAN (~50 VLANs QinQ + 3 simples de serviço) | **NE8000** — ✅ decidido 2026-07-24 (#13) | DM4170 fica só L2 (QinQ termination); reaproveita o padrão que o NE8000 já usa hoje pras VLANs de POP |
+| Roteamento inter-VLAN (~50 VLANs QinQ + simples de serviço) | **NE8000**, exceto redes privadas locais na CCR | VLAN 15/NTP reclassificada para a CCR em 2026-08-06; DM4170 fica só L2 |
 | OSPF area1 (adjacências + redistribute connected/static E1) | **NE8000** (decisão #13 — antes seria o DM4170) | Reproduzir; oportunidade de anúncios explícitos |
 | Dono do `177.72.104.0/27` (VLAN 16 sobe em L2) | **NE8000** — ✅ decidido 2026-07-23 (#9, Opção B) | Só IP público + firewall — **não faz mais o NAT** |
-| SRC-NAT/DST-NAT | 🆕 **CCR1036** — corrigido 2026-07-23 | Substitui a resposta anterior (NE8000). Falta definir qual IP e a rota até a CCR1036 |
+| SRC-NAT/DST-NAT | **CCR1036** | `.4/27` na VLAN 16 via DM4170; CCR é gateway das redes privadas, sem PBR no NE8000 |
 | Firewall de servidores | NE8000 (modelo de zonas do [05](05-limpeza-politicas.md)) | Aguarda passo 1 |
 | DHCP (`VLAN1066 - GERADOR MST`) | Datacom ou NE8000 | Trivial, decidir na config |
-| VPN equipe (L2TP **e** OpenVPN) | **CCR1036** (ligada direto ao NE8000) — ✅ definido 2026-07-23 | Redesenho, não porte |
-| Backup semanal FTP + netwatch→API (script `dude`) | **CCR1036** (candidata — RouterOS roda os scripts de hoje) ou NMS existente | Em aberto |
-| Bridge L2 dos servidores (RB2011 + `Bridge IP Publico`) | 🆕 Servidores plugam no **DM4170** (correção 2026-07-24 — antes seria a CCR1036); gerência privada segue por trunk novo **DM4170→CCR1036**; VLAN 16 (pública) sobe em L2 pelo **DM4170** até o NE8000; servidores que precisarem de IP público usam **segunda NIC** na VLAN 16 | Direto |
+| VPN equipe | **CCR1036, somente pós-migração** | WireGuard depois de toda a migração concluída; não entra na bancada/janela inicial |
+| ~~Backup semanal FTP + netwatch→API~~ | — | ✅ descartados; não migram (decisão #6) |
+| Bridge L2 dos servidores (RB2011 + `Bridge IP Publico`) | Servidores plugam no **DM4170**; VLAN 16 sobe em L2 até o NE8000 **e a CCR**, e redes privadas seguem nos trunks necessários | Direto |
 | EoIP NOC (`.1` ↔ `177.93.244.165`) | Substituir por rota/VPN padrão (já está fora do ar) | Em aberto |
 
 ## Estratégia: ~~fatiada por VLAN~~ → janela única com troca de cabo (revisado 2026-07-23)
@@ -83,15 +84,17 @@
    termination de todas as VLANs de acesso, trunk 802.1q pro NE8000, ACL de gerência no padrão
    `IPV4_NOC_NETPAL`. **Nenhuma SVI, nenhum OSPF no DM4170.**
 3. 🆕 Montar no **NE8000** todas as SVIs + adjacências OSPF area1 que **antes seriam do DM4170**
-   (as 27 QinQ + 3 simples de serviço do [09](09-l2-mapeamento-vlans.md)) — mesmo padrão que já
+   (as 27 QinQ + 2 simples de serviço do [09](09-l2-mapeamento-vlans.md)) — mesmo padrão que já
    usa hoje pras VLANs de POP (`MK_POP_*`), tudo sobre o trunk novo vindo do DM4170. Pré-criar
    também: zonas de firewall (conforme [05](05-limpeza-politicas.md)), tudo
    **desativado/sem aplicar**. Pré-criar na **CCR1036**: regras de NAT (SRC-NAT geral +
-   DST-NAT Dude/TS SIX), também desativadas até a janela.
-4. Montar o novo serviço de VPN e migrar os 4 usuários (pode ser feito antes de tudo — a VPN nova
-   convive com a velha). **Atenção aos certificados:** o OpenVPN atual exige certificado de
-   cliente (`require-client-certificate=yes`) — exportar a CA/certs do MK ou reemitir para os 4
-   usuários, senão os clientes não conectam no serviço novo.
+   DST-NAT Dude/TS SIX). 🆕 A base atual da CCR (VLAN 16, `.4`, VLAN 100, default e SRC-NAT) foi
+   deixada **habilitada em bancada por decisão do usuário em 2026-08-06**; permanece isolada pelo
+   SFP desconectado. DST-NAT ainda não foi criado. Não conectar o trunk antes da coordenação com o
+   RB3011, que ainda usa `.1` na VLAN 100.
+4. ~~Montar a nova VPN antes do corte.~~ → ❌ **adiado pelo usuário em 2026-08-06:** WireGuard
+   somente depois de toda a migração concluída e validada. Não configurar VPN na bancada nem na
+   janela inicial.
 5. ~~Migrar as automações (backup/notificação) para o servidor escolhido.~~ ✅ **removido
    (2026-07-24):** as duas automações (backup FTP semanal, notificação netwatch→FocusChat) foram
    descartadas (decisão #6) — nada a migrar aqui.
@@ -99,7 +102,7 @@
 
 ### Fase 1 — Estágio
 1. DM4170 instalado no rack, ligado ao NE8000 pelo link 10GE novo (trunk 802.1q com todas as
-   VLANs de acesso QinQ-terminadas + as 3 simples de serviço). **Sem trunk para a rede de
+   VLANs de acesso QinQ-terminadas + as simples destinadas ao NE8000). **Sem trunk para a rede de
    acesso** — ela não será mexida; o cabo QinQ só muda na janela (fase 2).
 2. 🆕 **Validar as SVIs e adjacências OSPF já criadas no NE8000** (fase 0, item 3) contra o
    [09](09-l2-mapeamento-vlans.md) — como o DM4170 não fala OSPF (decisão #13), não há

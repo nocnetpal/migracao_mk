@@ -31,7 +31,7 @@
 | 7 | Passo 1 da limpeza — quais sistemas do firewall antigo ainda estão vivos | [05](05-limpeza-politicas.md) | 🟡 conscientemente adiado (2026-07-24) — voltar depois de fechar o resto |
 | 8 | ~~Portas/VLANs Proxmox HubSoft e Zabbix~~ | [03 #12](03-decisoes-pendentes.md) | ✅ **concluído (2026-08-05):** os 4 hypervisors estão `.10`–`.13` na VLAN 100; públicas tag 16, privadas untagged. Portas antigas RB750 `ether3/ether4` desativadas — ver [16](16-etapa1-proxmox-vlans-datacom.md) |
 | 9 | ~~Destino final das automações (backup FTP, netwatch→API)~~ | [03 #6](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — as duas descartadas, não migram, nada a implementar aqui |
-| 10 | VPN nova (L2TP+OpenVPN) implementada e testada na CCR1036 | [03 #5](03-decisoes-pendentes.md) | 🟡 destino definido, falta implementar/testar |
+| 10 | ~~VPN nova durante a migração~~ | [03 #5](03-decisoes-pendentes.md) | ✅ retirada da janela: WireGuard somente pós-migração |
 | 11 | Solução de acesso do NOC (EoIP morre com o MK) | [03 #8](03-decisoes-pendentes.md) | 🟡 NE8000 já libera `177.93.244.165` direto na ACL de gerência — provavelmente já resolvido, falta confirmar |
 | 12 | ~~Dimensionamento do NE8000 para +30 subinterfaces/adjacências OSPF novas~~ | [03 #13](03-decisoes-pendentes.md) | ✅ **confirmado (2026-07-24): capacidade livre** |
 
@@ -100,18 +100,17 @@ RB3011, SVI NE8000 down, NAT CCR off).
       todas as VLANs de acesso, trunk 802.1q pro NE8000, ACL de gerência no padrão
       `IPV4_NOC_NETPAL`. **Nenhuma SVI, nenhum OSPF nele.** 🆕 Incluir também: portas dos
       servidores locais (com transceiver SFP-RJ45 — a confirmar) + trunk novo pra CCR1036 com as
-      VLANs de gerência privada (correção 2026-07-24, ver [02](02-arquitetura-alvo.md))
+      VLAN 16 + VLANs privadas (100, 15/NTP e demais; ver [02](02-arquitetura-alvo.md))
 - [ ] 🆕 Montar no **NE8000** as SVIs + adjacências OSPF area1 das ~50 VLANs de acesso (27 QinQ +
-      3 simples de serviço) que antes seriam do DM4170 — mesmo padrão que já usa hoje pras VLANs
+      2 simples de serviço; VLAN 15/NTP vai para a CCR) — mesmo padrão que já usa hoje pras VLANs
       de POP (`MK_POP_*`) — ver [09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md)
-- [ ] Montar a config da CCR1036 em bancada (VLANs de gerência, NAT desativado, VPN, firewall) —
-      ver [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md)
+- [x] Base da CCR1036 montada em bancada (2026-08-06): RouterOS/RouterBOOT 7.23.3, VLANs 16/100,
+      `.4/27`, `.1/24`, SRC-NAT e firewall ativos, isolados pelo SFP desconectado. OSPF, VLAN 15,
+      ACL roteada e demais VLANs seguem pendentes — ver [10](10-enderecamento-ccr1036.md)
 - [ ] Pré-criar no NE8000, **desativado**: zonas de firewall ([05](05-limpeza-politicas.md)),
       subinterfaces pros links da CCR1036
-- [ ] Implementar e testar a VPN nova na CCR1036 com os 4 usuários (pode ser feito bem antes,
-      convive com a antiga) — exportar/reemitir certificados do OpenVPN atual
-      (`require-client-certificate=yes`)
-- [ ] Definir e testar a rota do IP de NAT até a CCR1036 (bloqueador #3)
+- [ ] WireGuard na CCR somente depois de toda a migração concluída e validada
+- [ ] Testar integrado: VLAN 16 `.4`↔`.1`, NAT, OSPF `.4`↔`.1`, VLAN 100 e VLAN 15/NTP
 - [ ] Trocar o IP do Proxmox Zabbix (`177.72.104.5` → privado novo) — **pode ser feito
       independente do resto**, é standalone, sem indisponibilidade real (checklist na
       [decisão #12](03-decisoes-pendentes.md))
@@ -134,14 +133,14 @@ RB3011, SVI NE8000 down, NAT CCR off).
 ### Fase 1 — Estágio (sem indisponibilidade)
 
 - [ ] DM4170 instalado no rack, link 10GE novo até o NE8000 ativo (trunk 802.1q com as VLANs de
-      acesso QinQ-terminadas + as 3 simples de serviço)
+      acesso QinQ-terminadas + VLANs simples destinadas ao NE8000)
 - [ ] 🆕 Validar as SVIs e adjacências OSPF **já criadas no NE8000** (T-14, item 3) contra o
       [09](09-l2-mapeamento-vlans.md) — o DM4170 não fala OSPF (decisão #13), só encaminha o
       trunk em L2; nada de "vizinho novo" a validar nele
 - [ ] Validar: tabela de rotas do NE8000 pras VLANs recém-criadas; FlowSpec e NetStream intactos
-- [ ] CCR1036 instalada, link até o NE8000 ativo (pro IP público do NAT) **e** 🆕 trunk novo até o
-      **DM4170** ativo (VLANs de gerência dos servidores locais — correção 2026-07-24); NAT/VPN/
-      firewall dela testados mas **sem assumir tráfego real ainda**
+- [ ] CCR1036 instalada com seu **único uplink**, o trunk até o DM4170 (VLAN 16 + privadas), ativo;
+      não existe link direto CCR↔NE8000. Validar `.4`↔`.1`, OSPF, NAT, VLAN 100 e VLAN 15/NTP antes
+      de assumir tráfego real
 
 > Até aqui, nada em produção mudou. Ponto seguro pra pausar se precisar.
 

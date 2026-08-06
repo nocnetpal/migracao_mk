@@ -15,8 +15,7 @@ flowchart LR
     CCRa[CCR1036]
     NE8000a[NE8000]
     DM4170a -->|"10GE trunk"| NE8000a
-    CCRa -->|"10GE NAT/VPN"| NE8000a
-    DM4170a -->|"trunk gerencia"| CCRa
+    DM4170a -->|"trunk VLAN 16 + privadas"| CCRa
   end
 
   subgraph faseB [Etapa B - so servidores 177]
@@ -47,9 +46,9 @@ janela QinQ futura — só serve OSPF/POP.
 
 **Não entra:** troca do trunk QinQ, POPs, OLTs, VLANs de acesso, recabeamento de hosts.
 
-**Entra:** 2× 10GE (NE8000↔DM4170, NE8000↔CCR) + trunk DM4170↔CCR (gerência privada); VLANs de
-servidor/gerência no DM4170 **sem** hosts plugados; prep de SVI `/27` e rota NAT no NE8000
-(desativadas ou sem conflito com o RB3011).
+**Entra:** 1× 10GE NE8000↔DM4170 + trunk DM4170↔CCR (VLAN 16 + redes privadas);
+VLANs de servidor/gerência no DM4170 **sem** hosts plugados; prep da SVI `/27` no NE8000 e do NAT
+na CCR (habilitados em bancada, isolados pelo SFP desconectado para não conflitar com o RB3011).
 
 ### A.1 Material
 
@@ -58,8 +57,7 @@ servidor/gerência no DM4170 **sem** hosts plugados; prep de SVI `/27` e rota NA
 | DM4170 24GX+12XS | 1 | Já no rack / bancada — [02](02-arquitetura-alvo.md) |
 | CCR1036 8G-2S+ | 1 | Variante fechada 2026-07-24 |
 | Link 10GE NE8000↔DM4170 | 1 | SFP+; porta livre no NE8000 a escolher |
-| Link 10GE NE8000↔CCR | 1 | SFP+; propósito = IP público do NAT |
-| Trunk DM4170↔CCR | 1 | GE ou 10GE; só VLANs de gerência privada |
+| Trunk DM4170↔CCR | 1 | GE ou 10GE; VLAN 16 (`.4/27`) + VLANs privadas |
 | SFP-RJ45 (1000BASE-T) | ~8 | **Só necessário na Etapa B** — pode comprar em paralelo |
 | Gerência OOB do DM4170/CCR | — | IP de mgmt fora do `/27` de produção (VLAN/ACL NOC) |
 
@@ -68,10 +66,9 @@ servidor/gerência no DM4170 **sem** hosts plugados; prep de SVI `/27` e rota NA
 | # | Link | Velocidade | VLANs nesta etapa | Estado após A |
 |---|---|---|---|---|
 | 1 | NE8000 ↔ DM4170 | 10GE | VLAN 16 (prep) + VLANs de gerência privada dos clusters (prep) — **sem** QinQ de acesso | UP, sem hosts |
-| 2 | NE8000 ↔ CCR1036 | 10GE | Link dedicado NAT/VPN (sem VLAN de servidor) | UP; NAT **off** |
-| 3 | DM4170 ↔ CCR1036 | GE/10GE trunk | `vlan66`, `vlan116`, `vlan10`, `vlan999`, `vlan109` + VLAN 100 das gerências Proxmox ([10](10-enderecamento-ccr1036.md), decisão #12) | UP; sem servidores |
-| 4 | QinQ `sfp1` RB3011 | — | — | **não mexer** |
-| 5 | Servidores → DM4170 | — | — | **Etapa B** |
+| 2 | DM4170 ↔ CCR1036 | GE/10GE trunk | VLAN 16 + `vlan66`, `vlan116`, `vlan10`, `vlan999`, `vlan109` + VLAN 100 | UP; sem servidores |
+| 3 | QinQ `sfp1` RB3011 | — | — | **não mexer** |
+| 4 | Servidores → DM4170 | — | — | **Etapa B** |
 
 ### A.3 Config — DM4170 (só L2, decisão #13)
 
@@ -83,8 +80,7 @@ Checklist (bancada ou rack, **sem** tráfego de produção):
 - [ ] Criar VLANs de gerência privada do [10](10-enderecamento-ccr1036.md) (`vlan66`, `vlan116`,
       `vlan10`, `vlan999`, `vlan109` + as duas da decisão #12 quando fecharem)
 - [ ] Porta 10GE → NE8000: trunk com VLAN 16 + VLANs de gerência acima
-- [ ] Porta → CCR: trunk **somente** VLANs de gerência (sem VLAN 16 pública neste link —
-      [10](10-enderecamento-ccr1036.md))
+- [ ] Porta → CCR: trunk com VLAN 16 pública + VLANs privadas ([10](10-enderecamento-ccr1036.md))
 - [ ] Portas GE dos servidores: criar/nomear placeholders (mapa § A.5), deixar `shutdown` ou sem cabo
 - [ ] **Não** configurar QinQ termination de acesso nesta etapa (fica pra janela futura)
 
@@ -92,7 +88,6 @@ Checklist (bancada ou rack, **sem** tráfego de produção):
 
 - [ ] Porta 10GE nova ↔ DM4170: subinterfaces / trunk L2 para VLAN 16 + gerências (mesmo padrão
       `Gi0/1/8.xxx` dos POPs, IDs a definir na config)
-- [ ] Porta 10GE nova ↔ CCR1036: link L3 (ou subinterface) só para NAT/VPN
 - [ ] **Prep** SVI do `177.72.104.0/27` (gateway alvo = `.1` no NE8000) — **não ativar como
       dono do bloco enquanto o RB3011 ainda tiver `177.72.104.1/27`** (conflito ARP). Opções
       seguras na Etapa A: interface `shutdown`, ou IP temporário de teste fora do `/27`, ou
@@ -107,11 +102,11 @@ Checklist (bancada ou rack, **sem** tráfego de produção):
 
 ### A.5 Config — CCR1036
 
-- [ ] Link 10GE ↔ NE8000 UP; endereço do lado CCR no link de NAT (privado do enlace P2P)
-- [ ] Trunk ↔ DM4170 com VLANs de gerência; IPs de teste só se houver loopback/bancada
-- [ ] Regras SRC-NAT + DST-NAT Dude/TS SIX **criadas e desabilitadas**
-- [ ] IP `177.72.104.4` **não** anunciado em produção até Etapa B (e até a rota #9 existir)
-- [ ] VPN (L2TP/OpenVPN) pode ser montada e testada em paralelo — convive com a do RB3011
+- [ ] Trunk ↔ DM4170 com VLAN 16 + VLANs privadas
+- [x] SRC-NAT, VLAN 16 `.4` e VLAN 100 `.1` criados e habilitados em bancada; SFP desconectado
+- [ ] DST-NAT Dude/TS SIX: decidir `.1` vs `.4` e criar regras
+- [ ] OSPF `.4`↔`.1`, ACL roteada e VLAN 15/NTP `.9/30`: desenhados, ainda não aplicados
+- [ ] WireGuard: **não configurar agora**; somente pós-migração
 - [ ] Automações: **não migrar** (decisão #6)
 
 ### A.6 Mapa porta DM4170 (placeholders — Etapa B pluga)
@@ -132,7 +127,7 @@ Numeração sugerida nas 24× GE SFP (ajustar no rack). Uplink 10GE usa as XS, n
 | GE9 | CGNAT-1 mgmt `.66` | a confirmar cobre/fibra | a confirmar |
 | GE10 | Gerência NE8000 (sai do RB750) | a confirmar | a confirmar |
 | XS1 | Trunk 10GE → NE8000 | SFP+ | trunk |
-| XS2 | Trunk → CCR1036 | SFP+ ou GE | trunk gerência |
+| XS2 | Trunk → CCR1036 | SFP+ ou GE | VLAN 16 + VLANs privadas, incluindo 100 e 15 |
 | — | QinQ acesso | — | **fora desta fase** |
 
 Régua Volt: **não migra**. WireGuard `.19`: física a confirmar ([14](14-ips-servidores-e-17772.md)).
@@ -148,14 +143,13 @@ Régua Volt: **não migra**. WireGuard `.19`: física a confirmar ([14](14-ips-s
 | Teste | Esperado |
 |---|---|
 | Link físico NE8000↔DM4170 | UP, sem erro de óptica |
-| Link físico NE8000↔CCR | UP |
 | Trunk DM4170↔CCR | UP; VLANs aprendidas nos dois lados |
 | Ping gerência DM4170 ↔ NE8000 / CCR | OK (OOB ou VLAN de mgmt) |
-| Ping gerência CCR ↔ NE8000 no link NAT | OK no endereço do enlace |
+| Ping CCR `.4` ↔ NE8000 `.1` pela VLAN 16/DM4170 | OK quando habilitado para teste controlado |
 | Sessão BGP FlowSpec / NetStream no NE8000 | **Intactos** — ainda via RB3011 / `.27` no caminho antigo |
 | OSPF area1 RB3011↔NE8000 | Intacta |
 | ARP / gateway `177.72.104.1` | **Ainda no RB3011** — NE8000 não compete |
-| NAT na CCR | Desligado |
+| NAT na CCR | Configurado/ativo, mas sem tráfego porque o SFP permanece desconectado |
 | Servidores | Ainda no RB2011 / RB750 / ether do RB3011 |
 
 ### A.8 Rollback Etapa A
@@ -194,8 +188,8 @@ Lista completa de hosts: [14](14-ips-servidores-e-17772.md).
 | 2 | ~~Portas/VLANs Proxmox HubSoft e Zabbix~~ | [03 #12](03-decisoes-pendentes.md) | ✅ concluído em 2026-08-05; os 4 Proxmox estão organizados em VLAN 100/16 |
 | 3 | SFP-RJ45 no rack | [02](02-arquitetura-alvo.md) | Plugar qualquer servidor cobre |
 
-Etapa A pode avançar com (1) e (2) ainda abertos — mas (1) tem que fechar **ainda na A** (teste
-de rota no link NE8000↔CCR) antes de declarar A “pronta pra B”.
+Etapa A pode avançar com (1) ainda sem teste integrado, mas ele precisa fechar **ainda na A**:
+validar o caminho L2 da VLAN 16 e os gateways privados na CCR antes de declarar A “pronta pra B”.
 
 ---
 

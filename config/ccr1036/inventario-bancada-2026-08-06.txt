@@ -1,0 +1,70 @@
+MikroTik RouterOS 6.48.3 (c) 1999-2021
+
+jan/02/1970 00:00:21 system,error,critical router rebooted without proper shutdown, probably power outage
+[admin@MikroTik] > /system resource print
+             uptime: 1m21s
+            version: 6.48.3 (stable)
+         build-time: May/25/2021 06:09:45
+   factory-software: 6.43.5
+        free-memory: 3732.9MiB
+       total-memory: 3968.0MiB
+                cpu: tilegx
+          cpu-count: 36
+      cpu-frequency: 1200MHz
+           cpu-load: 0%
+     free-hdd-space: 881.4MiB
+    total-hdd-space: 1024.0MiB
+  architecture-name: tile
+         board-name: CCR1036-8G-2S+
+           platform: MikroTik
+
+[admin@MikroTik] > /system routerboard print
+       routerboard: yes
+             model: CCR1036-8G-2S+
+          revision: r2
+     serial-number: 968E0A898BCE
+     firmware-type: tilegx
+  factory-firmware: 6.43.10
+  current-firmware: 6.48.3
+  upgrade-firmware: 6.48.3
+[admin@MikroTik] > /system package print
+Flags: X - disabled 
+ #   NAME                  VERSION  SCHEDULED
+ 0   routeros-tile         6.48.3
+ 1   system                6.48.3
+ 2 X ipv6                  6.48.3
+ 3   wireless              6.48.3
+ 4   hotspot               6.48.3
+ 5   mpls                  6.48.3
+ 6   routing               6.48.3
+ 7   ppp                   6.48.3
+ 8   dhcp                  6.48.3
+ 9   security              6.48.3
+10   advanced-tools        6.48.3
+[admin@MikroTik] > /interface ethernet print detail
+Flags: X - disabled, R - running, S - slave 
+ 0 R  name="ether1" default-name="ether1" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:72 orig-mac-address=74:4D:28:57:0C:72 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 1    name="ether2" default-name="ether2" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:73 orig-mac-address=74:4D:28:57:0C:73 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 2    name="ether3" default-name="ether3" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:74 orig-mac-address=74:4D:28:57:0C:74 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 3    name="ether4" default-name="ether4" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:75 orig-mac-address=74:4D:28:57:0C:75 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 4    name="ether5" default-name="ether5" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:76 orig-mac-address=74:4D:28:57:0C:76 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 5    name="ether6" default-name="ether6" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:77 orig-mac-address=74:4D:28:57:0C:77 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 6    name="ether7" default-name="ether7" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:78 orig-mac-address=74:4D:28:57:0C:78 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 7    name="ether8" default-name="ether8" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:79 orig-mac-address=74:4D:28:57:0C:79 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=10M-full,100M-full,1000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=1Gbps bandwidth=unlimited/unlimited
+
+ 8    name="sfp-sfpplus1" default-name="sfp-sfpplus1" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:70 orig-mac-address=74:4D:28:57:0C:70 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=1000M-full,10000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=10Gbps bandwidth=unlimited/unlimited sfp-shutdown-temperature=95C
+
+ 9    name="sfp-sfpplus2" default-name="sfp-sfpplus2" mtu=1500 l2mtu=1580 mac-address=74:4D:28:57:0C:71 orig-mac-address=74:4D:28:57:0C:71 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m auto-negotiation=yes advertise=1000M-full,10000M-full full-duplex=yes tx-flow-control=off rx-flow-control=off speed=10Gbps bandwidth=unlimited/unlimited sfp-shutdown-temperature=95C
+[admin@MikroTik] > /ip address print detail
+Flags: X - disabled, I - invalid, D - dynamic
+[admin@MikroTik] > /ip route print detail
+Flags: X - disabled, A - active, D - dynamic, C - connect, S - static, r - rip, b - bgp, o - ospf, m - mme, B - blackhole, U - unreachable, P - prohibit
+[admin@MikroTik] > /system identity print
+  name: MikroTik
