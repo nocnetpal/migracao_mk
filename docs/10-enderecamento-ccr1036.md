@@ -27,7 +27,8 @@
 > 🆕 **Correção do usuário (2026-07-24): os servidores locais não plugam mais direto na CCR1036.**
 > Toda a agregação física de servidores passa a ser no **DM4170** (que tem 24 portas GE ópticas
 > de sobra e passa a ser o ponto físico único — POPs + servidores). O DM4170 entrega essas VLANs
-> de gerência privada (`vlan10`, `vlan66`, `vlan109`, `vlan116`, `vlan999` etc.) pra CCR1036 num
+> de gerência privada (`vlan66`, `vlan109`, `vlan116` etc.; ~~`vlan10`~~ e ~~`vlan999`~~ fora do plano
+> em 2026-08-06) pra CCR1036 num
 > **trunk 802.1q novo** (não mais porta-a-porta). ✅ **Correção final de 2026-08-06:** a CCR1036
 > passa a ter só **uma porta de uplink em uso**, o trunk pro DM4170; não haverá link direto com o
 > NE8000. Isso **derruba a demanda por portas RJ45** que motivava a variante 12G-4S — ver nota na
@@ -101,12 +102,12 @@ endereçamento da CCR1036/NE8000 para esses clusters.**
 | VLAN (no trunk DM4170↔CCR1036) | Dispositivo (Dude) | IP / rede hoje | Porta no DM4170 | Gateway no alvo | Observação |
 |---|---|---|---|---|---|
 | `vlan100` | **4 Proxmox** | `192.168.254.10`–`.13/24` | portas GE dos hosts | **CCR `192.168.254.1/24`** | Primeira VLAN privada preparada na CCR |
-| `vlan15` | **NTP container Docker** | `192.168.116.10/30` | Docker `enp8s0f1.15` via porta do Proxmox | **CCR `192.168.116.9/30`** | Toda a NetPal consulta UDP/123; desenhada, ainda não configurada |
-| `vlan66` | **TS SIX** | `192.168.66.14/28` | porta GE dedicada (SFP-RJ45) | **CCR `192.168.66.1/28`** | DST-NAT `:15389` continua apontando pra cá |
-| `vlan116` | **Dude / legado local** | `192.168.116.28/30` etc. | porta GE dedicada (SFP-RJ45) | **CCR (IP atual do RB3011 a consolidar)** | Não confundir com Proxmox Docker, já migrado para VLAN 100 |
-| `vlan10` | **DNS recursivo** | `10.200.255.254/30` | porta GE dedicada (SFP-RJ45) | **CCR `10.200.255.253/30`** | IP vem do RB3011 |
-| `vlan109` | **OLT CPV** | `192.168.115.42/30` | porta GE dedicada (SFP-RJ45) | **CCR `192.168.115.41/30`** | Gerência da OLT |
-| `vlan999` | **Callcenter futuro** | a definir | porta futura | **CCR, a definir** | Não é a VLAN dos Proxmox; gerência deles está na VLAN 100 |
+| `vlan15` | **NTP container Docker** | `192.168.116.10/30` | Docker `enp8s0f1.15` via porta do Proxmox | **CCR `192.168.116.9/30`** | ✅ aplicado na CCR em 2026-08-06; toda a NetPal consulta UDP/123 |
+| `vlan66` | **TS SIX** | `192.168.66.14/28` | porta GE dedicada (SFP-RJ45) | **CCR `192.168.66.1/28`** | ✅ aplicado na CCR em 2026-08-06; DST-NAT `:15389` continua aguardando decisao #9 |
+| `vlan116` | **Dude / legado local** | `192.168.116.28/30` etc. | porta GE dedicada (SFP-RJ45) | **CCR `192.168.116.29/30`** | ✅ aplicado na CCR em 2026-08-06; nao confundir com Proxmox Docker, ja migrado para VLAN 100 |
+| ~~`vlan10`~~ | ~~**DNS recursivo**~~ | ~~`10.200.255.254/30`~~ | ~~porta GE dedicada (SFP-RJ45)~~ | ~~**CCR `10.200.255.253/30`**~~ | ❌ **fora do plano da CCR (usuário, 2026-08-06)** |
+| `vlan109` | **OLT CPV** | `192.168.115.42/30` | porta GE dedicada (SFP-RJ45) | **CCR `192.168.115.41/30`** | ✅ aplicado na CCR em 2026-08-06; gerencia da OLT |
+| ~~`vlan999`~~ | ~~**Callcenter futuro**~~ | ~~a definir~~ | ~~porta futura~~ | ~~**CCR, a definir**~~ | ❌ **saiu do plano (usuário, 2026-08-06)** — quando existir, decide-se o caminho |
 | ✅ `vlan210` | ~~Proxmox HubSoft~~ | — | — | — | ~~substituído~~ → modelo 2 VLANs: **100**+**16** ([16](16-etapa1-proxmox-vlans-datacom.md), 2026-07-27) |
 | ✅ `vlan138` | ~~Proxmox DNS~~ | — | — | — | idem — gerência na **100**, público na **16** |
 
@@ -120,16 +121,17 @@ endereçamento da CCR1036/NE8000 para esses clusters.**
 > com folga.
 
 > ✅ **Esclarecido (usuário, 2026-07-23):** "Callcenter" não aparece no Dude porque **ainda não
-> existe** — é um sistema novo a ser implantado, não um serviço a migrar. `vlan999` fica reservada
-> também para ele quando entrar em produção; hoje ela só carrega o Proxmox Zabbix.
+> existe** — é um sistema novo a ser implantado, não um serviço a migrar. ❌ **Saiu do plano
+> (usuário, 2026-08-06):** sem `vlan999` reservada na CCR; quando o Callcenter existir, decide-se o
+> caminho.
 
 > ✅ **Pendência resolvida (2026-07-24):** `192.168.115.210` (HubSoft) e `192.168.115.138` (DNS)
 > confirmados por `ip -4 -o addr show` direto nos hosts físicos `px-hubsoft` e `proxmox-dns` —
 > `vmbr0` com esses IPs em cada um, mesmo padrão do Docker (`.116.122`), é gerência do próprio
 > hypervisor. ✅ **Concluído (2026-08-05):** os 4 hypervisors estão com gerência na VLAN 100
 > (`192.168.254.11` Docker, `.12` DNS, `.13` HubSoft, `.10` Zabbix) — ver [16](16-etapa1-proxmox-vlans-datacom.md).
-> A "mgmt privada nova" do Zabbix passou a ser a VLAN 100 (mesma dos demais); `vlan999` fica
-> reservada só para o Callcenter futuro.
+> A "mgmt privada nova" do Zabbix passou a ser a VLAN 100 (mesma dos demais); ~~`vlan999`~~ ❌ saiu
+> do plano junto com o Callcenter (2026-08-06).
 >
 > ✅ **Resolvido pra HubSoft (2026-07-24):** `/interface bridge host print` no **RB3011** (o
 > equipamento antigo) mostrou que os MACs das VMs do cluster HubSoft (`HUBSOFT`, `HUBSOFT-RADIUS`)
@@ -188,11 +190,9 @@ Internet → NE8000 (GW .1 do 177.72.104.0/27, VLAN16)
 /interface ethernet set [ find default-name=ether1 ] name=ether1-trunk-dm4170
 
 /interface vlan add name=vlan16-ip-publico      vlan-id=16  interface=ether1-trunk-dm4170
-/interface vlan add name=vlan10-dns-recursivo   vlan-id=10  interface=ether1-trunk-dm4170
 /interface vlan add name=vlan66-ts-six          vlan-id=66  interface=ether1-trunk-dm4170
 /interface vlan add name=vlan109-gerencia-olt   vlan-id=109 interface=ether1-trunk-dm4170
 /interface vlan add name=vlan116-proxmox-docker vlan-id=116 interface=ether1-trunk-dm4170
-/interface vlan add name=vlan999-mgmt-local     vlan-id=999 interface=ether1-trunk-dm4170
 
 # IP público NAT — dentro do /27 (VLAN 16), GW = NE8000 .1
 /ip address add address=177.72.104.4/27 interface=vlan16-ip-publico comment="NAT CCR"
@@ -217,7 +217,8 @@ add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-po
 - **TS SIX** continua `192.168.66.14/28` — gateway `192.168.66.1` passa do RB3011 para a CCR.
 - ~~**Proxmox Docker/CDNTV** continua `192.168.116.122/30`.~~ → ✅ migrou para
   `192.168.254.11/24` na VLAN 100 em 2026-08-05; gateway passa do RB3011 para a CCR.
-- **DNS recursivo** continua `10.200.255.254/30` — gateway passa para a CCR.
+- ~~**DNS recursivo** continua `10.200.255.254/30` — gateway passa para a CCR.~~ → ❌ **fora do plano
+  da CCR (usuário, 2026-08-06)**
 - **OLT CPV** continua `192.168.115.42/30` — gateway passa para a CCR.
 - **Proxmox Zabbix/Callcenter** ganha um IP privado novo na VLAN 100 para gerência; o IP
   público `177.72.104.5/6` migra para a **segunda NIC** (VLAN16 / rede de acesso).
@@ -230,7 +231,7 @@ add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-po
 ## Interfaces privadas que a CCR precisa criar (no trunk com o DM4170)
 
 ```text
-vlan10  -> 10.200.255.253/30   (DNS recursivo)
+vlan10  -> ~~10.200.255.253/30~~ ❌ removido do plano (usuário, 2026-08-06) — DNS recursivo não entra na CCR
 vlan15  -> 192.168.116.9/30    (NTP container Docker .10)
 vlan66  -> 192.168.66.1/28     (TS SIX)
 vlan100 -> 192.168.254.1/24    (gerência dos 4 Proxmox)

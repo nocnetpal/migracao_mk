@@ -111,7 +111,8 @@ RB3011, SVI NE8000 down, NAT CCR off).
 - [ ] Pré-criar no NE8000, **desativado**: zonas de firewall ([05](05-limpeza-politicas.md)),
       subinterfaces pros links da CCR1036
 - [ ] WireGuard na CCR somente depois de toda a migração concluída e validada
-- [ ] Testar integrado: VLAN 16 `.4`↔`.1`, NAT, OSPF `.4`↔`.1`, VLAN 100 e VLAN 15/NTP
+- [ ] Testar integrado: VLAN 16 `.4`↔`.1`, NAT, OSPF `.4`↔`.1`, VLAN 100, VLAN 15/NTP, VLAN 66
+  (TS SIX), VLAN 109 (OLT CPV) e VLAN 116 (Dude)
 - [ ] Trocar o IP do Proxmox Zabbix (`177.72.104.5` → privado novo) — **pode ser feito
       independente do resto**, é standalone, sem indisponibilidade real (checklist na
       [decisão #12](03-decisoes-pendentes.md))
@@ -183,7 +184,7 @@ minutos → religar `sfp1` no RB3011 (rollback é imediato, o MK está intacto).
 ### Validação final da janela
 
 - [ ] Adjacências OSPF: mesmo número de vizinhos de antes (NE8000 + POPs)
-- [ ] DNS recursivo (`10.200.255.253`) e DNS públicos (`.28`/`.58`/`.59`) respondendo
+- [ ] ~~DNS recursivo (`10.200.255.253`)~~ → ❌ fora do plano da CCR (usuário, 2026-08-06) — e DNS públicos (`.28`/`.58`/`.59`) respondendo
 - [ ] DHCP do gerador MST entregando lease
 - [ ] ~~VPN nova: os 4 usuários conectam~~ — VPN não migra no corte; WireGuard só pós-migração
       (decisão #5, [03](03-decisoes-pendentes.md)). O WireGuard antigo (RB750 `.19`) deve seguir

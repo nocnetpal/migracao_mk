@@ -29,7 +29,7 @@
 | 18 | SERVERINO | sfp1 (simples) | tag 18: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | |
 | 23 | SERVIDOR CDN TV | Proxmox `enp8s0f0`/`vmbr2` → **SW_JDF `XGE0/0/14` untagged** → `XGE0/0/1` tagged | **preservar no SW_JDF; fora do DM4170** | **NE8000** `Gi0/1/8.23`, `177.72.104.105/29` | `.107` Origin, `.108` Edge, `.109` Docker-Netpal; **não misturar com VLAN 16** e não aplicar tag no Proxmox |
 | 1066 | GERADOR MST | sfp1 (simples) | tag 1066: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | Único DHCP vivo (`192.168.90.0/24`) — escopo migra junto (decidir onde na config do NE8000) |
-| 10 | SERVIDOR DNS RECURSIVO | taggeada sobre `ether8` | servidor → DM4170 → trunk CCR | **CCR** `10.200.255.253/30` | Gerência privada do servidor local |
+| ~~10~~ | ~~SERVIDOR DNS RECURSIVO~~ | ~~taggeada sobre `ether8`~~ | ❌ **não entra na CCR (usuário, 2026-08-06)** | ~~CCR `10.200.255.253/30`~~ | ~~Gerência privada do servidor local~~ — reclassificado: IP `10.200.255.253/30` removido do plano da CCR |
 
 > ⚠️ **Ponto em aberto (VLAN 16):** hoje o domínio L2 "IP Público" = VLAN16 vinda da rede de
 > acesso + 4 servidores locais no RB3011. No alvo, o braço da rede de acesso atravessa o DM4170
@@ -116,7 +116,7 @@ da `ether1` ("REGUA VOLT"), e a **VLAN 28** (link MK↔NE8000, que deixa de exis
 | VLAN | Uso | IDs |
 |---|---|---|
 | Trunk DM4170 ↔ NE8000 | Carrega as VLANs de acesso QinQ-terminadas, simples destinadas ao NE8000 e VLAN 16; DM4170 não fala OSPF | **a definir** (não reutilizar 28) |
-| Trunk DM4170 ↔ CCR1036 | VLAN 16 + VLANs privadas locais (100, 15, 10, 66, 109 e demais consolidadas) | IDs reais |
+| Trunk DM4170 ↔ CCR1036 | VLAN 16 + VLANs privadas locais (100, 15, 66, 109, 116 e demais consolidadas; ~~10 e 999~~ fora do plano — 2026-08-06) | IDs reais |
 | Gerência | VLAN única de management (modelo `IPV4_NOC_NETPAL` — passo 3 do [05](05-limpeza-politicas.md)) | **a definir** |
 
 ## 6. Armadilhas e pendências L2

@@ -157,7 +157,7 @@ Migrar em bloco, na mesma janela:
 - [ ] Um ping/gerência por site: cada OLT, cada SW, cada POP (usar a tabela do [08](08-vlans-e-portas.md))
 - [ ] **MTU fim a fim**: ping com DF e payload grande (ex.: 1500) para um POP QinQ e para um
       servidor da VLAN 16 — valida baby giants no trunk novo e o MSS-clamp equivalente
-- [ ] DNS recursivo (`10.200.255.253`) e DNS públicos (`.28/.58/.59`) respondendo
+- [ ] ~~DNS recursivo (`10.200.255.253`)~~ → ❌ fora do plano da CCR (usuário, 2026-08-06) — e DNS públicos (`.28/.58/.59`) respondendo
 - [ ] Hubsoft/Fusion/VOIP acessíveis de fora (os que o passo 1 confirmar como vivos)
 - [ ] DHCP do gerador MST entregando lease
 - [ ] ~~VPN nova: os 4 usuários conectam~~ — VPN não migra no corte; WireGuard só pós-migração

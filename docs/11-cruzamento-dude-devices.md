@@ -136,7 +136,7 @@ demais servidores do Passo 1 do [05](05-limpeza-politicas.md).
 | `CGNAT 1/2 - Jardim Formoso` | `177.72.104.66` / `.102` | Batem exatamente com os `ip route-static` de CGNAT do NE8000 ([06](06-ne8000-bgp-core.md)) |
 | `BRAS - PPPoE - Jardim Formoso` | `10.200.255.240` | Identifica o alvo antes anônimo da regra `accept chain=forward dst-address=10.200.255.240` no RB3011 |
 
-## ✅ Resolvido: "Callcenter" não está no Dude porque ainda não existe
+## ✅ Resolvido: "Callcenter" não está no Dude porque ainda não existe (e saiu do plano — 2026-08-06)
 
 O `Devices.csv` não tem nenhum device chamado "Callcenter" — só o mapa/categoria `Proxmox Zabbix`,
 que agrupa vários hosts, não um host específico. A ausência tinha duas explicações possíveis (nome

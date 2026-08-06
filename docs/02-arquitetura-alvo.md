@@ -39,8 +39,8 @@
                      nenhuma SVI)
                     │         │
        trunk QinQ   │         └─ 🆕 servidores locais (VLANs de gerência
-       (o cabo que  │            privada, tagged) — TS SIX, Proxmox CDNTV,
-        hoje está   │            DNS recursivo, Callcenter/Zabbix, OLT ZTE
+        (o cabo que  │            privada, tagged) — TS SIX, Proxmox CDNTV,
+         hoje está   │            ~~DNS recursivo~~/~~Callcenter~~ (fora do plano da CCR — 2026-08-06), Zabbix, OLT ZTE
         na sfp1     │
         do MK)      │
                      rede de acesso (QinQ) — fora do escopo,
@@ -130,7 +130,8 @@
   VLAN vira uma subinterface roteada diretamente no NE8000, que fala OSPF com os POPs do outro
   lado do trunk (o DM4170 só encaminha os frames). Não reutilizar a VLAN 28 do MK, que morre com ele.
 - 🆕 **DM4170 ↔ CCR1036**: trunk 802.1q novo, carrega a **VLAN 16** (`177.72.104.4/27`) e as VLANs
-  privadas dos servidores locais (`vlan10`, `vlan66`, `vlan109`, `vlan116`, `vlan999`) — caminho
+  privadas dos servidores locais (`vlan66`, `vlan109`, `vlan116`; ~~`vlan10`~~/~~`vlan999`~~ fora do
+  plano — 2026-08-06) — caminho
   L2 do IP público confirmado pelo usuário em 2026-08-06. Os servidores plugam fisicamente no
   DM4170; o switch só encaminha essas VLANs até a CCR1036.
 - ~~**NE8000 ↔ CCR1036 direto**~~: ❌ descartado em 2026-08-06. Todo o caminho da CCR até o

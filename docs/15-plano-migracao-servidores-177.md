@@ -66,7 +66,7 @@ na CCR (habilitados em bancada, isolados pelo SFP desconectado para não conflit
 | # | Link | Velocidade | VLANs nesta etapa | Estado após A |
 |---|---|---|---|---|
 | 1 | NE8000 ↔ DM4170 | 10GE | VLAN 16 (prep) + VLANs de gerência privada dos clusters (prep) — **sem** QinQ de acesso | UP, sem hosts |
-| 2 | DM4170 ↔ CCR1036 | GE/10GE trunk | VLAN 16 + `vlan66`, `vlan116`, `vlan10`, `vlan999`, `vlan109` + VLAN 100 | UP; sem servidores |
+| 2 | DM4170 ↔ CCR1036 | GE/10GE trunk | VLAN 16 + `vlan66`, `vlan116`, ~~`vlan10`~~/~~`vlan999`~~ (fora — 2026-08-06), `vlan109` + VLAN 100 | UP; sem servidores |
 | 3 | QinQ `sfp1` RB3011 | — | — | **não mexer** |
 | 4 | Servidores → DM4170 | — | — | **Etapa B** |
 
@@ -78,7 +78,7 @@ Checklist (bancada ou rack, **sem** tráfego de produção):
 - [ ] **Nenhuma SVI, nenhum OSPF** no DM4170
 - [ ] Criar VLAN 16 (IP Público) — tagged no trunk pro NE8000; **sem** access ports de servidor ainda
 - [ ] Criar VLANs de gerência privada do [10](10-enderecamento-ccr1036.md) (`vlan66`, `vlan116`,
-      `vlan10`, `vlan999`, `vlan109` + as duas da decisão #12 quando fecharem)
+      ~~`vlan10`~~/~~`vlan999`~~ — fora do plano (2026-08-06), `vlan109` + as duas da decisão #12 quando fecharem)
 - [ ] Porta 10GE → NE8000: trunk com VLAN 16 + VLANs de gerência acima
 - [ ] Porta → CCR: trunk com VLAN 16 pública + VLANs privadas ([10](10-enderecamento-ccr1036.md))
 - [ ] Portas GE dos servidores: criar/nomear placeholders (mapa § A.5), deixar `shutdown` ou sem cabo
