@@ -159,8 +159,9 @@ igual aos servidores — IP `177.72.104.4`. ~~`/32` via P2P~~ e ~~`10.254.254.x`
 1. **IP de NAT:** `177.72.104.4` na VLAN 16.
 2. **Como chega:** L2 no broadcast do `/27` (DM4170 entrega VLAN 16 à CCR; NE8000 é o GW `.1`).
    Sem rota host especial — ARP resolve `.4` como qualquer outro servidor do bloco.
-3. **DST-NAT Dude/TS SIX:** ainda aberto — portas hoje no `.1`; migrar pra `.4`?
-   Alcance até Dude/TS SIX via VLANs de gerência no trunk DM4170 — ver [08](08-vlans-e-portas.md).
+3. **DST-NAT Dude/TS SIX:** ✅ **fechado (usuário, 2026-08-06): movem para a CCR `.4`.** Quem
+   acessa de fora passa a usar `177.72.104.4`; o NE8000 não recebe NAT server nem rota `.1/32`
+   (NAT fica só na CCR). Script: `07-dstnat-dude-tssix.rsc`.
 
 ```
 Internet → NE8000 (GW .1 do 177.72.104.0/27, VLAN16)

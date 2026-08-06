@@ -402,13 +402,15 @@ encaminhado às redes privadas fica restrito a `177.72.104.19/32`, `177.93.244.1
 `192.168.116.8/30` passivamente no OSPF e permite UDP/123 para toda a rede roteada NetPal. A lista
 exata de prefixos de origem ainda precisa ser consolidada antes da regra de firewall.
 
-**Ainda aberto (DST-NAT):** port-forwards Dude/TS SIX hoje no `.1` — passam pro `.4` (quem acessa
-de fora atualiza) ou o NE8000 também roteia `.1/32` pra CCR? A confirmar. Ver
-[10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
+~~**Ainda aberto (DST-NAT):** port-forwards Dude/TS SIX hoje no `.1` — passam pro `.4` (quem acessa
+de fora atualiza) ou o NE8000 também roteia `.1/32` pra CCR? A confirmar.~~ → ✅ **Resolvido
+(usuário, 2026-08-06): os DST-NAT movem para a CCR `.4`.** Quem acessa de fora atualiza o IP de
+destino para `177.72.104.4`; o NE8000 não recebe NAT server nem rota `.1/32` (NAT fica só na CCR,
+conforme decisão). Ver [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
 
 **Status:** ✅ **Opção B** (NE8000 dono do `/27`) + ✅ **CCR dentro do `/27` com `.4` na
-VLAN 16** (2026-07-27) + ✅ caminho L2 via DM4170 + gateways privados na CCR (2026-08-06).
-Pendência restante: DST-NAT Dude/TS SIX no `.1` vs `.4`.
+VLAN 16** (2026-07-27) + ✅ caminho L2 via DM4170 + gateways privados na CCR (2026-08-06) +
+✅ **DST-NAT Dude/TS SIX na CCR `.4`** (2026-08-06).
 
 ## 10. ~~Possível sobreposição no `177.72.104.60/30`~~ (enlace Juca Ana) — ✅ resolvido
 

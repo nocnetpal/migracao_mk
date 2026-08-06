@@ -49,7 +49,13 @@ RB3011 ainda usar `192.168.254.1` na VLAN 100.
   SIX), `vlan109` (`192.168.115.41/30` OLT CPV) e `vlan116` (`192.168.116.29/30` Dude).~~ →
   ✅ **aplicado em 2026-08-06** (script `06`). ~~vlan10 (DNS recursivo)~~ e ~~vlan999
   (Callcenter)~~ foram removidos do plano pelo usuario em 2026-08-06.
-- DST-NAT Dude/TS SIX: decisao `.1` versus `.4` continua aberta.
+- ~~DST-NAT Dude/TS SIX: decisao `.1` versus `.4` continua aberta.~~ → ✅ **decisao #9 fechada
+  (usuário, 2026-08-06): DST-NAT movem para a CCR `.4`** (`07-dstnat-dude-tssix.rsc`). Quem acessa
+  de fora passa a usar `177.72.104.4`. NE8000 sem NAT server nem rota `.1/32`.
+- `07` e `08` aplicados e validados: DST-NAT Dude (`:18291`→`192.168.116.30:8291`) e TS SIX
+  (`:15389`→`192.168.66.14:15389`) ativos; `NAT-PRIVADAS` agora com VLAN 100, 66 e 116 (OLT 109
+  fica fora do NAT, igual ao RB3011 — so gerencia). Consulta DNS dos servidores privados aos DNS
+  publicos `.28/.58/.59` sai mascarada como `.4` pela VLAN 16 — sem regra DNS especifica.
 - WireGuard: somente depois de toda a migracao concluida e validada.
 
 ## Hardware
