@@ -40,7 +40,7 @@ gerência) ainda têm o caminho de rede **não confirmado**.
 | OpenVPN - 2 (`OpenVPN2`) | `177.72.104.12` ✅ (+ `10.254.0.30` interno) | `62:B2:A1:0A:B1:AE` | VM pública |
 | Fusion - VoIP - Painéis Simples (`Fusion-Painel-Simples`) | `177.72.104.25` ✅ | `0E:C8:34:76:59:4E` | VM pública |
 | Fusion - VoIP - Elaborados - Full (`Fusion-Painel-Elaborados`) | `177.72.104.22` ✅ | `6E:26:1A:C9:19:CE` | VM pública |
-| Aplicações /etc/scripts (`APP-ETC-SCRIPTS`) | `177.72.104.23` ✅ | `36:DC:89:9D:DA:5A` | VM pública |
+| APLICACOES (ex-`APP-ETC-SCRIPTS`/API-ZAP) | `177.72.104.23` ✅ | `36:DC:89:9D:DA:5A` | VM pública — renomeado 2026-08-06 (comissão_v2, netpal_nginx, filebrowser, mariadb, influxdb) |
 | Opa ChatBot (`OPA.SUIT`) | `177.72.104.30` ✅ | `F6:C7:5C:8A:4A:A3` | VM pública |
 | 🆕 CdnTV-Origin | `177.72.104.107` | `2A:B7:2D:D8:6E:A2` | VM pública — **fora do `/27`**; ✅ `vmbr2` sem tag, rede CDN/VLAN 23 |
 | 🆕 CdnTV-Edge | `177.72.104.108` | `5E:68:F6:70:6E:0D` | VM pública — **fora do `/27`**; ✅ `vmbr2` sem tag, rede CDN/VLAN 23 |
@@ -157,8 +157,8 @@ Desde 2026-08-05, HubSoft `.16` está em `vmbr1/tag 16` e RADIUS `.214` em `vmbr
 | **Proxmox DNS** (hypervisor) | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` (VLAN 100, concluído em 2026-08-05) | Hewlett Packard | gerência privada; gateway `192.168.254.1`; IP e gateway antigos removidos |
 | OLT CLOUD (`OLT-CLOUD`) | `177.72.104.24` ✅ | `BC:24:11:89:AD:23` | VM pública (Web Server) |
 | DNS MASTER / NetPal (`NS-UNBOUND`) | `177.72.104.28/27` + `.58/32` + `.59/32` ✅ | `BC:24:11:E7:B0:75` | VM pública — **um único host com três IPs**; `.58`/`.59` são secundários/loopbacks |
-| AUTOMACOES | `177.72.104.29` ✅ | `BC:24:11:BF:0B:B5` | VM pública (Web Server) |
-| 🆕 API-ZAP | `177.72.104.26` | `BC:24:11:50:14:F9` | VM pública — **resolve o mistério do `.26`**. ~~Provável destino da notificação da decisão #6~~ descartado (2026-07-24): o script `dude` do RB3011 chama `api.focuschat.com.br` direto, sem host local — função real de API-ZAP segue desconhecida |
+| DEVOPS-01 (ex-`AUTOMACOES`) | `177.72.104.29` ✅ | `BC:24:11:BF:0B:B5` | VM pública — renomeado 2026-08-06 (dify, n8n, hubwatch, swmon) |
+| 🆕 API-WHATS | `177.72.104.26` | `BC:24:11:50:14:F9` | VM pública — **resolve o mistério do `.26`** (2026-08-06, consulta direta: Node.js bot WhatsApp, sem Docker/banco). ~~API-ZAP~~ era nome desatualizado do Dude — o API-ZAP real é o `.23` (APLICACOES). ~~Provável destino da notificação da decisão #6~~ descartado (2026-07-24): o script `dude` do RB3011 chama `api.focuschat.com.br` direto, sem host local |
 
 ## Resumo — o que falta pra fechar o endereçamento
 
@@ -174,7 +174,7 @@ Desde 2026-08-05, HubSoft `.16` está em `vmbr1/tag 16` e RADIUS `.214` em `vmbr
 | VMs públicas (19 no total) | ✅ regra geral: VLAN 16 sem passar pela CCR1036; **exceção confirmada:** CdnTV `.107`/`.108` e `.109` usam a rede própria `/29` pela `vmbr2` untagged/VLAN 23 |
 | Separação público/privado nos hosts HubSoft e Zabbix | ✅ concluída: públicas tag 16, privadas untagged/VLAN 100 |
 | Separação público/privado no host Docker/CDNTV | ✅ **já existe parcialmente** — usa VLAN tag (`18`, `38`) em parte das interfaces macvlan; não é o mesmo problema do HubSoft/Zabbix |
-| 🆕 Sistemas descobertos sem relação com o RB3011 (NetBox, phpIPAM, Portainer, PowerDNS, NTP server, UniFi, Wiki, Smokeping, API-ZAP) | ✅ identificados — impacto na migração é indireto (definem a origem real do NTP; a notificação da decisão #6 não depende de nenhum deles — vai direto pra `api.focuschat.com.br`), mas não mudam o desenho de rede do DM4170/CCR1036 |
+| 🆕 Sistemas descobertos sem relação com o RB3011 (NetBox, phpIPAM, Portainer, PowerDNS, NTP server, UniFi, Wiki, Smokeping, API-WHATS) | ✅ identificados — impacto na migração é indireto (definem a origem real do NTP; a notificação da decisão #6 não depende de nenhum deles — vai direto pra `api.focuschat.com.br`), mas não mudam o desenho de rede do DM4170/CCR1036 |
 | 🆕 `.107`, `.108`, `.109` (CdnTV) e `177.93.247.138` (SpeedTest) | ✅ CDN confirmado fora do `/27`: `.107`/`.108`/`.109` usam `vmbr2`/`enp8s0f0` untagged até a VLAN 23 no NE8000; SpeedTest continua em caminho próprio |
 
 Ver decisões #6, #9 e #12 em [03-decisoes-pendentes.md](03-decisoes-pendentes.md).

@@ -30,15 +30,15 @@
 | `.19` | FORA_DO_NAT; gateway das rotas `10.30.0.0/30` e `10.150.150.0/24` — ✅ **"VPN - WireGuard"** (Dude) — VPN à parte, não do RB3011, ver [11](11-cruzamento-dude-devices.md) | FORA_DO_NAT, /ip route |
 | `.20` | SBC VOIP — ✅ **confirmado por consulta direta (2026-07-24): é "SFTP-OPA-CHAT"** — nome do firewall estava desatualizado | firewall filter |
 | `.22` | Accept sem nome — ✅ **"Fusion - VoIP - Elaborados - Full"** (Dude) | firewall filter |
-| `.23` | Accept sem nome — ✅ **"Aplicações /etc/scripts"** (Dude) | firewall filter |
-| `.26` | ✅ **Identidade resolvida (2026-07-24):** **API-ZAP** (`proxmox-dns`). ~~Forte candidato ao destino da API HTTP estilo WhatsApp usada pelo script `dude`/netwatch~~ → ❌ **descartado (2026-07-24):** o script `dude` chama `api.focuschat.com.br` (SaaS externo), não `.26`. Função real de API-ZAP segue **não identificada** (ver decisão #6, [03](03-decisoes-pendentes.md)) | firewall filter |
+| `.23` | Accept sem nome — ✅ **"Aplicações /etc/scripts"** (Dude) → **APLICACOES** (renomeado 2026-08-06; era o "API-ZAP" real) | firewall filter |
+| `.26` | ✅ **Identidade resolvida (2026-08-06, consulta direta):** **API-WHATS** (Node.js bot WhatsApp, sem Docker/banco). ~~API-ZAP~~ era nome desatualizado do Dude — o API-ZAP real é o `.23` (APLICACOES). ~~Forte candidato ao destino da API HTTP estilo WhatsApp usada pelo script `dude`/netwatch~~ → ❌ **descartado (2026-07-24):** o script `dude` chama `api.focuschat.com.br` (SaaS externo), não `.26` (ver decisão #6, [03](03-decisoes-pendentes.md)) | firewall filter |
 | `.57` | Accept sem nome — ainda **não identificado**; `/ip arp print` no RB3011 (2026-07-24) não retornou nenhuma entrada — forte indício de residual/morto, mas não é prova definitiva | firewall filter |
 | `.24` | Accept `443,80,45345,21` — ✅ **"OLT CLOUD"** (Dude, Web Server) | firewall filter |
 | `.25` | Fusion Netpal — clientes simples — ✅ plausível ("Fusion - VoIP - Painéis Simples" no Dude) | firewall filter |
 | `.27` | Accept sem nome — **mesmo IP usado pelo NE8000 como Route-Reflector interno** (`177.72.104.27`, AS 52828) e destino do NetStream export; ✅ confirmado no Dude como **"RRFlow"** — não é coincidência, é o mesmo host/função. Ver decisão #8/#9 em [03](03-decisoes-pendentes.md). | firewall filter, [06-ne8000-bgp-core.md](06-ne8000-bgp-core.md), [11](11-cruzamento-dude-devices.md) |
 | `.21` | ~~DNS2 Recursivo (`DNS2-Recursivo-104.21`)~~ → ✅ **removido intencionalmente pelo usuário (2026-08-05), não é mais usado e não migra.** A rede macvlan ainda se chama historicamente `IP-DNS-177.72.104.21`, mas os outros containers continuam nela e o nome não indica ocupação do IP | consulta direta + validação pós-migração |
 | `.28` | DNS NetPal; gateway das rotas `.56/30`, `.58/32`, `.59/32` — ✅ **confirmado por consulta direta (2026-07-24): é a VM `NS-UNBOUND` (`proxmox-dns`)** | DNS_AUT, /ip route |
-| `.29` | ✅ **"AUTOMACOES"** (Dude, Web Server) — ✅ **confirmado por consulta direta (2026-07-24)**. ~~Possível relação com a decisão #6~~ → a notificação netwatch/`dude` na verdade não usa nenhum host local (vai direto pra `api.focuschat.com.br`); relação com `.26`/API-ZAP não confirmada, função exata de `AUTOMACOES` segue aberta | firewall filter |
+| `.29` | ✅ **~~"AUTOMACOES"~~ → DEVOPS-01** (renomeado 2026-08-06; dify, n8n, hubwatch, swmon) — ✅ **confirmado por consulta direta (2026-07-24)**. ~~Possível relação com a decisão #6~~ → a notificação netwatch/`dude` na verdade não usa nenhum host local (vai direto pra `api.focuschat.com.br`); relação com `.26`/API-WHATS não confirmada, função exata de `AUTOMACOES` segue aberta | firewall filter |
 | `.30` | OPA Suite (chat) — porta `45345` restrita à lista `REDE LIBERADA_OPA_SUITE` — ✅ confirmado ("Opa ChatBot" no Dude); ✅ **confirmado por consulta direta (2026-07-24)** | firewall filter |
 | `.58` | DNS NetPal — loopback — ✅ confirmado ("DNS MASTER" no Dude) **e por consulta direta: é o mesmo host `NS-UNBOUND` que responde por `.28`** — não são dois sistemas, é um só com dois IPs | DNS_AUT |
 | `.59` | ~~Sem ARP, possível residual/morto~~ → ✅ **confirmado em 2026-08-05:** IP secundário/loopback `/32` da VM 105 `NS-UNBOUND`, interface `ens18:1`. Não aparece em ARP próprio porque o RB3011 possui rota `177.72.104.59/32` via `.28` | DNS_AUT + QEMU Agent |
@@ -206,7 +206,7 @@ de acesso**, atendendo pelo menos:
 | **Gerência de OLTs** | ZTE CPV, PWW, PWW Nova, BCP, CCB, CASCA, MST, FSB, GGV, Praia MST, Praia São Simão, Praia Solidão, Lagoa do Bacupari, Solidão |
 | **Gerência de switches/rádios** | SW Shopping, SW4370 Solidão, S5735 Lagoa Bacupari, SW Aguapé/Povos/Pantano/Serraria/Bacupari, SW FO Shopping, SW TVR, SW Jardim Formoso, Rádios CPV |
 | **Clientes corporativos** | Banco do Brasil (PWW, CPV, MST), Consepro PWW, CEEE (Shopping, FSB, BCP, Prédio Maicon), Shopping, TIM (EDD MST) |
-| **Servidores/infra interna** | Proxmox (HUB, DOCKER/CDNTV, VOIP, DNS, PNETLAB), Graylog, LibreNMS, Wiki (x2), NTP, DNS recursivo, RADIUS Hubsoft, The Dude, TS Callcenter |
+| **Servidores/infra interna** | Proxmox (HUB, DOCKER/CDNTV, VOIP, DNS, PNETLAB), Graylog, LibreNMS, Wiki (x2), NTP, DNS recursivo, RADIUS Hubsoft, The Dude, TS Callcenter — ⚠️ **vários provavelmente mortos** (cruzamento com o Dude em 2026-08-06): LibreNMS, Wiki 2, Wiki privado, PNETLAB, Proxmox VOIP, TS Callcenter, Graylog não têm monitoramento ativo nem relação com o `/27` (ver [11](11-cruzamento-dude-devices.md)) |
 
 **Implicação para o projeto:** migrar isso para o Datacom não é "recriar algumas SVIs". São ~45
 VLANs, dezenas de enlaces ponto a ponto e uma malha de gerência que atravessa várias localidades
@@ -295,10 +295,15 @@ sessão de FlowSpec — que é justamente o mecanismo de mitigação de DDoS, ju
 
 Qualquer que seja o desenho final, o substituto precisa, **no mesmo instante do corte**:
 
-1. Assumir `177.72.104.1/27` (next-hop das rotas estáticas do NE8000 e gateway dos servidores).
-2. Continuar anunciando `177.72.104.0/27` na OSPF area 0.0.0.1.
-3. Manter o segmento `177.72.104.52/30` ↔ NE8000 ativo (`.53` deste lado, `.54` no NE8000).
-4. Manter alcançável o host `177.72.104.27` (RR de FlowSpec + coletor NetStream).
+1. ~~Assumir `177.72.104.1/27` (next-hop das rotas estáticas do NE8000 e gateway dos servidores).~~
+2. ~~Continuar anunciando `177.72.104.0/27` na OSPF area 0.0.0.1.~~
+3. ~~Manter o segmento `177.72.104.52/30` ↔ NE8000 ativo (`.53` deste lado, `.54` no NE8000).~~
+4. ~~Manter alcançável o host `177.72.104.27` (RR de FlowSpec + coletor NetStream).~~
+
+> ✅ **Requisitos reescritos pelas decisões #9/#13 (2026-07-24) e #11 (2026-08-06):** o **NE8000
+> assume o próprio `177.72.104.0/27`** numa SVI da VLAN 16 (via DM4170) — `.1` deixa de existir no
+> MK; o segmento `.52/30` e a VLAN 28 **morrem com o MK**; NAT fica na CCR `.4` (também na VLAN 16);
+> o RRFlow `.27` continua no mesmo IP, agora alcançado pelo novo caminho (ver [10](10-enderecamento-ccr1036.md)).
 
 *(O `177.72.104.1` também é o endpoint local do túnel EoIP com o NOC — ver
 [08-vlans-e-portas.md](08-vlans-e-portas.md) —, mas esse túnel está fora do ar atualmente e EoIP é
@@ -322,7 +327,10 @@ O link não é um cabo direto. Ambos os endereços da ponta Mikrotik estão em
 
 Ou seja: o NE8000 entrega **VLAN 28 taggeada**, o switch de topo de rack entrega **untagged** no
 `sfp1` do Mikrotik, e o segmento carrega **duas sub-redes** (uma privada de gerência, uma pública).
-O Datacom precisará reproduzir esse multinetting — uma SVI com IP primário e secundário.
+~~O Datacom precisará reproduzir esse multinetting — uma SVI com IP primário e secundário.~~ → ✅
+**Superado (decisão #13 + desenho 2026-08-06):** o DM4170 fica só L2, a VLAN 28 morre com o MK e o
+NE8000 termina o `/27` em SVI da VLAN 16; adjacência OSPF CCR↔NE8000 sobre a mesma VLAN 16
+(`.4`↔`.1`).
 
 ## ✅ A VPN **não** é "L2TP/IPSec" — confirmado
 

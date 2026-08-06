@@ -83,7 +83,8 @@ para `vlan100-servidores`. A porta antiga `ether3` da RB750 foi desativada e `en
 - ✅ Inventário completo da GW Servidores (IPs, VLANs/QinQ, portas, bridges, OSPF, NAT, VPNs, DHCP,
   automações) — [07](07-enderecamento-ip.md) e [08](08-vlans-e-portas.md)
 - ✅ Decisões fechadas: DHCP trivial (1 escopo); natureza das VPNs (L2TP sem criptografia +
-  OpenVPN); **dono do `/27` → NE8000, NAT → CCR1036** — ✅ **CCR dentro do `/27`** com
+  OpenVPN **+ PPTP** — PPTP descartado no redesenho); **dono do `/27` → NE8000, NAT → CCR1036** —
+  ✅ **CCR dentro do `/27`** com
   `177.72.104.4` na VLAN 16 (2026-07-27); ✅ **caminho L2 confirmado em 2026-08-06:** a VLAN 16
   chega à CCR pelo trunk **DM4170↔CCR**, enquanto o NE8000 mantém `.1/27` pelo trunk
   **DM4170↔NE8000**. ✅ **Topologia simplificada em 2026-08-06:** não haverá link direto
@@ -92,10 +93,11 @@ para `vlan100-servidores`. A porta antiga `ether3` da RB750 foi desativada e `en
   Pendência: DST-NAT Dude/TS SIX (`.1` vs `.4`)
 - ✅ **Sequência da VPN definida em 2026-08-06:** WireGuard na CCR somente **depois de toda a
   migração concluída e validada**. Não entra na configuração de bancada nem na janela inicial.
-- 🆕 **Desenho alvo definido pelo usuário (2026-07-23, corrigido 2026-08-06):** saem RB3011 +
-  RB2011; entram **DM4170** (L2 e agregação física) e **CCR1036** (gateway privado + NAT, com
-  WireGuard somente pós-migração), ligada **apenas ao DM4170 por trunk**; a rede de acesso não é
-  tocada. Automações antigas descartadas. Firewall redesenhado enxuto (sem
+- 🆕 **Desenho alvo definido pelo usuário (2026-07-23, corrigido 2026-08-06):** saem **RB3011 +
+  RB2011**; o **RB750 permanece** (termina WireGuard em `.19`, migra pós-corte). Entram **DM4170**
+  (L2 e agregação física) e **CCR1036** (gateway privado + NAT, com WireGuard somente pós-migração),
+  ligada **apenas ao DM4170 por trunk**; a rede de acesso não é tocada. Automações antigas
+  descartadas. Firewall redesenhado enxuto (sem
   geo-allowlist BRASIL). Trabalho na ordem: físico → L2 → L3 — ver [02](02-arquitetura-alvo.md)
 - 📝 Plano de corte ([04](04-plano-migracao.md)): QinQ em janela futura; **agora** prioridade =
   servidores 177 ([15](15-plano-migracao-servidores-177.md)) — Etapa A em andamento/documentada
@@ -125,14 +127,16 @@ para `vlan100-servidores`. A porta antiga `ether3` da RB750 foi desativada e `en
 - 🆕 **Cruzamento com o Dude** ([11](11-cruzamento-dude-devices.md)): forte candidato ao switch de
   topo do rack identificado (**Huawei S6730 "Jardim Formoso"**, ainda sem confirmação física);
   vários nomes de sistema no firewall do RB3011 estão **desatualizados** frente ao monitoramento
-  ao vivo (ex.: `.8` "Hubsoft" parece morto, o real é `.16`); descobertas **duas VPNs adicionais**
-  fora do RB3011 (WireGuard em `.19`, OpenVPN-2 em `.12`) que podem não fazer parte da decisão #5
+  ao vivo (ex.: `.8` "Hubsoft" parece morto, o real é `.16`); ✅ **WireGuard `.19` confirmado
+  como o próprio RB750** (2026-08-06) — não é host Proxmox; o RB750 permanece até a VPN migrar
+  para a CCR pós-migração; OpenVPN-2 `.12` é VM independente no Proxmox Docker.
 - 🆕 **Três decisões fechadas de uma vez (usuário, 2026-07-24):** #3 redundância/HA — **sem
   redundância**, aceita os mesmos pontos únicos de hoje; #7 geo-allowlist BRASIL — **descartar**,
   não recria no NE8000 (já estava assim em [05](05-limpeza-politicas.md), só faltava sincronizar
   com [03](03-decisoes-pendentes.md)); #11 chave OSPF MD5 — **Opção A**, mantém `ntprb1030` na
-  janela de corte, rotação fica pra fase 4. Também fechada por escopo a decisão #2 (lista de MKs
-  a remover) — não precisava de coleta nova, os MKs remotos de POP já são independentes do RB3011.
+  janela de corte, rotação fica pra fase 4. Também fechada por escopo a decisão #2 (~~lista de MKs
+  a remover~~ — RB3011 e RB2011 saem; RB750 **fica** até WireGuard migrar, corrigido 2026-08-06) —
+  não precisava de coleta nova, os MKs remotos de POP já são independentes do RB3011.
   Também fechada a decisão #10 (sobreposição `177.72.104.60/30`) — sem conflito real.
 - 🆕 **Rodada final de decisões (usuário, 2026-07-24):** IP do NAT na CCR1036 definido
   (`177.72.104.4`, entre os únicos 2 IPs livres do `/27` — `.4` e `.15`); MTU decidido (jumbo
@@ -143,11 +147,16 @@ para `vlan100-servidores`. A porta antiga `ether3` da RB750 foi desativada e `en
   por escolha).
 - ✅ **Decisão #6 (rotina 2) fechada — descartada (usuário, 2026-07-24):** a notificação
   netwatch → script `dude` → `api.focuschat.com.br` **não vai ser recriada** — usuário nem sabia
-  que essa automação existia. De quebra, invalidou a hipótese de que `API-ZAP` (`.26`) era o
-  destino (era uma chamada HTTPS direta pro SaaS FocusChat, sem host local envolvido) — corrigido
-  em [03](03-decisoes-pendentes.md), [05](05-limpeza-politicas.md), [07](07-enderecamento-ip.md),
-  [11](11-cruzamento-dude-devices.md), [12](12-mapeamento-proxmox.md). Token FocusChat só precisa
+  que essa automação existia. De quebra, invalidou a hipótese de que ~~`API-ZAP` (`.26`)~~ era o
+  destino (era uma chamada HTTPS direta pro SaaS FocusChat, sem host local envolvido). ✅
+  **Identidade do `.26` corrigida em 2026-08-06:** o host é **API-WHATS** (Node.js, sem
+  banco/Docker) e o "API-ZAP" real é o `.23` = **APLICACOES** (renomeado) — sincronizado em
+  [03](03-decisoes-pendentes.md), [05](05-limpeza-politicas.md), [07](07-enderecamento-ip.md),
+  [11](11-cruzamento-dude-devices.md), [12](12-mapeamento-proxmox.md), [14](14-ips-servidores-e-17772.md).
+  Token FocusChat só precisa
   ser **revogado** na fase 4, não rotacionado ([04](04-plano-migracao.md), [13](13-rotina-corte.md)).
+- ✅ **Decisão #14 fechada (2026-07-24):** firewall dos servidores locais sobe sem regra dedicada;
+  endurecimento fica pós-corte (ver [03](03-decisoes-pendentes.md)).
 
 ## Índice dos documentos
 

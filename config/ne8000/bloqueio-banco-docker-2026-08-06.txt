@@ -1,0 +1,57 @@
+# Bloqueio de portas de banco de dados expostas nos servidores Docker
+# NE8000 BGP_NETPAL — aplicar na janela de migração
+#
+# Servidores afetados:
+#   .23  = APLICACOES (PostgreSQL :5440, MariaDB :3307) — ex-"API-ZAP"/"Aplicações", renomeado 2026-08-06
+#   .29  = DEVOPS-01 (MySQL :3306, :33060, Redis :16379) — ex-AUTOMACOES, renomeado 2026-08-06
+#   .109 = Docker-Netpal (phpMyAdmin :8988 ja bloqueado via PORTAS_BLOQUEADAS_DOCKER)
+#   .26  = API-WHATS — SEM banco exposto, fica FORA do bloqueio (2026-08-06)
+#
+# Gerência liberada:
+#   NOC        177.93.244.165
+#   WireGuard  177.72.104.19
+#   WG clientes 10.150.150.0/24
+#   Proxmox    192.168.254.0/24
+
+# 1. Pool de destinos com banco exposto
+acl ip-pool BLOQUEIO-DB-DOCKER
+ description DOCKER-COM-BANCO-EXPOSTO
+ ip address 177.72.104.23 0.0.0.0
+ ip address 177.72.104.29 0.0.0.0
+ ip address 177.72.104.109 0.0.0.0
+#
+
+# 2. Pool de portas de banco a bloquear
+acl port-pool PORTAS-BLOQUEIO-DB
+ eq 3306
+ eq 3307
+ eq 5440
+ eq 16379
+ eq 33060
+#
+
+# 3. Pool de origens liberadas para acessar banco
+acl ip-pool LIBERA-DB-DOCKER
+ description GERENCIA-PODE-ACESSAR-BANCO-DOCKER
+ ip address 177.93.244.165 0.0.0.0
+ ip address 177.72.104.19 0.0.0.0
+ ip address 10.150.150.0 0.0.0.255
+ ip address 192.168.254.0 0.0.0.255
+#
+
+# 4. Regras no DROPFORWARD (antes das existentes 5999/6000/6001/6002)
+acl name DROPFORWARD advance
+ rule 5997 permit tcp source-pool LIBERA-DB-DOCKER destination-port-pool PORTAS-BLOQUEIO-DB
+ rule 5998 deny tcp destination-pool BLOQUEIO-DB-DOCKER destination-port-pool PORTAS-BLOQUEIO-DB
+#
+
+# Validação após aplicar:
+#   display acl all
+#   display traffic-policy statistics
+#
+# Rollback: remover as 3 pools e as 2 regras
+#   undo rule 5997 acl name DROPFORWARD
+#   undo rule 5998 acl name DROPFORWARD
+#   undo acl ip-pool LIBERA-DB-DOCKER
+#   undo acl ip-pool BLOQUEIO-DB-DOCKER
+#   undo acl port-pool PORTAS-BLOQUEIO-DB

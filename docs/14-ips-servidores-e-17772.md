@@ -43,7 +43,7 @@ NIC dedicada/VLAN 23. Redes internas NTP/SEVERINO mantêm seus caminhos próprio
 | **hypervisor** | ~~`192.168.116.122/30`~~ → ✅ `192.168.254.11/24` | gerência privada, VLAN 100 |
 | OpenVPN2 | `177.72.104.12` (+ `10.254.0.30`) | VM pública |
 | Fusion-Painel-Elaborados | `177.72.104.22` | VM pública |
-| APP-ETC-SCRIPTS | `177.72.104.23` | VM pública |
+| APLICACOES (ex-APP-ETC-SCRIPTS/API-ZAP) | `177.72.104.23` | VM pública |
 | Fusion-Painel-Simples | `177.72.104.25` | VM pública |
 | OPA.SUIT | `177.72.104.30` | VM pública |
 | CdnTV-Origin | `177.72.104.107` | VM pública — **fora do `/27`** |
@@ -67,9 +67,9 @@ VLAN 100: hypervisor. VLAN 16 tagged: todas as VMs públicas abaixo.
 |---|---|---|
 | **hypervisor** | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` | gerência privada, VLAN 100 |
 | OLT-CLOUD | `177.72.104.24` | VM pública |
-| API-ZAP | `177.72.104.26` | VM pública |
+| API-WHATS (ex-"API-ZAP" do Dude; o API-ZAP real é o `.23`) | `177.72.104.26` | VM pública |
 | NS-UNBOUND | `177.72.104.28/27` + `.58/32` + `.59/32` | VM pública (três IPs, um host; `.58`/`.59` secundários) |
-| AUTOMACOES | `177.72.104.29` | VM pública |
+| DEVOPS-01 (ex-AUTOMACOES) | `177.72.104.29` | VM pública |
 
 ### 1.3 Proxmox Zabbix — hypervisor + VMs
 
@@ -142,13 +142,13 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.20` | ocupado | SFTP-OPA-CHAT |
 | `.21` | **desocupado** | ~~DNS2 Recursivo~~ removido intencionalmente em 2026-08-05; não recriar na migração |
 | `.22` | ocupado | Fusion-Painel-Elaborados |
-| `.23` | ocupado | APP-ETC-SCRIPTS |
+| `.23` | ocupado | APLICACOES (ex-APP-ETC-SCRIPTS/API-ZAP) |
 | `.24` | ocupado | OLT-CLOUD |
 | `.25` | ocupado | Fusion-Painel-Simples |
-| `.26` | ocupado | API-ZAP |
+| `.26` | ocupado | API-WHATS (ex-"API-ZAP" do Dude; o API-ZAP real é o `.23`) |
 | `.27` | ocupado | RRFlow (RR FlowSpec AS 52828 + NetStream `:3055`) |
 | `.28` | ocupado | NS-UNBOUND (mesmo host que os loopbacks `.58` e `.59`) |
-| `.29` | ocupado | AUTOMACOES |
+| `.29` | ocupado | DEVOPS-01 (ex-AUTOMACOES) |
 | `.30` | ocupado | OPA.SUIT / Opa ChatBot |
 | `.31` | broadcast | prefixo `/27` |
 

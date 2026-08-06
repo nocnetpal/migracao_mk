@@ -78,7 +78,8 @@ Por host:
 - [ ] Remover `177.72.104.1/27` (e anúncio OSPF do `/27`) do RB3011
 - [ ] Ativar SVI/anúncio do `/27` no NE8000
 - [ ] Ativar NAT na CCR (`.4`) + DST-NAT Dude/TS SIX se esses hosts já migraram
-- [ ] RB2011/RB750: só o que for bridge de servidor — **não** mexer no `sfp1` QinQ
+- [ ] RB2011: só o que for bridge de servidor — **não** mexer no `sfp1` QinQ. RB750 **não se mexe**:
+      permanece ativo com o WireGuard `.19` (migra pós-corte)
 
 ### Rollback Etapa B
 
@@ -162,12 +163,14 @@ minutos → religar `sfp1` no RB3011 (rollback é imediato, o MK está intacto).
 - [ ] VLAN 16 / `177.72.104.0/27` — todas as sub-redes da antiga `Bridge IP Publico` migram para o
       NE8000 (decisão #9)
 - [ ] `.1` para de existir no RB3011; anúncio OSPF do `/27` muda de origem pro NE8000
-- [ ] Segmento `177.72.104.52/30` com o NE8000 ativo (`.53` do lado novo)
+- [ ] ~~Segmento `177.72.104.52/30` com o NE8000 ativo (`.53` do lado novo)~~ — morre com o MK; o
+      NE8000 termina o `/27` em SVI própria (VLAN 16 via DM4170)
 - [ ] Ativar NAT na **CCR1036** (SRC-NAT geral + DST-NAT Dude `:18291`/TS SIX `:15389`) e
       **desativar no RB3011**
 - [ ] Rotas estáticas locais reavaliadas (`10.8.0.0/21` via `.9`, `10.254.0.0/22` via `.12`,
       `10.30.0.0/30`+`10.150.150.0/24` via `.19`, DNS loopbacks via `.28`) — viram *connected*
-- [ ] Adjacência OSPF principal ativa (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)
+- [ ] ~~Adjacência OSPF principal ativa (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)~~ —
+      VLAN 28 morre com o MK; nova adjacência CCR↔NE8000 sobre a VLAN 16 (`.4`↔`.1`)
 - [ ] Servidores locais do RB3011 (`ether6`–`ether10`) recabeados para portas GE do **DM4170**
       (🆕 confirmado 2026-07-24 — não mais a CCR1036; transceiver SFP-RJ45, ver
       [02](02-arquitetura-alvo.md) e [10](10-enderecamento-ccr1036.md))
@@ -182,10 +185,12 @@ minutos → religar `sfp1` no RB3011 (rollback é imediato, o MK está intacto).
 - [ ] Adjacências OSPF: mesmo número de vizinhos de antes (NE8000 + POPs)
 - [ ] DNS recursivo (`10.200.255.253`) e DNS públicos (`.28`/`.58`/`.59`) respondendo
 - [ ] DHCP do gerador MST entregando lease
-- [ ] VPN nova: os 4 usuários conectam
+- [ ] ~~VPN nova: os 4 usuários conectam~~ — VPN não migra no corte; WireGuard só pós-migração
+      (decisão #5, [03](03-decisoes-pendentes.md)). O WireGuard antigo (RB750 `.19`) deve seguir
+      respondendo normalmente
 - [ ] Sistemas confirmados vivos no Passo 1 (Hubsoft, Fusion, VOIP etc.) acessíveis de fora
-- [ ] Backup automático roda no novo destino (próxima execução agendada, não precisa esperar a
-      semana)
+- [ ] ~~Backup automático roda no novo destino (próxima execução agendada, não precisa esperar a
+      semana)~~ — automações de backup descartadas (decisão #6, [03](03-decisoes-pendentes.md))
 - [ ] ⏱️ Registrar horário de término
 
 ## Rollback
@@ -200,7 +205,7 @@ NE8000/DM4170/CCR1036 (script escrito na véspera, não improvisar) | alvo: <15 
 ## Pós-janela (dias seguintes)
 
 - [ ] RB3011 e RB2011 ficam **desligados mas configurados** por N semanas (rollback físico de
-      longo prazo)
+      longo prazo). RB750 permanece ativo (WireGuard) até migrar para a CCR
 - [ ] Atualizar Dude/LibreNMS para monitorar os equipamentos novos
 - [ ] **Rotação de credenciais** — só depois que o RB3011/RB2011 saírem de vez: chave OSPF MD5
       (estratégia da [decisão #11](03-decisoes-pendentes.md)), senha BGP do peer Google,

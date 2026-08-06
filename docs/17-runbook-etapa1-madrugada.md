@@ -7,8 +7,10 @@
 > ⚠️ **Não aplicar agora (usuário, 2026-07-27):** só preparar.
 >
 > ✅ **Decisão (usuário, 2026-07-27):** **não mexer no bridge do RB750-WIREGUARD.**
-> HubSoft + Zabbix ficam **fora** desta etapa no MK — migram quando o 750 sair e for
-> pra **CCR/Datacom**. Etapa 1 no Mikrotik = só **Docker (ether7)** + **DNS (ether8)**.
+> HubSoft + Zabbix ficam **fora** desta etapa no MK — ~~migram quando o 750 sair e for
+> pra **CCR/Datacom**~~ → ✅ **concluído em 2026-08-05** via switch temporário/segundo cabo
+> ([16](16-etapa1-proxmox-vlans-datacom.md)); o **RB750 permanece** (WireGuard `.19`) até a VPN
+> migrar pós-corte (2026-08-06). Etapa 1 no Mikrotik = só **Docker (ether7)** + **DNS (ether8)**.
 
 **IPs alvo nesta etapa:** `.1` GW · `.11` Docker · `.12` DNS  
 **Depois (CCR):** `.10` Zabbix · `.13` HubSoft  

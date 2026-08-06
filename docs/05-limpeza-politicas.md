@@ -48,10 +48,10 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | SMTP_LIBERADO | lista nunca populada — bloqueio porta 25 sem exceção real | — | ? |
 | 🆕 (sem nome no MK) Zabbix | `177.72.104.6` | Zabbix | novo — incluir no levantamento |
 | 🆕 (sem nome no MK) | `177.72.104.22` | Fusion - VoIP - Elaborados - Full | novo — incluir |
-| 🆕 (sem nome no MK) | `177.72.104.23` | Aplicações /etc/scripts | novo — incluir |
+| 🆕 (sem nome no MK) | `177.72.104.23` | ~~Aplicações /etc/scripts~~ → **APLICACOES** (renomeado 2026-08-06; era o "API-ZAP" real: comissão_v2, netpal_nginx, filebrowser, mariadb-relatorio, influxdb) | novo — incluir |
 | 🆕 (sem nome no MK) | `177.72.104.24` | OLT CLOUD | novo — incluir |
-| 🆕 (sem nome no MK) | `177.72.104.29` | AUTOMACOES | ✅ confirmado por consulta direta (2026-07-24) — função exata segue aberta (não é o destino da notificação netwatch, ver decisão #6) |
-| 🆕 (sem nome no MK) | `177.72.104.26` | API-ZAP | ✅ **identidade resolvida (2026-07-24)** — ~~provável destino da notificação HTTP da decisão #6~~ descartado: o script `dude` chama `api.focuschat.com.br` direto, função real segue desconhecida |
+| 🆕 (sem nome no MK) | `177.72.104.29` | ~~AUTOMACOES~~ → **DEVOPS-01** (renomeado 2026-08-06; dify, n8n, hubwatch, swmon) | ✅ confirmado por consulta direta (2026-07-24) — função exata segue aberta (não é o destino da notificação netwatch, ver decisão #6) |
+| 🆕 (sem nome no MK) | `177.72.104.26` | **API-WHATS** (mantém o nome; Dude tinha como "API-ZAP", desatualizado — o API-ZAP real é o `.23`=APLICACOES) | ✅ **identidade resolvida (2026-08-06, consulta direta):** Node.js bot WhatsApp, sem Docker/banco exposto; ~~provável destino da notificação HTTP da decisão #6~~ descartado: o script `dude` chama `api.focuschat.com.br` direto |
 | 🆕 (sem regra no MK) | `177.72.104.2`, `.3`, `.10`, `.11` | UniFi Controller, Wiki, PowerDNS master/slave | 🆕 achados por consulta direta (2026-07-24) — nunca tiveram regra de firewall própria no MK, mas existem no `/27`. `.21` DNS2 Recursivo foi removido intencionalmente em 2026-08-05 e não migra |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.12` | OpenVPN - 2 | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.19` | VPN - WireGuard | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |

@@ -121,20 +121,24 @@
 
 ### Fase 3 — Janela do núcleo (a única com indisponibilidade real)
 Migrar em bloco, na mesma janela:
-- [ ] VLAN 16 / `177.72.104.0/27` (todas as sub-redes da antiga `Bridge IP Publico`) — para o dono
-      definido na decisão #9
+- [ ] ~~VLAN 16 / `177.72.104.0/27` (todas as sub-redes da antiga `Bridge IP Publico`)~~ — o NE8000
+      passa a anunciar o `/27` por SVI própria (decisão #9); ~~a bridge morre~~
 - [ ] `.1` para de existir no MK; anúncio OSPF do `/27` muda de origem
-- [ ] Segmento `177.72.104.52/30` com o NE8000 (`.53`)
+- [ ] ~~Segmento `177.72.104.52/30` com o NE8000 (`.53`)~~ — morre com o MK; NE8000 passa a terminar
+      o `/27` em SVI própria (VLAN 16 via DM4170), não precisa do `.52/30`
 - [ ] Ativar NAT na **CCR1036** (SRC-NAT geral + DST-NAT Dude/TS SIX) e **desativar no MK**
 - [ ] Rotas estáticas locais (`10.8.0.0/21` via `.9`, `10.254.0.0/22` via `.12`,
-      `10.30.0.0/30`+`10.150.150.0/24` via `.19`, DNS loopbacks via `.28`)
-- [ ] Adjacência OSPF principal (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)
+      `10.30.0.0/30`+`10.150.150.0/24` via `.19`, DNS loopbacks via `.28`) — rever quais viram
+      *connected* no NE8000 e quais migram para a CCR
+- [ ] ~~Adjacência OSPF principal (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)~~ — a
+      VLAN 28 morre com o MK; a nova adjacência OSPF CCR↔NE8000 será sobre a VLAN 16 (`.4`↔`.1`)
 - [ ] Servidores locais do MK (`ether6`–`10`) recabeados para portas GE do **DM4170** (🆕
       confirmado 2026-07-24 — não mais a CCR1036; usar transceiver SFP-RJ45 nas portas ópticas)
 - [ ] **Validar FlowSpec e NetStream imediatamente** (sessão BGP `177.72.104.27`, fluxo na porta 3055)
 
 ### Fase 4 — Descomissionamento
-1. RB3011 e RB2011 ficam **desligados mas configurados** por N semanas (rollback físico).
+1. RB3011 e RB2011 ficam **desligados mas configurados** por N semanas (rollback físico). RB750
+   permanece ativo (WireGuard).
 2. **Rotação de credenciais** (tudo vazou em texto claro nos exports): chave OSPF MD5 `ntprb1030`
    (rede toda, coordenar! — estratégia na decisão #11 de [03](03-decisoes-pendentes.md)), senha
    BGP do peer Google, senhas PPP dos 4 usuários, community SNMP. 🆕 Credenciais FTP de backup
@@ -156,8 +160,10 @@ Migrar em bloco, na mesma janela:
 - [ ] DNS recursivo (`10.200.255.253`) e DNS públicos (`.28/.58/.59`) respondendo
 - [ ] Hubsoft/Fusion/VOIP acessíveis de fora (os que o passo 1 confirmar como vivos)
 - [ ] DHCP do gerador MST entregando lease
-- [ ] VPN nova: os 4 usuários conectam
-- [ ] Backup automático rodou no novo lugar
+- [ ] ~~VPN nova: os 4 usuários conectam~~ — VPN não migra no corte; WireGuard só pós-migração
+      (decisão #5, [03](03-decisoes-pendentes.md))
+- [ ] ~~Backup automático rodou no novo lugar~~ — automações de backup descartadas (decisão #6,
+      [03](03-decisoes-pendentes.md)); validar apenas que o RB750 (WireGuard) segue íntegro
 
 ## Rollback
 

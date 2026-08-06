@@ -57,28 +57,32 @@ escopo do corte).
   CGNAT-1 mgmt, Régua Volt, Dude, RRFlow) e RB750 no `ether10`. Isso **explica** o achado da
   decisão #12 (MACs de HubSoft/Zabbix no mesmo `ether10` — ambos atrás do RB750).
 
-**Status:** ✅ **decidida (usuário, 2026-07-24): os 3 MKs saem, o DM4170 absorve tudo.** RB3011,
-RB2011 **e RB750** são todos eliminados — **cada servidor pluga direto numa porta GE do DM4170**,
-sem bridge intermediária (um único domínio L2 de servidores no DM4170). Isso simplifica o desenho
-(fim das 2 bridges em cascata) mas **cresce a contagem de portas físicas do DM4170** — ver
-"Contagem de portas" abaixo e o material de transceiver SFP-RJ45. Os MKs remotos de POP seguem
+**Status:** ✅ **decidida (usuário, 2026-07-24; corrigida 2026-08-06): RB3011 e RB2011 saem;
+RB750 FICA.** O RB750 termina WireGuard em `177.72.104.19` (pool `10.150.150.0/24`, OSPF, NAT) e
+**não pode ser removido** até a VPN migrar para a CCR (previsto pós-migração, junto com o WireGuard
+da própria CCR). Portanto, em vez de "cada servidor pluga direto no DM4170", os servidores que hoje
+passam pelo RB750 (NE8000 mgmt, Proxmox Zabbix, Proxmox HubSoft) já migraram para caminhos próprios
+(switch temporário / segundo cabo — 2026-08-05), e o RB750 permanece ativo somente com a função
+WireGuard. O RB2011 e o RB3011 saem na janela; o DM4170 absorve a agregação dos servidores que
+passavam pelo RB2011 e direto do RB3011. Os MKs remotos de POP seguem
 fora de escopo (independentes do RB3011, falam OSPF direto com o NE8000).
 
 **Contagem de portas do DM4170 (servidores diretos):** cruzando a topologia
 ([`config/topologia-fisica-rack.md`](../config/topologia-fisica-rack.md)), os servidores/gerências
-que hoje penduram nos 3 MKs e passam a plugar direto:
+que hoje penduram ~~nos 3 MKs~~ (RB3011/RB2011/RB750 — ✅ **RB750 permanece**, ver Status acima) e
+passam a plugar direto:
 
 | # | Equipamento | Hoje pendura em | Meio |
 |---|---|---|---|
 | 1 | Proxmox Docker/CDNTV | RB3011 ether7 | cobre (SFP-RJ45) |
 | 2 | Proxmox DNS | RB3011 ether8 | cobre |
-| 3 | Proxmox Zabbix/Zeus | RB750 p3 | cobre |
-| 4 | Proxmox HubSoft | RB750 p4 | cobre |
+| 3 | Proxmox Zabbix/Zeus | ~~RB750 p3~~ → ✅ caminho próprio (switch temp./segundo cabo, 2026-08-05) | cobre |
+| 4 | Proxmox HubSoft | ~~RB750 p4~~ → ✅ caminho próprio (switch temp./segundo cabo, 2026-08-05) | cobre |
 | 5 | TS SIX | RB2011 p2 | cobre |
 | 6 | Servidor Dude | RB2011 p5 | cobre |
 | 7 | Servidor RRFlow | RB2011 p6 | cobre |
 | 8 | MGNT CGNAT-1 (Hillstone) | RB2011 p3 | confirmar (cobre/fibra) |
-| 9 | Gerência NE8000 | RB750 p2 | confirmar |
+| 9 | Gerência NE8000 | ~~RB750 p2~~ → ✅ caminho próprio (2026-08-05) | confirmar |
 | 10 | Gerência OLT CPV | RB3011 ether9 | cobre |
 
 + **Régua Volt** (RB2011 p4) — ESTRAGADA, **não migra** (dropar). Coleta ao vivo de 2026-08-05
@@ -89,9 +93,11 @@ uplinks (QinQ de acesso, trunk NE8000, trunk CCR1036). Cabe folgado no DM4170 24
 compra a confirmar (ver [02](02-arquitetura-alvo.md), questão física). CGNAT-1 e gerência NE8000
 podem já ser fibra — confirmar antes de fechar a lista de transceivers.
 
-**Ainda útil (não bloqueia):** export do RB750 (`/export`) só pra confirmar que ele é bridge L2
-burro mesmo (como o RB2011) e não faz nada de L3/roteamento antes de descartar. Baixo risco — a
-topologia já indica que é só agregação L2.
+**Ainda útil (não bloqueia):** ~~export do RB750 (`/export`) só pra confirmar que ele é bridge L2
+burro mesmo~~ → ✅ **export obtido em 2026-07-27** (`config/rb750gr3-wireguard/export-2026-07-27.rsc`)
+confirma que o RB750 **NÃO é só L2** — termina WireGuard em `177.72.104.19` (pool `10.150.150.0/24`,
+OSPF area1, SRC-NAT). Por decisão do usuário (2026-08-06), o RB750 **permanece** até a VPN migrar
+para a CCR pós-migração.
 
 ## 3. ~~Redundância / HA~~ — ✅ decidido: sem redundância
 
@@ -120,7 +126,12 @@ rack. E o segmento carrega **duas sub-redes**, não uma:
 | GW Servidores | `192.168.116.34/30` + `177.72.104.53/30` | `sfp1` (untagged, multinetting) |
 | NE8000 | `192.168.116.33/30` + `177.72.104.54/30` (`sub`) | `Gi0/1/8.28` (dot1q VLAN 28) |
 
-O Datacom terá de reproduzir isso como uma SVI na VLAN 28 com IP primário **e** secundário.
+O ~~Datacom~~ **NE8000** passa a reproduzir isso como uma SVI própria na VLAN nova, com IP
+primário **e** secundário — ~~o Datacom terá de reproduzir isso como uma SVI na VLAN 28 com IP
+primário e secundário~~ → ✅ **corrigido (decisão #13, 2026-07-24):** DM4170 fica só L2; a VLAN 28
+do MK **morre com o MK** e não é reutilizada. O NE8000 termina o `/27` numa SVI da VLAN 16 (via
+DM4170) e a adjacência OSPF CCR↔NE8000 passa a ser sobre a VLAN 16 (`.4`↔`.1`, área 0.0.0.1, MD5
+`ntprb1030` — decisão #11).
 
 O que ainda falta decidir:
 - ~~O Datacom assume essa adjacência OSPF no lugar da GW Servidores (mesma VLAN/subrede,
@@ -162,7 +173,8 @@ O que ainda falta decidir:
   mexer nele, isso é informativo (dá tranquilidade técnica: S6730 é enterprise, suporta QinQ bem),
   não bloqueante.
 
-**Status:** adjacência principal detalhada (VLAN 28, duas sub-redes, via rede de acesso);
+**Status:** adjacência principal detalhada (~~VLAN 28~~ → ✅ **morre com o MK; nova adjacência
+CCR↔NE8000 sobre a VLAN 16** `.4`↔`.1`, 2026-08-06 — ver desenho do OSPF em [10](10-enderecamento-ccr1036.md));
 mapa VLAN→porta completo ([09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md)). ~~🆕 Com o
 escopo fechado em "só a GW Servidores" (2026-07-23), a confirmação de SVI roteada sobre tag
 interna de QinQ no DmOS volta a ser o bloqueio técnico nº 1 — é o DM4170 quem herda as SVIs
@@ -208,19 +220,16 @@ senhas em texto claro — e, pior, **ambos os profiles PPP têm `use-encryption=
 "default-encryption" foi alterado): hoje **nenhuma sessão L2TP tem criptografia obrigatória**.
 Ver [07-enderecamento-ip.md](07-enderecamento-ip.md).
 
-**Status:** natureza do serviço esclarecida (L2TP sem criptografia + OpenVPN com certificado).
-~~✅ Destino definido para recriar L2TP/OpenVPN na CCR durante a migração.~~ → 🆕 **Sequência
-corrigida pelo usuário em 2026-08-06:** nenhuma VPN será configurada agora na CCR. O serviço novo
-será **WireGuard**, implantado somente **depois de toda a migração concluída e validada**. A
-configuração de bancada e a janela inicial não incluem interface, chaves, peer, porta ou firewall
-de WireGuard. PPTP continua descartado.
+**Status:** ✅ **Sequência fechada (2026-08-06)** — WireGuard na CCR somente após toda a migração
+validada; L2TP/OpenVPN/PPTP não serão recriados na bancada nem na janela. A natureza histórica
+(L2TP sem cripto + OpenVPN + PPTP) foi o ponto de partida; PPTP descartado definitivamente.
 
 🆕 **Atenção ao escopo, achado do cruzamento com o Dude ([11](11-cruzamento-dude-devices.md)):**
-existem **outras duas VPNs** na rede, hospedadas em servidores Proxmox à parte (não no RB3011) —
-"VPN - WireGuard" em `177.72.104.19` e "OpenVPN - 2" em `177.72.104.12`. Essas **provavelmente não
-fazem parte desta decisão**: não dependem do RB3011 para existir, só precisam que o firewall/NAT
-novo do NE8000 preserve o acesso a esses hosts (tratamento igual a qualquer outro servidor do
-Passo 1 do [05](05-limpeza-politicas.md)). Confirmar com o usuário antes de fechar de vez.
+existem **outras duas VPNs** na rede — "VPN - WireGuard" em `177.72.104.19` e "OpenVPN - 2" em
+`177.72.104.12`. ✅ **Corrigido em 2026-08-06:** `.19` **NÃO é** um host Proxmox independente — é o
+**próprio RB750** (identity `WIREGUARD`, ver [`config/rb750gr3-wireguard/export-2026-07-27.rsc`](../config/rb750gr3-wireguard/export-2026-07-27.rsc)).
+O RB750 permanece ativo até a VPN migrar para a CCR (pós-migração). Já `.12` (OpenVPN-2) é uma VM
+no Proxmox Docker — independente do RB3011, só precisa do firewall do NE8000 preservado.
 
 ## 6. Automações que rodavam como script no Mikrotik
 
@@ -260,9 +269,12 @@ outro lugar).
 `/system script` chamado `dude` (o que o netwatch dispara) faz
 `/tool fetch url="https://api.focuschat.com.br/core/v2/api/chats/send-text?..."` —
 **é uma chamada HTTPS direta pra internet, pra um SaaS de terceiros (FocusChat)**, sem nenhuma
-dependência de IP interno. **`API-ZAP` (`.26`) não tem relação com esse script** — o nome e a
-coincidência de cluster com `AUTOMACOES` (`.29`) induziram a uma hipótese errada; a identidade
-real de `.26`/API-ZAP continua sem explicação conhecida (mistério à parte, não bloqueia nada).
+dependência de IP interno. ~~**`API-ZAP` (`.26`) não tem relação com esse script**~~ — ✅
+**corrigido 2026-08-06 (consulta direta ao Docker):** o nome "API-ZAP" do Dude apontava pro `.26`,
+mas o host `.26` se chama **API-WHATS** (Node.js bot WhatsApp, sem Docker/banco) e o **API-ZAP
+real é o `.23` (APLICACOES)** — o nome e a
+coincidência de cluster com `AUTOMACOES`/`DEVOPS-01` (`.29`) induziram a uma hipótese errada; o
+mistério do `.26` está **resolvido** (2026-08-06, não bloqueia nada).
 Token de acesso da FocusChat está em texto claro no export — **não copiar o valor pros docs**
 (regra de [01](01-inventario-atual.md)), só rotacionar na fase 4 (já listado em
 [04](04-plano-migracao.md) e [13](13-rotina-corte.md)).
@@ -616,7 +628,8 @@ diretamente, não só inferidos pelo Dude.**
   O nome histórico da rede Docker `IP-DNS-177.72.104.21` pode permanecer, pois os outros cinco
   containers ativos ainda usam essa macvlan; o nome da rede não significa que o IP `.21` esteja
   ocupado.
-- **DNS**: 4 VMs confirmadas, incluindo a resolução de `.26` (API-ZAP, ver decisão #6 acima) e a
+- **DNS**: 4 VMs confirmadas, incluindo a resolução de `.26` (~~API-ZAP~~ → ✅ **API-WHATS**,
+  2026-08-06; o API-ZAP real é o `.23` = APLICACOES — ver decisão #6 acima) e a
   descoberta de que `.28`+`.58` (antes tratados como possivelmente 2 sistemas) são o mesmo host
   (`NS-UNBOUND`). 🆕 **Complemento confirmado diretamente em 2026-08-05:** `.59/32` também é IP
   secundário/loopback da mesma VM `NS-UNBOUND`; a rota do RB3011 via `.28` explica a ausência de

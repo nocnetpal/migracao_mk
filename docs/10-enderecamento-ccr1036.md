@@ -46,9 +46,9 @@ de portas só previa gerência para 1:
 
 | Cluster | IP de gerência (hypervisor) | VMs — **públicas** | VMs — **privadas** |
 |---|---|---|---|
-| Proxmox Docker | ~~`192.168.116.122/30`~~ → ✅ `192.168.254.11/24` (VLAN 100) | OpenVPN-2 `177.72.104.12`, Fusion Elaborados `.22`, Fusion Painéis Simples `.25`, Aplicações `.23`, Opa ChatBot `.30` | — |
+| Proxmox Docker | ~~`192.168.116.122/30`~~ → ✅ `192.168.254.11/24` (VLAN 100) | OpenVPN-2 `177.72.104.12`, Fusion Elaborados `.22`, Fusion Painéis Simples `.25`, APLICACOES `.23` (ex-"Aplicações"), Opa ChatBot `.30` | — |
 | **Proxmox HubSoft** | `192.168.115.210/30` ⚠️ **fora do plano** | HubSoft `177.72.104.16` | **Radius HubSoft `192.168.115.214`** ⚠️ |
-| **Proxmox DNS** | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` (VLAN 100) | OLT Cloud `177.72.104.24`, DNS Master `.28/.58/.59`, Automações `.29`, API-ZAP `.26` | — |
+| **Proxmox DNS** | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` (VLAN 100) | OLT Cloud `177.72.104.24`, DNS Master `.28/.58/.59`, DEVOPS-01 `.29` (ex-AUTOMACOES), API-WHATS `.26` | — |
 | Proxmox Zabbix | ⚠️ nenhum IP de gerência identificado no Dude (`ether5` já previa "mgmt privada nova", consistente) | Zabbix `.6`, Fusion PM CPV `.14`, Fusion 0800 `.18`, Zeus TIP `.13`, "Proxmox Zabbix" `.5`, DOCS Cloud `.7`, Servidor VPN `.9`, Fusion PM MST `.17`, SFTP OPA `.20` | Dude VLSUL `192.168.17.38` ⚠️, Dude PM CPV `192.168.17.42` ⚠️, Servidor Monsta `192.168.115.62` ⚠️ |
 
 ### ⚠️ VMs privadas não cabem no `/30` de gerência do hypervisor
@@ -126,9 +126,10 @@ endereçamento da CCR1036/NE8000 para esses clusters.**
 > ✅ **Pendência resolvida (2026-07-24):** `192.168.115.210` (HubSoft) e `192.168.115.138` (DNS)
 > confirmados por `ip -4 -o addr show` direto nos hosts físicos `px-hubsoft` e `proxmox-dns` —
 > `vmbr0` com esses IPs em cada um, mesmo padrão do Docker (`.116.122`), é gerência do próprio
-> hypervisor. Falta só reservar VLAN/subinterface no NE8000 pra cada um. Ainda em aberto: se o
-> cluster **Zabbix** realmente não tem gerência de hypervisor separada hoje (nesse caso, `vlan999`
-> cobre isso ao criar a "mgmt privada nova").
+> hypervisor. ✅ **Concluído (2026-08-05):** os 4 hypervisors estão com gerência na VLAN 100
+> (`192.168.254.11` Docker, `.12` DNS, `.13` HubSoft, `.10` Zabbix) — ver [16](16-etapa1-proxmox-vlans-datacom.md).
+> A "mgmt privada nova" do Zabbix passou a ser a VLAN 100 (mesma dos demais); `vlan999` fica
+> reservada só para o Callcenter futuro.
 >
 > ✅ **Resolvido pra HubSoft (2026-07-24):** `/interface bridge host print` no **RB3011** (o
 > equipamento antigo) mostrou que os MACs das VMs do cluster HubSoft (`HUBSOFT`, `HUBSOFT-RADIUS`)
