@@ -36,14 +36,14 @@ add address=192.168.88.1/24 interface=ether1-MGMT comment="GERENCIA TEMPORARIA B
 add name=vlan16-PUBLICA vlan-id=16 interface=sfp1-TRUNK-DM disabled=yes comment="177.72.104.0/27 - GW NE8000 .1"
 
 /ip address
-add address=177.72.104.4/27 interface=vlan16-PUBLICA disabled=yes comment="IP PUBLICO NAT CCR - ATIVAR NO CORTE"
+add address=177.72.104.15/27 interface=vlan16-PUBLICA disabled=yes comment="IP PUBLICO NAT CCR - ATIVAR NO CORTE (era .4, trocado 2026-08-07: .4 = LoopBack1 NE8000)"
 
 /ip route
 add dst-address=0.0.0.0/0 gateway=177.72.104.1 disabled=yes comment="DEFAULT NE8000 - ATIVAR NO CORTE"
 
 # Dupla protecao: regra desativada e lista NAT-PRIVADAS ainda vazia/inexistente.
 /ip firewall nat
-add chain=srcnat action=src-nat to-addresses=177.72.104.4 src-address-list=NAT-PRIVADAS out-interface=vlan16-PUBLICA disabled=yes comment="NAT GERAL - ATIVAR SOMENTE NO CORTE"
+add chain=srcnat action=src-nat to-addresses=177.72.104.15 src-address-list=NAT-PRIVADAS out-interface=vlan16-PUBLICA disabled=yes comment="NAT GERAL - ATIVAR SOMENTE NO CORTE"
 
 # Gerencia local de bancada. Reavaliar a origem permitida antes de instalar no rack.
 /ip service

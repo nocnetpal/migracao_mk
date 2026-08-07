@@ -13,9 +13,10 @@ add name=vlan15-NTP vlan-id=15 interface=sfp1-TRUNK-DM comment="NTP container 19
 /ip address
 add address=192.168.116.9/30 interface=vlan15-NTP comment="GW NTP"
 
-# ---------- 2. OSPF area 0.0.0.1 (NE8000 .1 <-> CCR .4, MD5 ntprb1030 - decisao #11) ----------
+# ---------- 2. OSPF area 0.0.0.1 (NE8000 .1 <-> CCR .15, MD5 ntprb1030 - decisao #11) ----------
+# router-id trocado 2026-08-07: .4 e o LoopBack1 do NE8000/PPPOE_NETPAL, nao pode ser usado aqui.
 /routing ospf instance
-add name=ospf1 router-id=177.72.104.4
+add name=ospf1 router-id=177.72.104.15
 
 /routing ospf area
 add name=area0.0.0.1 area-id=0.0.0.1 instance=ospf1

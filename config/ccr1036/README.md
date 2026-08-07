@@ -1,5 +1,11 @@
 # CCR1036 - estado da bancada em 2026-08-06
 
+> ⚠️ **2026-08-07/08: IP trocado de `.4` para `.15`** (endereço, SRC-NAT, router-id OSPF,
+> `dst-address` dos DST-NAT — ver `runbook-noite.html` passo 3). Os scripts `01`, `03`, `05`, `07`,
+> `08` abaixo já refletem `.15`. O export `ccr1036-pre-corte-2026-08-06.rsc` é uma captura
+> histórica **anterior** à troca (ainda tem `.4`) — não reaplicar sem revisar; gerar export novo
+> após a troca ao vivo.
+
 ## Aplicado e validado
 
 - Equipamento: CCR1036-8G-2S+ r2.
@@ -7,9 +13,10 @@
 - Identity: `CCR-GW_PRIV_SERVIDORES-VPN_WG`.
 - Gerencia temporaria: `ether1-MGMT`, `192.168.88.1/24`.
 - Uplink unico do alvo: `sfp1-TRUNK-DM` para o DM4170; `sfp2-RESERVA` desativada.
-- VLAN 16: `177.72.104.4/27`, gateway/default `177.72.104.1`.
+- VLAN 16: ~~`177.72.104.4/27`~~ → **`177.72.104.15/27`** (trocado 2026-08-07: `.4` é o
+  LoopBack1 do NE8000/PPPOE_NETPAL), gateway/default `177.72.104.1`.
 - VLAN 100: gateway `192.168.254.1/24`.
-- SRC-NAT de `NAT-PRIVADAS` para `177.72.104.4`.
+- SRC-NAT de `NAT-PRIVADAS` para `177.72.104.15`.
 - VLANs, enderecos, rota, lista NAT e regra SRC-NAT ficaram habilitados por decisao do usuario.
 - Chain `input`: established/related, drop invalid, ICMP, gerencia de bancada e drop final.
 - Chain `forward`: established/related, drop invalid, futuro DST-NAT, privadas para internet e
@@ -31,7 +38,8 @@
   `177.72.104.19/32`, entao nao e necessario mais nenhuma regra de firewall na CCR para acesso
   administrativo.
 - VLAN 15 na CCR: `vlan15-NTP` com `192.168.116.9/30` — aplicada.
-- OSPF RouterOS 7 (instance `ospf1` router-id `177.72.104.4`, area `0.0.0.1`) com 6
+- OSPF RouterOS 7 (instance `ospf1` router-id ~~`177.72.104.4`~~ → **`177.72.104.15`**, area
+  `0.0.0.1`) com 6
   interface-templates validados no equipamento: `vlan16-PUBLICA` `type=ptp` `auth=md5`
   `auth-id=1` (chave `ntprb1030` — decisao #11); `vlan100-PRIVADA`, `vlan15-NTP`,
   `vlan66-TS-SIX`, `vlan109-OLT-CPV` e `vlan116-DUDE` passivas.
@@ -57,8 +65,9 @@ RB3011 ainda usar `192.168.254.1` na VLAN 100.
   ✅ **aplicado em 2026-08-06** (script `06`). ~~vlan10 (DNS recursivo)~~ e ~~vlan999
   (Callcenter)~~ foram removidos do plano pelo usuario em 2026-08-06.
 - ~~DST-NAT Dude/TS SIX: decisao `.1` versus `.4` continua aberta.~~ → ✅ **decisao #9 fechada
-  (usuário, 2026-08-06): DST-NAT movem para a CCR `.4`** (`07-dstnat-dude-tssix.rsc`). Quem acessa
-  de fora passa a usar `177.72.104.4`. NE8000 sem NAT server nem rota `.1/32`.
+  (usuário, 2026-08-06): DST-NAT movem para a CCR** (`07-dstnat-dude-tssix.rsc`), IP trocado
+  para **`177.72.104.15`** em 2026-08-07. Quem acessa de fora passa a usar `177.72.104.15`.
+  NE8000 sem NAT server nem rota `.1/32`.
 - `07` e `08` aplicados e validados: DST-NAT Dude (`:18291`→`192.168.116.30:8291`) e TS SIX
   (`:15389`→`192.168.66.14:15389`) ativos; `NAT-PRIVADAS` agora com VLAN 100, 66 e 116 (OLT 109
   fica fora do NAT, igual ao RB3011 — so gerencia). Consulta DNS dos servidores privados aos DNS

@@ -1,6 +1,6 @@
 # ============================================================
 # CCR1036 - 08-nat-privadas-ts-six-dude.rsc
-# Inclui TS SIX (66) e Dude (116) no SRC-NAT para 177.72.104.4
+# Inclui TS SIX (66) e Dude (116) no SRC-NAT para 177.72.104.15
 # RouterOS 7.23.3 - 2026-08-06
 # No RB3011, a lista NAT tinha 192.168.66.0/28 e 192.168.116.28/30.
 # OLT CPV (109) NAO fazia NAT no RB3011 (so gerencia) - fora.
