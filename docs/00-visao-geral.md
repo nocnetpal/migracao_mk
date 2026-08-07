@@ -106,4 +106,5 @@ futura. 📌 Escopo fechado: **a rede de acesso não é tocada.**
 - [17-runbook-etapa1-madrugada.md](17-runbook-etapa1-madrugada.md) — 🆕 **runbook passo a passo** da madrugada Etapa 1 (4 Proxmox)
 - [arquitetura-alvo.drawio](arquitetura-alvo.drawio) — diagrama esquemático da arquitetura alvo (abrir no draw.io desktop ou app.diagrams.net)
 - [runbook-noite.html](runbook-noite.html) — 🆕 **passo a passo autoritativo da janela de 2026-08-12→13** (interativo, checkbox salva no navegador; inclui a troca `.4`→`.15` na CCR)
+- [site-virada.html](site-virada.html) — 🆕 **site da virada** (gerado com skills de design/diagrama, 2026-08-07): arquitetura SVG (NE8000/DM4170/CCR/RB3011/servidores), acessos, VLANs, mapa do `/27` — exportável em PNG/PDF
 - [ips-virada.html](ips-virada.html) — 🆕 mapa visual dos IPs do `/27` para a virada (complementa o [14](14-ips-servidores-e-17772.md))
