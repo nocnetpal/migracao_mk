@@ -113,9 +113,9 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.0` | rede | prefixo `/27` |
 | `.1` | gateway / NAT hoje | GW Servidores (SRC-NAT + DST-NAT Dude/TS SIX) → NE8000 assume o bloco |
 | `.2` | ocupado | UniFi Controller (`docker-netpal`) |
-| `.3` | ocupado | Wiki (`docker-netpal`) |
+| `.3` | ocupado | ~~Wiki~~ 🆕 2026-08-07: **Nginx_Netpal** (proxy reverso, `docker-netpal`) — vhost `wiki.netpaltelecom.online`/`wiki.netpal.com.br` → Wiki. O container Wiki foi recriado sem volume em 05/08 (incidente) e restaurado em 07/08 com a base de 09/2022 |
 | `.4` | **livre → reservado** | NAT da CCR1036 (definido 2026-07-24) |
-| `.5` | ocupado | hypervisor Proxmox Zabbix (+ regras Hubsoft legadas no firewall) |
+| `.5` | ocupado ⚠️ **CONFLITO (2026-08-07)** | hypervisor Proxmox Zabbix (+ regras Hubsoft legadas no firewall). ⚠️ Na correção da wiki em 07/08 o container Wiki subiu com `--ip 177.72.104.5` (achou-se que estava livre) e passou a **mascarar a gerência do hypervisor** (`:8006`/`:22` inalcançáveis). Correção: tirar o Wiki da macvlan e movê-lo pra rede interna Docker atrás do `Nginx_Netpal` (`.3`) |
 | `.6` | ocupado | Zabbix |
 | `.7` | ocupado | Docs / DOCS Cloud |
 | `.8` | ocupado | Smokeping (`docker-netpal`) |
@@ -125,13 +125,13 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.12` | ocupado | OpenVPN-2 (também next-hop `10.254.0.0/22`) |
 | `.13` | ocupado | TIP-VOIP |
 | `.14` | ocupado | Fusionpbx-PM-CPV |
-| `.15` | **livre** | único IP livre restante no `/27` (além do `.4` já reservado) |
+| `.15` | **livre** | único IP livre restante no `/27` (além do `.4` já reservado). 🆕 2026-08-07: usuário vetou usá-lo pra Wiki — a Wiki vai pra rede interna Docker atrás do nginx (`.3`), sem consumir IP do `/27` |
 | `.16` | ocupado | HubSoft |
 | `.17` | ocupado | Fusionpbx-PM-MST |
 | `.18` | ocupado | Fusion-0800-Netpal |
 | `.19` | ocupado | VPN WireGuard (next-hop `10.30.0.0/30`, `10.150.150.0/24`) |
 | `.20` | ocupado | SFTP-OPA-CHAT |
-| `.21` | ocupado | DNS2 Recursivo (`docker-netpal`) |
+| `.21` | **desativado → a liberar** | ~~DNS2 Recursivo (`docker-netpal`)~~ 🆕 2026-08-07: usuário confirmou que o serviço **não é mais necessário** (container morto desde 05/08 sem ninguém sentir). Desligar o container `DNS2-Recursivo-104.21` (`docker stop` + `--restart=no`) e tratar o `.21` como livre no redesenho. A rede macvlan da `docker-netpal` ainda se chama `IP-DNS-177.72.104.21` (só nome, sem função) |
 | `.22` | ocupado | Fusion-Painel-Elaborados |
 | `.23` | ocupado | APP-ETC-SCRIPTS |
 | `.24` | ocupado | OLT-CLOUD |
@@ -143,7 +143,7 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.30` | ocupado | OPA.SUIT / Opa ChatBot |
 | `.31` | broadcast | prefixo `/27` |
 
-**Resumo `/27`:** 2 livres utilizáveis (`.4` reservado NAT, `.15` livre); o restante ocupado ou rede/broadcast.
+**Resumo `/27`:** ~~2 livres utilizáveis~~ 🆕 2026-08-07: 3 livres — `.4` (reservado NAT CCR1036), `.15` e `.21` (DNS2 desativado); o restante ocupado ou rede/broadcast.
 
 ---
 

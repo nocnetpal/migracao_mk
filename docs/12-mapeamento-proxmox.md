@@ -62,7 +62,7 @@ direta dos containers (`docker-mapear-containers.sh`) revelou:
 | `NTP_SERVER` | macvlan | `192.168.116.10` | 🆕 **É a origem do NTP de toda a rede** — o RB3011 aponta pra cá ([01](01-inventario-atual.md)) |
 | `smokeping` | macvlan `IP-DNS-177.72.104.21` | `177.72.104.8` | 🆕 **Resolve o mistério do `.8`** — não é Hubsoft nem morto ([07](07-enderecamento-ip.md), [11](11-cruzamento-dude-devices.md)) |
 | `unifi-controller` | macvlan | `177.72.104.2` | 🆕 novo, nunca catalogado |
-| `Wiki` | macvlan | `177.72.104.3` | 🆕 novo — já citado genericamente na "escala real" do [07](07-enderecamento-ip.md) |
+| `Wiki` | macvlan | ~~`177.72.104.3`~~ | 🆕 novo — já citado genericamente na "escala real" do [07](07-enderecamento-ip.md). ⚠️ 2026-08-07: recriado sem volume na janela de 05/08 (base perdida do ar); restaurado em 07/08 com a base de 09/2022, mas subiu no `.5` (**conflito com o hypervisor Proxmox Zabbix** — ver [14](14-ips-servidores-e-17772.md)); `.3` agora é do `Nginx_Netpal` (proxy). Correção: Wiki sai da macvlan pra rede interna Docker atrás do nginx (sem IP do `/27`) |
 | `pdns-master1` | macvlan | `177.72.104.10` | 🆕 novo — stack PowerDNS separada da "DNS NetPal" |
 | `pdns-slave` | macvlan | `177.72.104.11` | 🆕 novo |
 | `DNS2-Recursivo-104.21` | macvlan | `177.72.104.21` | 🆕 novo — dá nome à rede macvlan do host |

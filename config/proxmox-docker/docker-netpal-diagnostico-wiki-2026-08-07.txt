@@ -1,0 +1,57 @@
+# Coleta 2026-08-07 — diagnóstico "wiki com base 09/2022" pós-Etapa 1
+# Contexto: wiki.netpal.com.br -> 177.72.104.3 responde nginx (vhost wiki com base velha).
+# Verificado da DEVOPS-01 (177.72.104.29): .3 MAC d6:77:8e:01:c0:c1 (nginx Ubuntu, default vhost = Portainer);
+# .21 (DNS2-Recursivo) sem resposta; .2/.8/.10/.11 respondem.
+
+root@docker-netpal:~# docker ps -a --format '{{.Names}}\t{{.Status}}\t{{.Networks}}' | grep -iE 'wiki|nginx|portainer|dns'
+Wiki    Up 30 minutes   IP-DNS-177.72.104.21
+DNS2-Recursivo-104.21   Exited (137) 2 days ago IP-DNS-177.72.104.21
+smokeping       Up 2 days       IP-DNS-177.72.104.21
+pdns-slave      Up 2 days       IP-DNS-177.72.104.21,pdns_pdns
+pdns-master1    Up 2 days       IP-DNS-177.72.104.21,pdns_pdns
+unifi-controller        Up 2 days (healthy)     IP-DNS-177.72.104.21
+portainer       Up 3 weeks      portainer_internal
+Nginx_Netpal    Up 8 days       IP-DNS-177.72.104.21,bridge,portainer_internal
+pdns-admin-static       Up 3 weeks      pdns_pdns
+pdns-adminuwsgi Up 3 weeks      pdns_pdns
+pdns-phpmyadmin Up 3 weeks      pdns_pdns
+pdns-recursor   Up 3 weeks      pdns_pdns
+pdns-mariadb    Up 3 weeks (healthy)    pdns_pdns
+DNS2-Recursivo  Up 3 weeks
+
+root@docker-netpal:~# docker inspect Wiki --format '{{json .NetworkSettings.Networks}}'
+{"IP-DNS-177.72.104.21":{"IPAMConfig":{"IPv4Address":"177.72.104.5"},"Links":null,"Aliases":[],"DriverOpts":{},"GwPriority":0,"NetworkID":"2f1948bf295156b3ac0da368fd998db6fb21d8965960a2b9b91c72234c4e8601","EndpointID":"4f13484eca308423cab040b87896d4df9836d9a41cb2de609ccbd2236b1ab6bf","Gateway":"177.72.104.1","IPAddress":"177.72.104.5","MacAddress":"0e:db:8f:29:c7:5a","IPPrefixLen":27,"IPv6Gateway":"","GlobalIPv6Address":"","GlobalIPv6PrefixLen":0,"DNSNames":["Wiki","3c55421c90fe"]}}
+
+root@docker-netpal:~# ip -d link show ens18
+2: ens18: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether f6:ef:da:c8:5b:0b brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 68 maxmtu 65535 addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535
+    altname enp0s18
+
+# --- RB3011 (GW Servidores), mesma data ---
+# /ip arp print where address=177.72.104.3
+#  0 DC 177.72.104.3    D6:77:8E:01:C0:C1 Bridge IP Publico
+# /interface bridge host print where mac-address=D6:77:8E:01:C0:C1
+#  0   D   D6:77:8E:01:C0:C1      vlan16-servidores Bridge I... 30m30s
+#  1   D   D6:77:8E:01:C0:C1   16 ether7 - Proxm... bridge-s... 30m30s
+# => o dono do .3 está DENTRO do Proxmox Docker, chegando via ether7/VLAN16 (entrega VLAN16->ens18 OK)
+
+# --- Relatório da correção feita na docker-netpal em 2026-08-07 (resumo) ---
+# Causa raiz: em 05/08 (janela Etapa 1) a rede macvlan foi recriada (parent ens2) e o container
+#   Wiki foi recriado SEM volumes (docker run sem -v) -> subiu vazio; base real (3,2 GB, sqlite)
+#   ficou intacta em /Docker/wikijs/config/db.sqlite (compose de 2022, porta 3002).
+# Correção 07/08: backup em /Docker/backup-wiki-20260807/; container recriado com os volumes
+#   antigos; nginx (Nginx_Netpal) assumiu o .3 e faz proxy do vhost wiki -> Wiki; cert LE via
+#   DNS-01 (hooks pdns) até 05/11/2026.
+# ⚠️ PROBLEMA INTRODUZIDO: Wiki subiu com --ip 177.72.104.5 = IP de gerência do hypervisor
+#   Proxmox Zabbix (HP físico, docs/12) -> :8006/:22 do hypervisor mascarados (verificado da
+#   DEVOPS-01: ARP .5 = 0e:db:8f:29:c7:5a, portas 8006/22 sem resposta). Proposta: mover pro .15
+#   (único livre no /27) e ajustar proxy_pass do nginx.
+# ⚠️ Base é de 02/09/2022 — nenhuma base mais nova encontrada na VM nem na varredura de rede.
+# ⚠️ DNS2-Recursivo-104.21 (.21) segue morto (Exited 137, 05/08) — religar.
+# ⚠️ VM "Docs" (177.72.104.7, Proxmox Zabbix) = ownCloud (verificado 07/08) — não é wiki.
+
+# Observações:
+# - Wiki foi RECRIADO (rede nova NetworkID 2f1948..., IP mudou de .3 -> .5; "Up 30 minutes")
+# - Nginx_Netpal entrou na macvlan (~8 dias; antes só bridge+portainer_internal) — provável dono atual do .3
+# - DNS2-Recursivo-104.21 morto: Exited (137) há 2 dias (kill -9/OOM) -> .21 fora do ar
+# - Containers da macvlan reiniciados há 2 dias (noite da Etapa 1); pdns_pdns/portainer com 3 semanas de uptime (VM não reiniciou)
