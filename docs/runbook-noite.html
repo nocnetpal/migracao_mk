@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Passo a Passo da Noite — Migração GW Servidores (2026-08-07)</title>
+<title>Passo a Passo da Noite — Migração GW Servidores (data a definir)</title>
 <style>
   :root{
     --bg:#0d1117; --card:#161b22; --card2:#1c2330; --border:#30363d;
@@ -69,7 +69,7 @@
 <div class="wrap">
 <header>
   <h1>🌙 Passo a Passo da Noite — Migração GW Servidores</h1>
-  <div class="sub">2026-08-07 · Seguir na ordem. Marcar cada passo ao concluir (salva no navegador).</div>
+  <div class="sub">Janela a agendar (preparado em 2026-08-07) · Seguir na ordem. Marcar cada passo ao concluir (salva no navegador).</div>
   <span class="badge b-warn">QinQ / sfp1: NÃO MEXER</span>
   <span class="badge b-err">Regra: caminho novo valida ANTES de derrubar o antigo</span>
   <div class="prog"><div class="prog-bar" id="progBar"></div></div>
@@ -117,7 +117,7 @@
     <span class="num">4</span><span class="step-title">Backup das configs atuais</span>
     <span class="tag tag-pre">PRÉ</span><span class="chevron">▶</span></div>
     <div class="step-body">
-      <div class="do"># RB3011: /export file=pre-noite-2026-08-07<br># NE8000 (PPPOE e BGP_NETPAL): display current-configuration<br># DM4170 e CCR: já salvos em config/ (running-config-bancada-2026-08-07.txt, ccr1036-pre-corte-2026-08-06.rsc)</div>
+      <div class="do"># RB3011: /export file=pre-noite-AAAA-MM-DD  <span class="cm">(usar a data da janela)</span><br># NE8000 (PPPOE e BGP_NETPAL): display current-configuration<br># DM4170 e CCR: já salvos em config/ (running-config-bancada-2026-08-07.txt, ccr1036-pre-corte-2026-08-06.rsc)</div>
       <div class="expect">Esperado: arquivos salvos no notebook (pasta config/).</div>
     </div>
   </div>

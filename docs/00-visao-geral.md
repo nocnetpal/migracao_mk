@@ -26,8 +26,9 @@ Remover o(s) Mikrotik(s) que hoje atuam como gateway/roteador da rede e substitu
 > (com as correções em ~~riscado~~). **Decisões: todas as 14 fechadas** — sumário-tabela no topo
 > do [03-decisoes-pendentes.md](03-decisoes-pendentes.md).
 
-**Fase atual:** janela da noite de **2026-08-07** — instalar DM4170 + CCR no rack e migrar os
-servidores 177 ([runbook-noite.html](runbook-noite.html) é o passo a passo oficial; estratégia em
+**Fase atual:** aguardando agendamento da **próxima janela** (previsão: semana de 2026-08-10,
+**data ainda não marcada**) — instalar DM4170 + CCR no rack e migrar os servidores 177
+([runbook-noite.html](runbook-noite.html) é o passo a passo oficial; estratégia em
 [15](15-plano-migracao-servidores-177.md)). O QinQ **fica no RB3011** — corte do trunk é janela
 futura. 📌 Escopo fechado: **a rede de acesso não é tocada.**
 
@@ -98,5 +99,5 @@ futura. 📌 Escopo fechado: **a rede de acesso não é tocada.**
 - [16-etapa1-proxmox-vlans-datacom.md](16-etapa1-proxmox-vlans-datacom.md) — 🆕 **primeira etapa:** VLANs Proxmox + portas Datacom (native gerência + tag 16)
 - [17-runbook-etapa1-madrugada.md](17-runbook-etapa1-madrugada.md) — 🆕 **runbook passo a passo** da madrugada Etapa 1 (4 Proxmox)
 - [arquitetura-alvo.drawio](arquitetura-alvo.drawio) — diagrama esquemático da arquitetura alvo (abrir no draw.io desktop ou app.diagrams.net)
-- [runbook-noite.html](runbook-noite.html) — 🆕 **passo a passo autoritativo da janela de 2026-08-07** (interativo, checkbox salva no navegador; inclui a troca `.4`→`.15` na CCR)
+- [runbook-noite.html](runbook-noite.html) — 🆕 **passo a passo autoritativo da próxima janela** (data a definir; interativo, checkbox salva no navegador; inclui a troca `.4`→`.15` na CCR)
 - [ips-virada.html](ips-virada.html) — 🆕 mapa visual dos IPs do `/27` para a virada (complementa o [14](14-ips-servidores-e-17772.md))
