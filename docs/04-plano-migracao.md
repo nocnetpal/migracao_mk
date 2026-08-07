@@ -141,7 +141,7 @@ Migrar em bloco, na mesma janela:
 ### Fase 4 — Descomissionamento
 1. RB3011 e RB2011 ficam **desligados mas configurados** por N semanas (rollback físico). RB750
    permanece ativo (WireGuard).
-2. **Rotação de credenciais** (tudo vazou em texto claro nos exports): chave OSPF MD5 `ntprb1030`
+2. **Rotação de credenciais** (tudo vazou em texto claro nos exports): chave OSPF MD5 da area1 (valor nos exports em `config/`)
    (rede toda, coordenar! — estratégia na decisão #11 de [03](03-decisoes-pendentes.md)), senha
    BGP do peer Google, senhas PPP dos 4 usuários, community SNMP. 🆕 Credenciais FTP de backup
    (`mkbkp`/`hwbkp`) e token da API FocusChat **não precisam rotacionar** — as duas automações que

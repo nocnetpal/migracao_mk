@@ -362,7 +362,7 @@ locais**, não uma stack L2TP/IPSec. É um requisito bem menor do que o document
 |---|---|---|
 | `use-ipsec: no` | L2TP sem IPSec | Túnel sem criptografia de transporte; depende só de MPPE |
 | `authentication: chap,mschap1,mschap2` | CHAP e MS-CHAPv1 aceitos | Ambos são algoritmos quebrados. Deveria ser **apenas `mschap2`** |
-| `ipsec-secret: ntp1030` | Definido mas inativo | Segredo exposto no equipamento sem função; note a semelhança com a chave OSPF `ntprb1030` — padrão de reuso de credencial |
+| `ipsec-secret` definido (valor no export) | Definido mas inativo | Segredo exposto no equipamento sem função; o valor é quase idêntico ao da chave OSPF da area1 — padrão de reuso de credencial |
 | Senhas dos `/ppp secret` | Texto claro no export | Rotacionar todas ao desativar o equipamento |
 
 > **Confirmado pela coleta 2 — e é pior do que parecia:** `/ppp profile print` mostrou que **os

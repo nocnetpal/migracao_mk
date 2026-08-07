@@ -26,7 +26,7 @@
 | 2 | ~~MTU/baby giants nos dois trechos novos~~ | [03 #4](03-decisoes-pendentes.md) | ✅ **estratégia fechada (2026-07-24)** — jumbo frame máximo de cada equipamento; número concreto na hora de configurar |
 | 3 | Mecanismo de NAT na CCR1036 — como o IP público chega nela | [03 #9](03-decisoes-pendentes.md) | ✅ **CCR dentro do `/27`** (~~`.4`~~ → 🆕 **`.15`** VLAN 16, troca 2026-08-07 — LoopBack1 `.4/32` do NE8000; ver `config/ne8000/check-177.72.104.15-livre-2026-08-07.md`); ~~`/32` P2P~~ descartado; falta testar + DST-NAT na CCR `.15` |
 | 4 | ~~Sobreposição `177.72.104.60/30`~~ | [03 #10](03-decisoes-pendentes.md) | ✅ **investigado e resolvido (2026-07-24)** — não é conflito real, NE8000 não tem interface nesse /30 |
-| 5 | ~~Estratégia da chave OSPF MD5 `ntprb1030` no corte~~ | [03 #11](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — Opção A: mantém `ntprb1030` no corte, rotaciona na fase 4 |
+| 5 | ~~Estratégia da chave OSPF MD5 da area1 no corte~~ | [03 #11](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — Opção A: mantém a chave atual no corte, rotaciona na fase 4 |
 | 6 | ~~Variante da CCR1036~~ | [02](02-arquitetura-alvo.md) | ✅ **decidido (2026-07-24): 8G-2S+** |
 | 7 | Passo 1 da limpeza — quais sistemas do firewall antigo ainda estão vivos | [05](05-limpeza-politicas.md) | 🟡 conscientemente adiado (2026-07-24) — voltar depois de fechar o resto |
 | 8 | ~~Portas/VLANs Proxmox HubSoft e Zabbix~~ | [03 #12](03-decisoes-pendentes.md) | ✅ **concluído (2026-08-05):** os 4 hypervisors estão `.10`–`.13` na VLAN 100; públicas tag 16, privadas untagged. Portas antigas RB750 `ether3/ether4` desativadas — ver [16](16-etapa1-proxmox-vlans-datacom.md) |

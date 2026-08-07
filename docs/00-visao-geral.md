@@ -75,7 +75,7 @@ futura. 📌 Escopo fechado: **a rede de acesso não é tocada.**
 - WireGuard na CCR + saída do RB750 — só depois de toda a migração validada (decisão #5)
 - **Janela QinQ futura:** trunk `sfp1`→DM4170, SVIs POP no NE8000, router-id/source do BGP
   FlowSpec e NetStream saindo do `.54`, desligar RB3011/RB2011 — [13](13-rotina-corte.md)
-- Fase 4 (descomissionamento): rotação/revogação de credenciais — chave OSPF `ntprb1030`
+- Fase 4 (descomissionamento): rotação/revogação de credenciais — chave OSPF MD5 da area1
   (decisão #11), FTP backup, PPP, SNMP, token FocusChat (revogar)
 
 ## Índice dos documentos

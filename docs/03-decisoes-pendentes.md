@@ -14,7 +14,7 @@
 | 8 | Dependências NE8000↔GW Servidores | ✅ | Resolvida pela #9 (`/27` connected no NE8000); LoopBacks de gerência criadas 2026-08-07 |
 | 9 | Dono do `/27` + IP da CCR | ✅ 2026-08-07 | NE8000 dono (`.1`); CCR ~~`.4`~~ → **`.15`** VLAN 16; DST-NAT Dude/TS SIX na CCR |
 | 10 | Sobreposição `177.72.104.60/30` | ✅ 2026-07-24 | Sem conflito; `.60/30` migra pro NE8000 |
-| 11 | Chave OSPF MD5 | ✅ 2026-07-24 | Opção A — mantém `ntprb1030` no corte, rotação fase 4 |
+| 11 | Chave OSPF MD5 | ✅ 2026-07-24 | Opção A — mantém a chave atual da area1 no corte, rotação fase 4 |
 | 12 | Gerência dos 4 Proxmox | ✅ 2026-08-05 | Concluída: hosts `.10`–`.13` na VLAN 100, VMs públicas tag 16 |
 | 13 | DM4170 L2 ou L3 | ✅ 2026-07-24 | Opção B — **DM4170 só L2**; SVIs QinQ no NE8000; privadas na CCR |
 | 14 | Firewall dos servidores locais | ✅ 2026-07-24 | Sobe **sem regra dedicada**; endurecimento pós-corte |
@@ -132,7 +132,7 @@ disponibilidade. Reforça a importância de não introduzir *novos* riscos duran
 ## 4. Roteamento dinâmico (OSPF) — ✅ esclarecido pelo export do NE8000
 
 Confirmado: o NE8000 ("BGP_NETPAL") **já é** vizinho OSPF da GW Servidores hoje, pela subinterface
-`GigabitEthernet0/1/8.28` (`192.168.116.33/30`, area 0.0.0.1, mesma chave MD5 `ntprb1030`) — bate
+`GigabitEthernet0/1/8.28` (`192.168.116.33/30`, area 0.0.0.1, mesma chave MD5 da area1) — bate
 exatamente com o gateway padrão que a GW Servidores usa. Ver detalhes em
 [06-ne8000-bgp-core.md](06-ne8000-bgp-core.md).
 
@@ -151,7 +151,7 @@ primário e secundário~~ → ✅ **corrigido (decisão #13, 2026-07-24):** DM41
 do MK **morre com o MK** e não é reutilizada. O NE8000 termina o `/27` numa SVI da VLAN 16 (via
 DM4170) e a adjacência OSPF CCR↔NE8000 passa a ser sobre a VLAN 16 (~~`.4`~~ 🆕 `.15`↔`.1`,
 área 0.0.0.1, MD5
-`ntprb1030` — decisão #11).
+da area1 — decisão #11).
 
 O que ainda falta decidir:
 - ~~O Datacom assume essa adjacência OSPF no lugar da GW Servidores (mesma VLAN/subrede,
@@ -340,7 +340,7 @@ Mikrotik que vamos remover.** Não é uma dependência de gerência — é de pl
    criadas — **a gerência não depende mais do `.54`**; na janela QinQ falta só trocar o router-id/
    source do BGP FlowSpec e o NetStream saindo do `.54` (checklist em [13](13-rotina-corte.md)).
    ⚠️ Achado: OSPF da VS BGP_NETPAL está com **Authtype None** na área 0.0.0.1 (sem MD5) — incluir
-   na estratégia de rotação `ntprb1030` (decisão #11/fase 4).
+   na estratégia de rotação da chave da area1 (decisão #11/fase 4).
 3. O coletor NetStream/IPFIX (`177.72.104.27:3055`) está no mesmo host.
 
 **O que o substituto precisa fazer, no mesmo instante do corte:**
@@ -487,7 +487,7 @@ Efeitos:
 só "sem conflito", agora com dono definido). O achado do FTP/SFTP client-source fica resolvido pela
 mesma mudança (NE8000 vira dono do `.61`).
 
-## 11. ~~Estratégia da chave OSPF MD5 (`ntprb1030`) no corte~~ — ✅ decidido: Opção A
+## 11. ~~Estratégia da chave OSPF MD5 da area1 no corte~~ — ✅ decidido: Opção A
 
 A chave MD5 da area1 é a **mesma em toda a rede** (dezenas de interfaces no NE8000 e nos MKs de
 POP). O plano joga a rotação para a fase 4 ("rede toda, coordenar!"), mas o
@@ -495,7 +495,7 @@ POP). O plano joga a rotação para a fase 4 ("rede toda, coordenar!"), mas o
 Trocar a chave **só** na adjacência nova significa conviver com duas chaves na área — o que é
 válido (MD5 é por-interface), mas precisa ser decisão explícita, não acidental.
 
-- **Opção A** — manter `ntprb1030` no corte (menos variáveis na janela) e rotacionar na fase 4,
+- **Opção A** — manter a chave atual no corte (menos variáveis na janela) e rotacionar na fase 4,
   interface por interface ou com rollover de key-id.
 - **Opção B** — já nascer com chave nova na adjacência DM4170↔NE8000 e ir migrando as demais
   interfaces aos poucos (convivência de duas chaves por tempo indeterminado).
@@ -503,7 +503,7 @@ válido (MD5 é por-interface), mas precisa ser decisão explícita, não aciden
 **Recomendação preliminar: Opção A** — a janela do núcleo já tem variáveis demais; a chave não é
 uma vulnerabilidade urgente.
 
-**✅ Decidido (usuário, 2026-07-24): Opção A.** Mantém `ntprb1030` na adjacência DM4170↔NE8000
+**✅ Decidido (usuário, 2026-07-24): Opção A.** Mantém a chave atual na adjacência DM4170↔NE8000
 durante o corte; rotação da chave fica pra fase 4 ("rede toda, coordenar!"), interface por
 interface ou com rollover de key-id.
 

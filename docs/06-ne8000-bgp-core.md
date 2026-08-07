@@ -13,7 +13,8 @@ Ele é o **core BGP + OSPF de toda a rede da NetPal**, já em produção, com:
   - Route-reflector interno (`177.72.104.27`, AS 52828, também usado para FlowSpec)
   - Google GGC (cache CDN, AS 11344)
 - **OSPF area 0.0.0.1 (= "area1")** — a mesma area1 vista no export do Mikrotik "GW Servidores",
-  com a **mesma chave MD5** (`ntprb1030`). Confirma que MK e NE8000 já são vizinhos OSPF hoje.
+  com a **mesma chave MD5** da area1 (valor: ver exports em `config/ne8000/`). Confirma que MK e
+  NE8000 já são vizinhos OSPF hoje.
 - **Dezenas de subinterfaces QinQ**, cada uma sendo um link ponto a ponto para um POP, torre,
   rádio ou cliente com IP público dedicado (nomenclatura `MK_POP_*`, `RB_*`, `GERENCIA_SW_*`, etc.)
   — isso é a distribuição inteira da rede da NetPal convergindo neste equipamento.
@@ -26,7 +27,7 @@ Subinterface `GigabitEthernet0/1/8.28`:
 ```
 description GERENCIA_GW_SERVIDORES_HUAWEI_NE8000
 ip address 192.168.116.33 255.255.255.252
-ospf authentication-mode md5 1 plain ntprb1030
+ospf authentication-mode md5 1 plain <chave-area1>
 ospf network-type p2p
 ospf enable 1 area 0.0.0.1
 ```
@@ -81,7 +82,7 @@ para SSH/API/Winbox/gerência do Datacom também, em vez de inventar um esquema 
 3. SNMP community está em `cipher` (criptografado) — **ponto positivo**, ao contrário do Mikrotik
    "RB Bridge Servidores" que tinha community em texto claro com write-access liberado pra
    internet inteira.
-4. Chave OSPF MD5 (`ntprb1030`) é a **mesma em toda a rede** (dezenas de interfaces). Não é uma
+4. Chave OSPF MD5 da area1 é a **mesma em toda a rede** (dezenas de interfaces). Não é uma
    vulnerabilidade grave em si (é assim que OSPF costuma ser operado numa rede única), mas se for
    trocada em algum ponto por causa da migração, precisa trocar em todos os vizinhos ao mesmo
    tempo (ou usar rollover de key-id).
