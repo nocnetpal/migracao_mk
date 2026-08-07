@@ -128,7 +128,7 @@ RB3011, SVI NE8000 down, NAT CCR off).
       ACL roteada e demais VLANs seguem pendentes — ver [10](10-enderecamento-ccr1036.md)
 - [ ] Pré-criar no NE8000, **desativado**: zonas de firewall ([05](05-limpeza-politicas.md)),
       subinterfaces pros links da CCR1036
-- [ ] WireGuard na CCR somente depois de toda a migração concluída e validada
+- [ ] ~~WireGuard na CCR somente depois de toda a migração concluída~~ → 🆕 **entra na Etapa A da noite** (origem `.19`; RB750 sai na janela) — [18](18-vpn-remota-ccr-wireguard.md)
 - [ ] Testar integrado: VLAN 16 ~~`.4`~~ 🆕 `.15`↔`.1`, NAT, OSPF ~~`.4`~~ `.15`↔`.1`, VLAN 100, VLAN 15/NTP, VLAN 66
   (TS SIX), VLAN 109 (OLT CPV) e VLAN 116 (Dude)
 - [ ] Trocar o IP do Proxmox Zabbix (`177.72.104.5` → privado novo) — **pode ser feito

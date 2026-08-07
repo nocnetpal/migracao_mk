@@ -5,10 +5,10 @@
 | # | Decisão | Status | Resultado resumido |
 |---|---|---|---|
 | 1 | NAT e DHCP | ✅ 2026-07-23 | NAT → **CCR1036**; NE8000 só `/27`+firewall; DHCP = 1 escopo trivial |
-| 2 | Quais MKs saem | ✅ 2026-08-06 | RB3011 + RB2011 saem; **RB750 fica** (WireGuard `.19`) até VPN migrar |
+| 2 | Quais MKs saem | ✅ 2026-08-06 / 🆕 08-07 | RB3011 + RB2011 **e RB750** saem na janela 12→13; WireGuard migra p/ CCR (origem `.19`) antes — [18](18-vpn-remota-ccr-wireguard.md) |
 | 3 | Redundância/HA | ✅ 2026-07-24 | **Sem redundância** — mesmo SPOF de hoje, aceito |
 | 4 | OSPF / adjacências | ✅ | VLAN 28 morre com o MK; nova adjacência CCR `.15`↔NE8000 `.1` na VLAN 16 |
-| 5 | VPN de equipe | ✅ 2026-08-06 | WireGuard na CCR **só pós-migração**; L2TP/OpenVPN/PPTP não recriados |
+| 5 | VPN de equipe | ✅ 2026-08-06 / 🆕 08-07 | WireGuard na CCR **entra na Etapa A da noite** (usuário remoto; RB750 sai na janela) com origem `177.72.104.19` — ver [18](18-vpn-remota-ccr-wireguard.md); L2TP/OpenVPN/PPTP não recriados |
 | 6 | Automações (backup FTP, netwatch→FocusChat) | ✅ 2026-07-24 | **Descartadas**, não migram; token FocusChat só revogar (fase 4) |
 | 7 | Geo-allowlist BRASIL | ✅ 2026-07-24 | **Descartar** — lista órfã, nunca referenciada |
 | 8 | Dependências NE8000↔GW Servidores | ✅ | Resolvida pela #9 (`/27` connected no NE8000); LoopBacks de gerência criadas 2026-08-07 |

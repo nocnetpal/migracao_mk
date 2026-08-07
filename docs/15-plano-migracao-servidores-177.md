@@ -28,6 +28,8 @@ flowchart LR
   end
 ```
 
+> 🆕 **2026-08-07:** RB750 **também sai na janela** (WireGuard migra p/ CCR com origem `.19`) — [18](18-vpn-remota-ccr-wireguard.md)
+
 | Continua no RB3011 (nesta fase) | Migra nesta fase |
 |---|---|
 | `sfp1` QinQ (acesso POP/OLT) | Links novos NE8000↔DM4170↔CCR (Etapa A) |

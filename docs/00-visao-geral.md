@@ -40,7 +40,7 @@ futura. 📌 Escopo fechado: **a rede de acesso não é tocada.**
 | NE8000 | Dono do `/27` (SVI VLAN 16, `.1`) + firewall L3 + SVIs das VLANs de acesso; segue core BGP/OSPF ([06](06-ne8000-bgp-core.md)) |
 | CCR1036 8G-2S+ | NAT (**`177.72.104.15`** na VLAN 16) + gateway das redes privadas locais + WireGuard (só pós-migração); único uplink = trunk com o DM4170 |
 | RB3011 + RB2011 | **Saem** (RB3011 mantém o QinQ até a janela futura) |
-| RB750 | **Fica** com o WireGuard `.19` até a VPN migrar pra CCR (pós-migração) |
+| RB750 | **Sai na janela 12→13** — WireGuard `.19` migra para a CCR (origem `.19` mantida) — 🆕 [18](18-vpn-remota-ccr-wireguard.md) |
 
 ### ✅ Pronto
 
@@ -104,6 +104,7 @@ futura. 📌 Escopo fechado: **a rede de acesso não é tocada.**
 - [15-plano-migracao-servidores-177.md](15-plano-migracao-servidores-177.md) — **Etapa A** (DM4170+CCR no NE8000) e **Etapa B** (só servidores 177); QinQ fora desta fase
 - [16-etapa1-proxmox-vlans-datacom.md](16-etapa1-proxmox-vlans-datacom.md) — 🆕 **primeira etapa:** VLANs Proxmox + portas Datacom (native gerência + tag 16)
 - [17-runbook-etapa1-madrugada.md](17-runbook-etapa1-madrugada.md) — 🆕 **runbook passo a passo** da madrugada Etapa 1 (4 Proxmox)
+- [18-vpn-remota-ccr-wireguard.md](18-vpn-remota-ccr-wireguard.md) — 🆕 **acesso remoto na virada:** WireGuard na CCR com origem `177.72.104.19` (RB750 sai na janela; usuário opera remoto)
 - [arquitetura-alvo.drawio](arquitetura-alvo.drawio) — diagrama esquemático da arquitetura alvo (abrir no draw.io desktop ou app.diagrams.net)
 - [runbook-noite.html](runbook-noite.html) — 🆕 **passo a passo autoritativo da janela de 2026-08-12→13** (interativo, checkbox salva no navegador; inclui a troca `.4`→`.15` na CCR)
 - [site-virada.html](site-virada.html) — 🆕 **site da virada** (gerado com skills de design/diagrama, 2026-08-07): arquitetura SVG (NE8000/DM4170/CCR/RB3011/servidores), acessos, VLANs, mapa do `/27` — exportável em PNG/PDF
