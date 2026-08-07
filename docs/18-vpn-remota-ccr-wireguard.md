@@ -5,92 +5,87 @@
 > acontece **na própria janela**, então o WireGuard precisa subir na **CCR1036** antes (Etapa A).
 > O usuário opera **remoto** (outra internet) e o acesso depende desta VPN.
 
-## Decisão (usuário, 2026-08-07)
+## Decisão (usuário, 2026-08-07 — revisada no mesmo dia)
 
-- **Manter o IP `177.72.104.19` como origem da VPN na CCR** — em vez de usar o `.15`:
-  todos os firewalls/ACLs já liberam o `.19` (NE8000 rule 11 da VS, input da CCR, whitelist do
-  DM4170 via `/27`). Zero mudança nos acessos existentes.
+- 🆕 **Abordagem A (recomendada e escolhida): WireGuard na CCR com endpoint
+  `177.72.104.15`** (o IP de NAT da CCR) — só para o operador acessar durante a janela. É a
+  mais simples: o `.15` já é IP da CCR (**sem conflito ARP** com o RB750) e, com
+  **SRC-NAT do pool → `.15`**, o retorno sempre volta para a CCR (não depende do OSPF
+  anunciar o pool — e não colide com o anúncio do RB750 enquanto ele estiver no ar).
+  Origem `.15` já liberada: NE8000 rule 70 (VS e PPPOE — `/27` inteiro), DM4170 whitelist
+  (`/27`), CCR forward (vê `10.150.150.0/24`).
+- **Variante B (descartada por ora): origem `.19`** — exigiria IP secundário `.19` na CCR,
+  esperar o RB750 sair (ARP duplicado) e SRC-NAT→`.19`. Mantida como opção pós-virada se
+  quiserem preservar o endereço histórico.
 - **Revisa a decisão #5** (WireGuard só pós-migração) → WG entra **na Etapa A da noite**;
   **revisa a decisão #2** (RB750 "fica até a VPN migrar") → RB750 **sai na janela** (2026-08-12→13).
 
 ## Desenho
 
 ```
-Você remoto → Internet → 177.72.104.19:13231 (WG na CCR, VLAN 16)
+Você remoto → Internet → 177.72.104.15:13231 (WG na CCR, VLAN 16)
                         → CCR (wg1 · pool 10.150.150.0/24)
-                        → SRC-NAT → origem .19
+                        → SRC-NAT → origem .15 (IP da CCR)
                         → default via .1 → NE8000 (.240/.241/.242) ✓
                         → VLANs privadas (100/15/66/109/116) ✓
 ```
 
-| Item | Valor | Origem |
+| Item | Valor | Obs |
 |---|---|---|
-| Endpoint WG | `177.72.104.19:13231` | igual ao RB750 — clientes não mudam endpoint |
+| Endpoint WG | `177.72.104.15:13231` | IP de NAT da CCR — sem conflito ARP |
 | IP do servidor WG | `10.150.150.1/24` | pool mantido |
-| Peers | `10.150.150.2/.4/.5/.6/.7/.8` (Leonardo, Bruno, Regis…) | idênticos ao RB750 |
-| SRC-NAT | `10.150.150.0/24 → 177.72.104.19` | mesma regra do RB750 |
-| IP secundário na CCR | `177.72.104.19/27` na VLAN 16 | **disabled** até o RB750 sair |
+| Peer (janela) | `10.150.150.x/32` — só o operador (Leonardo) | novo peer na CCR |
+| SRC-NAT | `10.150.150.0/24 → 177.72.104.15` | retorno sempre volta p/ CCR — não precisa anunciar o pool no OSPF |
+| OSPF do pool | **não anunciar** (SRC-NAT resolve) | evita dupla origem com o RB750 |
 
 ## ⚠️ Cuidados técnicos
 
-1. **ARP duplicado:** enquanto o RB750 estiver no ar com o `.19`, a CCR **não pode** ativar o
-   `.19` (dois donos = ARP flap). Sequência: cabos da CCR (trunk) → pessoal tira
-   RB750/RB2011 → **habilitar `.19` + WG na CCR** → usuário conecta.
+1. ~~**ARP duplicado (variante B/.19)**~~ — não se aplica à abordagem A (o `.15` é IP da CCR).
+   O RB750 pode continuar no ar com o `.19` sem conflito.
 2. **Firewall da CCR:** liberar **UDP/13231 no input** (hoje o input é restrito:
    established/.19/NOC/drop — sem isso o handshake WG é descartado).
-3. **OSPF do pool:** a CCR não pode anunciar `10.150.150.0/24` enquanto o RB750 o anunciar
-   (dupla origem). Anunciar passivamente **depois** da saída do RB750.
-4. **Chave WG — pendência (decidir segunda-feira):** (a) CCR gera par novo → atualizar a chave
-   pública nos clients; ou (b) **reutilizar a chave privada do RB750** → zero mudança nos
-   clients (migração instantânea; risco da chave já ter sido usada).
+3. **OSPF do pool:** **não anunciar** — o SRC-NAT→`.15` faz o retorno voltar sempre para a CCR.
+   (Anunciar só se no futuro quiserem clientes WG alcançáveis de dentro, após a saída do RB750.)
+4. **Chave WG:** a CCR gera **par novo** (não reutilizar a do RB750) — é só **um client** na
+   janela (o operador), atualizar a public-key no device dele.
 
 ## Config proposta na CCR (bancada, segunda-feira — aplicar com WG disabled)
 
 ```rsc
-# IP secundário .19 (origen VPN — DISABLED até o RB750 sair)
-/ip address add address=177.72.104.19/27 interface=vlan16-PUBLICA comment="ORIGEM VPN WG (era RB750 .19)" disabled=yes
-
-# Interface WireGuard (pegar a public-key gerada para os clients)
+# Interface WireGuard (anotar a public-key gerada — vai no client)
 /interface wireguard add name=wireguard1 listen-port=13231 mtu=1380
 /ip address add address=10.150.150.1/24 interface=wireguard1 comment="WG SERVIDOR"
 
-# Peers (idênticos ao RB750 — conferir public-keys no export rb750gr3-wireguard)
-/interface wireguard peers add interface=wireguard1 allowed-address=10.150.150.2/32 comment="Leonardo" public-key="…" persistent-keepalive=25s
-/interface wireguard peers add interface=wireguard1 allowed-address=10.150.150.4/32 comment="Leonardo PC CASA" public-key="…" persistent-keepalive=25s
-/interface wireguard peers add interface=wireguard1 allowed-address=10.150.150.5/32 comment="Leonardo IPHONE" public-key="…" persistent-keepalive=25s
-/interface wireguard peers add interface=wireguard1 allowed-address=10.150.150.6/32 comment="Bruno" public-key="…" persistent-keepalive=25s
-/interface wireguard peers add interface=wireguard1 allowed-address=10.150.150.7/32 comment="Leonardo" public-key="…" persistent-keepalive=25s
-/interface wireguard peers add interface=wireguard1 allowed-address=10.150.150.8/32 comment="PC Regis" public-key="…" persistent-keepalive=25s
+# Peer do operador (Leonardo) — só ele na janela; public-key = chave pública do client
+/interface wireguard peers add interface=wireguard1 allowed-address=10.150.150.5/32 comment="Leonardo REMOTO" public-key="…" persistent-keepalive=25s
 
-# SRC-NAT do pool → .19 (mesma do RB750)
-/ip firewall nat add chain=srcnat src-address=10.150.150.0/24 action=src-nat to-addresses=177.72.104.19 comment="WG REMOTO ORIGEM .19"
+# SRC-NAT do pool → .15 (IP da CCR — retorno volta sempre para ela)
+/ip firewall nat add chain=srcnat src-address=10.150.150.0/24 action=src-nat to-addresses=177.72.104.15 comment="WG REMOTO ORIGEM .15"
 
 # Liberar o handshake no input
 /ip firewall filter add chain=input protocol=udp dst-port=13231 action=accept comment="WIREGUARD REMOTO"
 
-# OSPF passivo do pool — só DEPOIS do RB750 sair (senão dupla origem)
-# /routing ospf interface-template add area=area0.0.0.1 interfaces=wireguard1 passive comment="OSPF PASSIVA WG"
-
-# Deixar tudo desligado até a hora:
-/interface wireguard disable wireguard1
+# ⚠️ NÃO anunciar o pool no OSPF (SRC-NAT resolve o retorno; evita dupla origem com o RB750)
 ```
+> No client (device do operador): endpoint `177.72.104.15:13231` + a public-key da CCR.
+> Não depende da saída do RB750 — só do trunk da CCR subir (Etapa A).
 
 ## Ordem na noite (2026-08-12→13)
 
 1. Etapa A: cabos da CCR (XS2 ↔ sfp1) e do NE8000 (GE0/1/3 ↔ XS1) — validar L2
-2. Pessoal retira **RB2011 + RB750**
-3. Na CCR: habilitar `wireguard1` + IP `.19` (desabilitar o disabled) + (se aplicável) OSPF passivo do pool
-4. Clientes: se chave nova, atualizar a public-key do servidor; se reutilizou a do RB750, **nada a mudar**
-5. Validação remota (de outra internet): handshake WG OK → `ping 10.200.255.241/242` → SSH no NE8000 → alcançar VLAN 100/privadas
+2. Na CCR: habilitar `wireguard1` (endpoint `.15:13231`) — **não precisa esperar o RB750 sair**
+3. Operador remoto conecta: handshake WG OK → `ping 10.200.255.241/242` → SSH no NE8000 → alcançar VLAN 100/privadas
+4. Pessoal retira **RB2011 + RB750** (a partir daqui o `.19` deixa de existir)
+5. Pós-virada: decidir se mantém o `.15` (recomendado) ou replica o `.19` (variante B)
 
 ## Rollback
 
-- Se o WG da CCR não funcionar: religar o RB750 (ele permanece configurado) — o `.19` volta para ele; a CCR desativa o `.19` e o wg1.
-- O RB750/RB2011 ficam desligados mas configurados por N semanas (rollback físico — fase 4 do plano).
+- Se o WG da CCR não funcionar: o RB750 permanece configurado até a retirada — o operador usa o WG antigo (`.19`) como reserva enquanto ele existir.
+- Depois da retirada: RB750/RB2011 ficam desligados mas configurados por N semanas (rollback físico — fase 4 do plano).
 
 ## Pendências para segunda-feira
 
-- [ ] Decidir chave WG: nova (atualizar clients) ou reutilizar a do RB750
-- [ ] Conferir as public-keys dos peers no export `config/rb750gr3-wireguard/export-2026-07-27.rsc`
-- [ ] Aplicar a config acima na CCR (WG disabled)
-- [ ] Registrar o IP `.19` e o wg1 no monitoramento/backup da CCR
+- [x] Abordagem A escolhida: endpoint `.15` (2026-08-07)
+- [ ] Aplicar a config acima na CCR (wg1 + peer do operador + SRC-NAT→.15 + UDP/13231)
+- [ ] Atualizar o device do operador: endpoint `177.72.104.15:13231` + public-key da CCR
+- [ ] Registrar o wg1 no monitoramento/backup da CCR

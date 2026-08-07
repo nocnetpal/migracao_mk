@@ -179,12 +179,12 @@
 
 
   <div class="step warn" data-i="8"><div class="step-head">
-    <span class="num">9</span><span class="step-title">WireGuard remoto na CCR — origem .19 (antes do RB750 sair)</span>
+    <span class="num">9</span><span class="step-title">WireGuard remoto na CCR — endpoint 177.72.104.15 (operador remoto)</span>
     <span class="tag tag-pre">REMOTO</span><span class="chevron">▶</span></div>
     <div class="step-body">
-      <div class="warnbox"><b>Operador está remoto (outra internet).</b> O RB750 (WG .19) e o RB2011 <b>saem na janela</b> — a VPN passa para a CCR com a <b>mesma origem 177.72.104.19</b> (todos os firewalls já liberam). Detalhe completo: <a href="18-vpn-remota-ccr-wireguard.md">doc 18</a>.</div>
-      <div class="do"># Sequência (CRÍTICA): cabos da CCR primeiro → pessoal tira RB750/RB2011 → depois habilita:<br>/interface wireguard enable wireguard1<br>/ip address enable [find where address="177.72.104.19/27"]<br><span class="cm"># (OPCIONAL, se o RB750 já saiu) anunciar o pool no OSPF:</span><br>/routing ospf interface-template add area=area0.0.0.1 interfaces=wireguard1 passive comment="OSPF PASSIVA WG"</div>
-      <div class="expect">Esperado: de fora, o WG conecta em <span class="ip">177.72.104.19:13231</span> (pool 10.150.150.x) → ping <span class="ip">10.200.255.241</span>/<span class="ip">.242</span> → SSH no NE8000. ⚠️ Não habilitar o .19 na CCR enquanto o RB750 estiver no ar (ARP duplicado). Chave WG: decidir antes (doc 18).</div>
+      <div class="warnbox"><b>Operador está remoto (outra internet).</b> O RB750 (WG .19) e o RB2011 <b>saem na janela</b>. A VPN sobe na CCR com <b>endpoint 177.72.104.15</b> (IP de NAT — sem conflito ARP) e <b>SRC-NAT do pool → .15</b> (retorno sempre volta p/ CCR; não precisa anunciar o pool no OSPF). Detalhe: <a href="18-vpn-remota-ccr-wireguard.md">doc 18</a>.</div>
+      <div class="do"># 1) cabos da CCR (Etapa A) → 2) habilita o WG (não precisa esperar o RB750 sair):<br>/interface wireguard enable wireguard1<br><span class="cm"># client remoto: endpoint 177.72.104.15:13231 + public-key da CCR (doc 18)</span><br><span class="cm"># SRC-NAT pool→.15 e UDP/13231 já configurados (doc 18); NÃO anunciar o pool no OSPF</span></div>
+      <div class="expect">Esperado: de fora, o WG conecta em <span class="ip">177.72.104.15:13231</span> (pool 10.150.150.x) → ping <span class="ip">10.200.255.241</span>/<span class="ip">.242</span> → SSH no NE8000 → VLAN 100/privadas. ⚠️ Tráfego sai mascarado como <span class="ip">.15</span> (origem no /27 = liberada em tudo). RB750 pode sair depois sem afetar o acesso.</div>
     </div>
   </div>
 
