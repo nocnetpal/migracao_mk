@@ -36,6 +36,8 @@
     .card h3 { font-size: .875rem; font-weight: 600; }
     .card ul { list-style: none; color: #94a3b8; font-size: .75rem; }
     .card li { margin-bottom: .375rem; }
+    .card { transition: transform .2s ease, border-color .2s ease; }
+    .card:hover { transform: translateY(-3px); border-color: #334155; }
     .card li b { color: #e2e8f0; font-weight: 600; }
     .ip { color: #22d3ee; }
     .ip-warn { color: #fbbf24; }
@@ -61,6 +63,7 @@
   <div class="container" id="report-container">
     <div class="header">
       <div class="header-row">
+        <a href="index.html" style="font-family:JetBrains Mono,monospace;font-size:.72rem;color:#94a3b8;text-decoration:none;letter-spacing:.12em;white-space:nowrap;">← index</a>
         <div class="pulse-dot"></div>
         <h1>Virada NetPal — 2026-08-12 → 13</h1>
         <div class="toolbar">

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetPal NOC — Virada 2026-08-12 → 13</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05060a; --panel:#0b0e15; --line:#1c2333; --txt:#e8ecf4; --muted:#7c87a1;
+    --cyan:#22d3ee; --emerald:#34d399; --amber:#fbbf24; --rose:#fb7185; --violet:#a78bfa;
+    --max:1180px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Space Grotesk',sans-serif;
+    background:
+      radial-gradient(900px 480px at 85% -5%, rgba(34,211,238,.10), transparent 60%),
+      radial-gradient(800px 500px at -10% 20%, rgba(251,113,133,.07), transparent 60%),
+      radial-gradient(700px 600px at 60% 110%, rgba(163,230,53,.06), transparent 60%),
+      var(--bg);
+    color:var(--txt); min-height:100vh; padding:clamp(1.2rem,4vw,3rem);
+  }
+  .wrap{max-width:var(--max);margin:0 auto;}
+  header{margin-bottom:clamp(2rem,5vw,3.5rem);}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--cyan);margin-bottom:.9rem;
+    display:flex;align-items:center;gap:.6rem;
+  }
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--cyan);opacity:.6;}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  h1{
+    font-size:clamp(2.1rem,5.5vw,3.6rem);font-weight:700;letter-spacing:-.03em;line-height:1.02;
+  }
+  h1 em{font-style:normal;color:var(--cyan);}
+  .sub{color:var(--muted);margin-top:1rem;font-size:clamp(.95rem,2vw,1.1rem);max-width:60ch;line-height:1.5;}
+  .meta{
+    margin-top:1.4rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);
+    display:flex;gap:.5rem;flex-wrap:wrap;
+  }
+  .chip{
+    border:1px solid var(--line);border-radius:999px;padding:.28rem .8rem;background:var(--panel);
+  }
+  .chip.cyan{color:var(--cyan);border-color:rgba(34,211,238,.35);}
+  .chip.rose{color:var(--rose);border-color:rgba(251,113,133,.35);}
+  .chip.amber{color:var(--amber);border-color:rgba(251,191,36,.35);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.1rem;}
+  .card{
+    position:relative;display:flex;flex-direction:column;gap:.9rem;
+    background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 40%),var(--panel);
+    border:1px solid var(--line);border-radius:14px;padding:1.5rem 1.4rem 1.35rem;
+    text-decoration:none;color:var(--txt);
+    transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+    overflow:hidden;
+  }
+  .card::after{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+    background:radial-gradient(420px 220px at 80% 0%,var(--glow,rgba(34,211,238,.12)),transparent 70%);
+  }
+  .card:hover{transform:translateY(-4px);border-color:var(--accent,#22d3ee);box-shadow:0 18px 40px -18px rgba(0,0,0,.7),0 0 0 1px var(--accent,#22d3ee) inset;}
+  .card:hover::after{opacity:1;}
+  .card:active{transform:translateY(-1px) scale(.995);}
+  .card .num{
+    font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.22em;color:var(--muted);
+    text-transform:uppercase;
+  }
+  .card h2{font-size:1.28rem;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:.6rem;}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .card p{color:var(--muted);font-size:.86rem;line-height:1.55;flex:1;}
+  .card .go{
+    font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--accent,#22d3ee);
+    display:flex;align-items:center;gap:.45rem;letter-spacing:.06em;
+  }
+  .card .go .arr{transition:transform .2s ease;}
+  .card:hover .go .arr{transform:translateX(5px);}
+  .card .tags{display:flex;gap:.4rem;flex-wrap:wrap;}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.1em;padding:.18rem .55rem;border-radius:6px;border:1px solid var(--line);color:var(--muted);}
+  .card.cyan{--accent:var(--cyan);--glow:rgba(34,211,238,.14);} .card.cyan .dot{background:var(--cyan);}
+  .card.emerald{--accent:var(--emerald);--glow:rgba(52,211,153,.12);} .card.emerald .dot{background:var(--emerald);}
+  .card.violet{--accent:var(--violet);--glow:rgba(167,139,250,.12);} .card.violet .dot{background:var(--violet);}
+  .card.amber{--accent:var(--amber);--glow:rgba(251,191,36,.10);} .card.amber .dot{background:var(--amber);}
+  .foot{margin-top:3rem;text-align:center;color:#4a5470;font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.06em;line-height:1.8;}
+  .foot .hl{color:var(--muted);}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><span class="pulse"></span> NOC NetPal · Capivari do Sul/RS</div>
+    <h1>Virada <em>GW Servidores</em></h1>
+    <p class="sub">Migração da agregação Mikrotik → Datacom/Huawei/CCR. Etapa A (DM4170 + CCR no NE8000) + Etapa B (servidores 177). QinQ permanece no RB3011.</p>
+    <div class="meta">
+      <span class="chip cyan">quarta 12 → quinta 13 ago 2026</span>
+      <span class="chip">DM4170 12.4.0 · bancada ✅</span>
+      <span class="chip">CCR NAT .15 ✅</span>
+      <span class="chip rose">QinQ: não mexer</span>
+      <span class="chip amber">caminho novo antes do antigo</span>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <a class="card cyan" href="site-virada.html">
+      <span class="num">01 · Visão geral</span>
+      <h2><span class="dot"></span>Site da virada</h2>
+      <p>Arquitetura da rede em diagrama (NE8000 → DM4170 → CCR + servidores), acessos de todos os equipamentos, VLANs e gateways, mapa do <code>/27</code>. Exportável em PNG/PDF.</p>
+      <div class="tags"><span class="tag">DIAGRAMA</span><span class="tag">IPS</span><span class="tag">ACESSOS</span></div>
+      <span class="go">abrir diagrama <span class="arr">→</span></span>
+    </a>
+
+    <a class="card emerald" href="runbook-noite.html">
+      <span class="num">02 · Execução</span>
+      <h2><span class="dot"></span>Passo a passo da noite</h2>
+      <p>22 passos sequenciais com comandos prontos e resultado esperado de cada um. Checklist interativo que salva no navegador — a ordem oficial da janela.</p>
+      <div class="tags"><span class="tag">CHECKLIST</span><span class="tag">COMANDOS</span><span class="tag">ROLLBACK</span></div>
+      <span class="go">abrir runbook <span class="arr">→</span></span>
+    </a>
+
+    <a class="card violet" href="ips-virada.html">
+      <span class="num">03 · Referência</span>
+      <h2><span class="dot"></span>Mapa de IPs /27</h2>
+      <p>Todos os públicos do bloco <code>177.72.104.0/27</code> — ocupados, livres e reservados (.15 NAT · .4 do NE8000), VM a VM com a porta do DM4170.</p>
+      <div class="tags"><span class="tag">IP PÚBLICO</span><span class="tag">VMS</span><span class="tag">PORTAS</span></div>
+      <span class="go">abrir mapa <span class="arr">→</span></span>
+    </a>
+
+    <a class="card amber" href="../config/index.html" style="display:none"></a>
+
+  </main>
+
+  <footer class="foot">
+    <span class="hl">NETPAL</span> · virada 2026-08-12→13 · docs/00–17 + config/ · gerado 2026-08-07<br>
+    console do NE8000 no rack = plano B de acesso · se algo falhar: religar o cabo no RB3011
+  </footer>
+</div>
+</body>
+</html>
