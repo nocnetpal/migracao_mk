@@ -1,0 +1,42 @@
+# RB750-WIREGUARD — public-keys dos peers WG (coleta 2026-08-10, pré-retirada)
+
+> ⚠️ **Sensível** — chaves públicas dos peers WireGuard. Não copiar valores para os docs
+> (regra do projeto). Coletado antes da retirada do RB750 na janela 12→13.
+> RouterOS 7.21.5 · identity RB750-WIREGUARD.
+
+## Peers wireguard1 (porta 13231, pool 10.150.150.0/24)
+
+| # | Nome | allowed-address | public-key | obs |
+|---|---|---|---|---|
+| 0 | Leonardo | 10.150.150.2/32 | mvWRWGlj3cdrBewImwq8niCkCNbspk83tmRz8uUAdV4= | last handshake 2w6d (inativo) |
+| 1 | LEONARDO PC CASA | 10.150.150.4/32 | dNj+KsZHildrXFRzYetyIgfgAoxl2W9jD833w4Ct0wM= | ativo (handshake 1m49s) |
+| 2 | LEONARDO IPHONE | 10.150.150.5/32 | WBlUhzu0h2ks7BrBwqnrvVVQvlHeBBmFQmCmP965Ry0= | ativo (2w6d) |
+| 3 | Bruno | 10.150.150.6/32 | 7RVka3AiZau5m8GTPCgCEHa/qxBOcZGbKpck6lYMX1I= | ativo (7h) |
+| 4 | Leonardo | 10.150.150.7/32 | TE3+JnrHqE2COG25ALf1cnNd/vtsv3NQf0XzjMALJ3Q= | inativo |
+| 5 | PC Regis | 10.150.150.8/32 | mJXUlsvpDbbzU8OCVPDEId5pi3LQc7mncflLpiIQAwM= | inativo |
+| 6 | Luann (X) | 10.150.150.9/32 | f8VD4aaXdm3UIu8Ilu86J0ekOQs3Mmq6WjoVm2CTYi4= | desabilitado |
+| 7 | Sabrina | 10.150.150.10/32 | XHuVoEwRvfLVTrmZWunL7XQyYlJ7xt/eem6mr/rjc2Q= | inativo |
+| 8 | Isaac | 10.150.150.11/32 | xcV6lJ9utyfR0KQfoAwtnkBKcfiPH1enTe0W7kID1F8= | inativo |
+| 9 | Bruno MAC | 10.150.150.12/32 | aqNrOCyI4qZtFUTNnLa9UK4t4aUGlgAivhh6tRtN8ws= | inativo |
+| 10 | Bruno MAC Win | 10.150.150.13/32 | IkCxksry5x5oXRLBoMvGm61xV7vruz/QM6eBxs0A/R4= | inativo |
+| 11 | Leonardo2 | 10.150.150.3/32 | gvJUF7JxK+EsOExHQc28G4oN6ArOJHr1oFVCDDDgnUk= | inativo |
+| 12 | RB RODEIO TVR (X) | 10.150.150.15/32 | cT3nbbXuTTpDULU7o8cbhPk5QnWLjCVOzRIaRwkZE0E= | desabilitado |
+| 13 | Sabrina iPad | 10.150.150.14/32 | cPXBqeHLl1tuGiCedOXQQGwkW8E3fPOBmKhODCgx/kU= | inativo |
+| 14 | AUTOBRAP | 10.150.150.16/32 | 3c42hV+e49C3DKNNdECd+gI7M6YzonGqcuJo9WIFaEY= | **ATIVO** (endpoint 100.64.31.1:13231, handshake 1m53s) |
+| 15 | Bruno Home | 10.150.150.17/32 | HW4WDQ78ryk1X+W+5JVvloGQPZrN80Hhs5naeKyShjE= | ativo (1m11s) |
+| 16 | Condominio RARO (wg-mgmt) | 10.99.0.2/32, 10.90.0.0/22 | 2GBneJPnh2VJWcXP7KrvOdtBl4ccLpHGoiFEXtLNvwU= | interface **wg-mgmt** (outro WG!) |
+
+## ⚠️ Achados
+
+1. A RB750 tem **muito mais peers** que o export de 2026-07-27 (que listava 6): agora 17 peers,
+   incluindo **AUTOBRAP (ativo)** e **Condominio RARO** (interface `wg-mgmt`, redes 10.99.0.2/32
+   + 10.90.0.0/22 — outro túnel WG, provavelmente gerência/parceiro).
+2. **A saída da RB750 pode afetar mais que a VPN da equipe** — AUTOBRAP e RARO usam este
+   equipamento. ⚠️ Confirmar com o usuário antes da retirada: esses túneis migram ou podem cair?
+3. O plano do WG remoto (doc 18) usa **chave nova na CCR** (peer só do operador) — as
+   public-keys acima servem de referência/rollback, não de migração.
+
+## Export completo
+
+- `/export file=rb750-pre-retirada-2026-08-10` → trazer o .rsc para `config/rb750gr3-wireguard/`
+  (arquivo fica em flash/ na RB750; baixar via FTP/winbox).
