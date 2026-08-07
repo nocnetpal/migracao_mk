@@ -1,1 +1,4 @@
 .claude/
+
+# Firmware DmOS (124 MB) - baixar do portal Datacom, nao versionar
+config/dm4170/DmOS-12.4.0-DM4170/Firmware/*.swu
