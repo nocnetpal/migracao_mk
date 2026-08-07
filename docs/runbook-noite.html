@@ -141,8 +141,9 @@
     <span class="tag tag-config">CONFIG</span><span class="chevron">▶</span></div>
     <div class="step-body">
       <div class="warnbox">Tudo desativado: <b>sem impacto em produção</b>. A SVI do /27 fica shutdown até a virada (o RB3011 ainda é o gateway).</div>
-      <div class="do"># VS BGP_NETPAL — porta escolhida ex.: GE0/1/2:<br>interface GigabitEthernet0/1/2.16<br>&nbsp;vlan-type dot1q 16<br>&nbsp;ip address 177.72.104.1 255.255.255.224<br>&nbsp;shutdown<br>interface GigabitEthernet0/1/2.100<br>&nbsp;vlan-type dot1q 100<br>&nbsp;ip address 192.168.254.1 255.255.255.0<br>&nbsp;shutdown<br>interface GigabitEthernet0/1/2.15<br>&nbsp;vlan-type dot1q 15<br>&nbsp;ip address 192.168.116.9 255.255.255.252<br>&nbsp;shutdown<br>interface GigabitEthernet0/1/2.66<br>&nbsp;vlan-type dot1q 66<br>&nbsp;ip address 192.168.66.1 255.255.255.240<br>&nbsp;shutdown<br>interface GigabitEthernet0/1/2.109<br>&nbsp;vlan-type dot1q 109<br>&nbsp;ip address 192.168.115.41 255.255.255.252<br>&nbsp;shutdown<br>interface GigabitEthernet0/1/2.116<br>&nbsp;vlan-type dot1q 116<br>&nbsp;ip address 192.168.116.29 255.255.255.252<br>&nbsp;shutdown<br>commit</div>
-      <div class="expect">Esperado: subinterfaces criadas, todas administrativamente down. <code>display interface GigabitEthernet0/1/2.16</code> mostra administratively down. OSPF NÃO habilitado nelas.</div>
+      <div class="okbox">✅ O NE8000 só tem sub-interface do <b>público</b> (VLAN 16, `.1/27`) — as VLANs privadas (100/15/66/109/116) são gateway <b>só da CCR</b>, não duplicar aqui.</div>
+      <div class="do"># VS BGP_NETPAL — porta escolhida ex.: GE0/1/2:<br>interface GigabitEthernet0/1/2.16<br>&nbsp;vlan-type dot1q 16<br>&nbsp;ip address 177.72.104.1 255.255.255.224<br>&nbsp;shutdown<br>commit</div>
+      <div class="expect">Esperado: sub-interface `.16` criada, administrativamente down. <code>display interface GigabitEthernet0/1/2.16</code> mostra administratively down. OSPF NÃO habilitado nela ainda.</div>
     </div>
   </div>
 
@@ -159,8 +160,8 @@
     <span class="num">8</span><span class="step-title">Validação L2 do trunk DM4170 (sem ativar L3)</span>
     <span class="tag tag-valid">VALIDAR</span><span class="chevron">▶</span></div>
     <div class="step-body">
-      <div class="do"># DM4170:<br>show vlan membership detail&nbsp;&nbsp;<span class="cm"># 6 VLANs nas XS1/XS2</span><br>show mac-address-table vlan 16<br># CCR (bancada): ping ao DM4170 pela VLAN 100<br>/ping 192.168.254.1 count=3</div>
-      <div class="expect">Esperado: VLANs nos trunks, MACs aprendidos, ARP da VLAN 100 resolvendo. <b>Não ativar o /27 ainda.</b></div>
+      <div class="do"># DM4170:<br>show vlan membership detail&nbsp;&nbsp;<span class="cm"># 6 VLANs nas XS1/XS2</span><br>show interface status ten-gigabit-ethernet 1/1/1<br>show interface status ten-gigabit-ethernet 1/1/2<br># CCR: confirmar as proprias interfaces vlan UP (sem 3o dispositivo, nao ha o que fazer ping ainda)<br>/interface print</div>
+      <div class="expect">Esperado: link UP nas duas XS, as 6 VLANs tagged aprendidas nas portas. <b>Sem servidor plugado em nenhuma VLAN ainda, não dá pra testar ping fim a fim</b> — isso só valida na Etapa B. Não ativar o /27.</div>
     </div>
   </div>
 </div>

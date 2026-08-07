@@ -97,8 +97,11 @@ Checklist (bancada ou rack, **sem** tráfego de produção):
       dono do bloco enquanto o RB3011 ainda tiver `177.72.104.1/27`** (conflito ARP). Opções
       seguras na Etapa A: interface `shutdown`, ou IP temporário de teste fora do `/27`, ou
       validar só L2 (ping entre IPs de gerência dos equipamentos novos)
-- [ ] Prep subinterfaces/SVIs das gerências dos clusters (gateways do [10](10-enderecamento-ccr1036.md))
-      — idem: sem anunciar se ainda colidem com o RB3011
+- [x] ~~Prep subinterfaces/SVIs das gerências dos clusters no NE8000~~ → ❌ **removido
+      (2026-08-08): as gerências privadas (100/15/66/109/116) são gateway só da CCR
+      ([10](10-enderecamento-ccr1036.md)), não devem existir no NE8000** — resíduo de antes do
+      refinamento de 2026-08-06 (decisão #13). O NE8000 só tem sub-interface do público
+      (VLAN 16, `.1/27`).
 - [ ] ✅ **NAT fechado (2026-07-27; 🆕 IP trocado 2026-08-07):** CCR **dentro do `/27`** —
       ~~`177.72.104.4`~~ → **`177.72.104.15`** na VLAN 16
       (via DM4170); GW `.1` no NE8000. ~~`.4`~~ `.15` — o LoopBack1 `.4/32` do NE8000
