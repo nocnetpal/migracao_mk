@@ -130,7 +130,8 @@ O ~~Datacom~~ **NE8000** passa a reproduzir isso como uma SVI própria na VLAN n
 primário **e** secundário — ~~o Datacom terá de reproduzir isso como uma SVI na VLAN 28 com IP
 primário e secundário~~ → ✅ **corrigido (decisão #13, 2026-07-24):** DM4170 fica só L2; a VLAN 28
 do MK **morre com o MK** e não é reutilizada. O NE8000 termina o `/27` numa SVI da VLAN 16 (via
-DM4170) e a adjacência OSPF CCR↔NE8000 passa a ser sobre a VLAN 16 (`.4`↔`.1`, área 0.0.0.1, MD5
+DM4170) e a adjacência OSPF CCR↔NE8000 passa a ser sobre a VLAN 16 (~~`.4`~~ 🆕 `.15`↔`.1`,
+área 0.0.0.1, MD5
 `ntprb1030` — decisão #11).
 
 O que ainda falta decidir:
@@ -174,7 +175,7 @@ O que ainda falta decidir:
   não bloqueante.
 
 **Status:** adjacência principal detalhada (~~VLAN 28~~ → ✅ **morre com o MK; nova adjacência
-CCR↔NE8000 sobre a VLAN 16** `.4`↔`.1`, 2026-08-06 — ver desenho do OSPF em [10](10-enderecamento-ccr1036.md));
+CCR↔NE8000 sobre a VLAN 16** ~~`.4`~~ 🆕 `.15`↔`.1`, 2026-08-06/07 — ver desenho do OSPF em [10](10-enderecamento-ccr1036.md));
 mapa VLAN→porta completo ([09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md)). ~~🆕 Com o
 escopo fechado em "só a GW Servidores" (2026-07-23), a confirmação de SVI roteada sobre tag
 interna de QinQ no DmOS volta a ser o bloqueio técnico nº 1 — é o DM4170 quem herda as SVIs
@@ -316,6 +317,11 @@ Mikrotik que vamos remover.** Não é uma dependência de gerência — é de pl
    subinterface voltada para a GW Servidores. E o route-reflector `177.72.104.27` é um host dentro
    do `177.72.104.0/27`, que só é alcançável porque **a GW Servidores anuncia esse /27 na OSPF
    area 1**. O NE8000 não tem interface própria nesse bloco.
+   🆕 (2026-08-07): LoopBacks de gerência `10.200.255.241` (PPPOE) e `10.200.255.242` (BGP_NETPAL)
+   criadas — **a gerência não depende mais do `.54`**; na janela QinQ falta só trocar o router-id/
+   source do BGP FlowSpec e o NetStream saindo do `.54` (checklist em [13](13-rotina-corte.md)).
+   ⚠️ Achado: OSPF da VS BGP_NETPAL está com **Authtype None** na área 0.0.0.1 (sem MD5) — incluir
+   na estratégia de rotação `ntprb1030` (decisão #11/fase 4).
 3. O coletor NetStream/IPFIX (`177.72.104.27:3055`) está no mesmo host.
 
 **O que o substituto precisa fazer, no mesmo instante do corte:**
@@ -371,26 +377,34 @@ foi substituída pela decisão #1: o NAT roda na **CCR1036**. Continua válido q
 mesmo modelo dos servidores (VLAN 16), com IP `177.72.104.4`. **Não** é host-route `/32`
 por link privado separado.
 
+🚨 **REVISADO (2026-08-07): o `177.72.104.4` NÃO pode ser usado pela CCR — troca para
+`177.72.104.15`.** O dump do NE8000 (PPPOE_NETPAL, `config/ne8000/pppoe_netpal-config-2026-08-07.txt`)
+revelou o `LoopBack1 = 177.72.104.4/32` anunciado no OSPF (`network 177.72.104.4 0.0.0.0`) —
+o `.4` já é do NE8000. **Checagem ao vivo 2026-08-07** (`config/ne8000/check-177.72.104.15-livre-2026-08-07.md`):
+`177.72.104.15` livre (ping 100% sem resposta no NE8000 e RB3011; ARP do RB3011 dinâmico sem MAC).
+**Novo IP da CCR: `177.72.104.15`** (usuário, 2026-08-07). ⚠️ A CCR já estava configurada com
+`.4` em bancada — **reconfigurar para `.15`** antes do trunk subir (base 2026-08-06 dos scripts 01–09).
+
 - NE8000: dono/gateway do `177.72.104.0/27` (SVI VLAN 16)
-- CCR: `177.72.104.4` na VLAN 16, ✅ **confirmado em 2026-08-06 pelo trunk DM4170↔CCR** —
-  SRC-NAT/DST-NAT usam `.4`; o NE8000 mantém `.1/27` no mesmo domínio L2 pelo trunk
-  DM4170↔NE8000
+- CCR: ~~`177.72.104.4`~~ → 🆕 **`177.72.104.15`** na VLAN 16, ✅ caminho confirmado em 2026-08-06
+  pelo trunk DM4170↔CCR — SRC-NAT/DST-NAT usam `.15`; o NE8000 mantém `.1/27` no mesmo domínio
+  L2 pelo trunk DM4170↔NE8000
 - ~~Link direto CCR↔NE8000 como trânsito separado~~ → ❌ **descartado em 2026-08-06**. A CCR tem
   somente o trunk com o DM4170; por ele chegam a VLAN 16, as redes privadas e o caminho até o
   NE8000
 - ~~rota `/32` via P2P `10.254.254.x`~~ → ❌ **descartado** (usuário 2026-07-27): primeiro
   rejeitou o `10.254.254.x`, depois definiu CCR **dentro** do `/27` (não `/32` isolado)
 
-Mesmo padrão L2 dos hosts `.9`/`.12`/`.27` no broadcast do bloco — o NE8000 alcança `.4` por ARP
-na VLAN 16.
+Mesmo padrão L2 dos hosts `.9`/`.12`/`.27` no broadcast do bloco — o NE8000 alcança
+~~`.4`~~ `.15` por ARP na VLAN 16.
 
 ✅ **Caminho do tráfego privado fechado (usuário, 2026-08-06):** a CCR é o **gateway L3 das redes
 privadas de servidores** recebidas pelo trunk do DM4170, incluindo VLAN 100
 `192.168.254.0/24` com gateway `192.168.254.1`. Assim o tráfego passa naturalmente pelo SRC-NAT
-na CCR e sai como `.4` pela VLAN 16 no mesmo trunk até o gateway `.1` no NE8000. Não há PBR nem
-gateway privado no NE8000 para essas redes locais.
+na CCR e sai como ~~`.4`~~ 🆕 **`.15`** pela VLAN 16 no mesmo trunk até o gateway `.1` no NE8000.
+Não há PBR nem gateway privado no NE8000 para essas redes locais. (IP trocado 2026-08-07.)
 
-📋 **Acesso roteado e OSPF desenhados, ainda não aplicados (usuário, 2026-08-06):** OSPF entre NE8000 `.1` e CCR `.4`
+📋 **Acesso roteado e OSPF desenhados, ainda não aplicados (usuário, 2026-08-06):** OSPF entre NE8000 `.1` e CCR ~~`.4`~~ 🆕 **`.15`**
 diretamente sobre o `/27`/VLAN 16, área `0.0.0.1`; VLANs privadas anunciadas passivamente pela
 CCR. Como a VLAN 16 é compartilhada, a CCR aceita protocolo OSPF somente da origem `.1`. Acesso
 encaminhado às redes privadas fica restrito a `177.72.104.19/32`, `177.93.244.165/32` e
@@ -404,13 +418,14 @@ exata de prefixos de origem ainda precisa ser consolidada antes da regra de fire
 
 ~~**Ainda aberto (DST-NAT):** port-forwards Dude/TS SIX hoje no `.1` — passam pro `.4` (quem acessa
 de fora atualiza) ou o NE8000 também roteia `.1/32` pra CCR? A confirmar.~~ → ✅ **Resolvido
-(usuário, 2026-08-06): os DST-NAT movem para a CCR `.4`.** Quem acessa de fora atualiza o IP de
-destino para `177.72.104.4`; o NE8000 não recebe NAT server nem rota `.1/32` (NAT fica só na CCR,
-conforme decisão). Ver [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
+(usuário, 2026-08-06): os DST-NAT movem para a CCR ~~`.4`~~ 🆕 **`.15`** (2026-08-07).** Quem acessa
+de fora atualiza o IP de destino para `177.72.104.15`; o NE8000 não recebe NAT server nem rota
+`.1/32` (NAT fica só na CCR, conforme decisão). Ver [10-enderecamento-ccr1036.md](10-enderecamento-ccr1036.md).
 
-**Status:** ✅ **Opção B** (NE8000 dono do `/27`) + ✅ **CCR dentro do `/27` com `.4` na
-VLAN 16** (2026-07-27) + ✅ caminho L2 via DM4170 + gateways privados na CCR (2026-08-06) +
-✅ **DST-NAT Dude/TS SIX na CCR `.4`** (2026-08-06).
+**Status:** ✅ **Opção B** (NE8000 dono do `/27`) + ✅ **CCR dentro do `/27` com
+~~`.4`~~ 🆕 **`.15`** na VLAN 16** (2026-07-27; troca 2026-08-07 pelo LoopBack1 `.4/32` do NE8000)
++ ✅ caminho L2 via DM4170 + gateways privados na CCR (2026-08-06) +
+✅ **DST-NAT Dude/TS SIX na CCR `.15`** (2026-08-06/07).
 
 ## 10. ~~Possível sobreposição no `177.72.104.60/30`~~ (enlace Juca Ana) — ✅ resolvido
 

@@ -1,0 +1,4 @@
+Version:	1139-61-DmOS-12.4.0-DM4170.swu
+Release Date:	Sat, 27 Jun 2026 09:12:05 GMT
+md5sum:		b48fd9be3d0a8ee57ab75a66bdd210f9
+sha256sum:	879de6d2b51c80c5c4a6add3d9fd8a1bc5f0d08c9340e0b101c6b8a0c6cf5372

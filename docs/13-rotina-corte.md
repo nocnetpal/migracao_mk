@@ -14,9 +14,9 @@
 > | **Etapa B** | Migrar só servidores `177.*` + virada `/27`/NAT; QinQ fica no RB3011 | [15 § Etapa B](15-plano-migracao-servidores-177.md) + seção **Etapa B** abaixo |
 > | **Futura** | Troca QinQ `sfp1` + SVIs POP + desliga RB3011 | Restante deste runbook (T-14 / janela QinQ) |
 >
-> 🚨 **Etapa B ainda não está pronta pra agendar** enquanto os bloqueadores #3 (teste da rota NAT
-> `.4`) e #8 (novo L2 para HubSoft/Zabbix) abaixo estiverem abertos. Os passos `⛔ BLOQUEADO`
-> continuam válidos.
+> 🚨 **Etapa B ainda não está pronta pra agendar** enquanto o bloqueador #3 (teste da rota NAT
+> `.15` → CCR no NE8000) estiver aberto. ~~e #8 (novo L2 para HubSoft/Zabbix)~~ ✅ concluído
+> 2026-08-05. Os passos `⛔ BLOQUEADO` continuam válidos.
 
 ## 🚦 Bloqueadores — precisam fechar antes de marcar a data
 
@@ -24,7 +24,7 @@
 |---|---|---|---|
 | 1 | ~~SVI roteada sobre tag interna de QinQ no DmOS~~ | [03 #13](03-decisoes-pendentes.md) | ✅ **caiu (2026-07-24)** — decisão #13: DM4170 fica só L2, quem termina a SVI é o NE8000 |
 | 2 | ~~MTU/baby giants nos dois trechos novos~~ | [03 #4](03-decisoes-pendentes.md) | ✅ **estratégia fechada (2026-07-24)** — jumbo frame máximo de cada equipamento; número concreto na hora de configurar |
-| 3 | Mecanismo de NAT na CCR1036 — como o IP público chega nela | [03 #9](03-decisoes-pendentes.md) | ✅ **CCR dentro do `/27`** (`.4` VLAN 16, 2026-07-27); ~~`/32` P2P~~ descartado; falta testar + DST-NAT `.1` vs `.4` |
+| 3 | Mecanismo de NAT na CCR1036 — como o IP público chega nela | [03 #9](03-decisoes-pendentes.md) | ✅ **CCR dentro do `/27`** (~~`.4`~~ → 🆕 **`.15`** VLAN 16, troca 2026-08-07 — LoopBack1 `.4/32` do NE8000; ver `config/ne8000/check-177.72.104.15-livre-2026-08-07.md`); ~~`/32` P2P~~ descartado; falta testar + DST-NAT na CCR `.15` |
 | 4 | ~~Sobreposição `177.72.104.60/30`~~ | [03 #10](03-decisoes-pendentes.md) | ✅ **investigado e resolvido (2026-07-24)** — não é conflito real, NE8000 não tem interface nesse /30 |
 | 5 | ~~Estratégia da chave OSPF MD5 `ntprb1030` no corte~~ | [03 #11](03-decisoes-pendentes.md) | ✅ **fechado (2026-07-24)** — Opção A: mantém `ntprb1030` no corte, rotaciona na fase 4 |
 | 6 | ~~Variante da CCR1036~~ | [02](02-arquitetura-alvo.md) | ✅ **decidido (2026-07-24): 8G-2S+** |
@@ -46,10 +46,26 @@ itens 7, 10 e 11 podem correr em paralelo até a véspera; o 7 foi conscientemen
 > Pré-condição: **Etapa A pronta** ([15 § A.7](15-plano-migracao-servidores-177.md)). Lista de
 > hosts: [14](14-ips-servidores-e-17772.md). Detalhe de escopo: [15](15-plano-migracao-servidores-177.md).
 
+### 🆕 Acesso garantido ao NE8000 (checklist — 2026-08-07)
+
+> Regra de ouro: **caminho novo sobe e valida ANTES de derrubar o antigo.** Nunca remover o
+> `.1/27` do RB3011 (ou derrubar VLAN 28/VE .1014) sem SSH alternativo validado.
+
+- [x] LoopBacks de gerência criadas (2026-08-07): `10.200.255.241/32` (PPPOE, chassi) e
+      `10.200.255.242/32` (BGP_NETPAL, VS) — anunciadas no OSPF area 0.0.0.1. Registro:
+      `config/ne8000/loopbacks-gerencia-2026-08-07.md`
+- [ ] Testar SSH ao NE8000 por `10.200.255.241` e `10.200.255.242` **de fora** (RB3011/RB750/NOC)
+- [ ] Confirmar ping `10.200.255.241` do RB3011/RB750 antes de qualquer janela
+- [ ] Gerência local `192.168.15.2` validada (caminho próprio 2026-08-05 — doc 03)
+- [ ] Console do NE8000 acessível no rack (último recurso da janela)
+- [ ] Atualizar o Dude: "BGP - Jardim Formoso" sai de `177.72.104.54` → `10.200.255.242`
+- [ ] Na janela QinQ: novo router-id/source do BGP FlowSpec (`.27` fica diretamente conectado
+      quando o `/27` subir — decisão #8) e NetStream source saindo do `.54`
+
 ### Pré-corte Etapa B
 
 - [ ] Critério de pronto da Etapa A OK (pings mgmt; FlowSpec/NetStream intactos via caminho antigo)
-- [ ] Rota `177.72.104.4` → CCR testada no NE8000 (bloqueador #3) — ⛔ se aberto
+- [ ] Rota ~~`177.72.104.4`~~ 🆕 **`177.72.104.15`** → CCR testada no NE8000 (bloqueador #3) — ⛔ se aberto
 - [ ] SFP-RJ45 instalados nas portas do mapa [15 § A.5](15-plano-migracao-servidores-177.md)
 - [ ] Script de rollback escrito: repor `177.72.104.1/27` no RB3011 + `shutdown` SVI no NE8000 +
       religar cabo na porta antiga (RB2011/RB750/RB3011)
@@ -77,7 +93,7 @@ Por host:
 
 - [ ] Remover `177.72.104.1/27` (e anúncio OSPF do `/27`) do RB3011
 - [ ] Ativar SVI/anúncio do `/27` no NE8000
-- [ ] Ativar NAT na CCR (`.4`) + DST-NAT Dude/TS SIX se esses hosts já migraram
+- [ ] Ativar NAT na CCR (~~`.4`~~ 🆕 `.15`) + DST-NAT Dude/TS SIX se esses hosts já migraram
 - [ ] RB2011: só o que for bridge de servidor — **não** mexer no `sfp1` QinQ. RB750 **não se mexe**:
       permanece ativo com o WireGuard `.19` (migra pós-corte)
 
@@ -96,7 +112,8 @@ RB3011, SVI NE8000 down, NAT CCR off).
 
 ## T-14 dias: preparação QinQ (sem tocar em produção)
 
-- [ ] Fechar os bloqueadores restantes acima (2, 3, 5, 6, 12)
+- [ ] Fechar o bloqueador restante acima (**#3** — teste da rota NAT; os 🟡 #7 e #11 podem correr
+      em paralelo). ~~2, 5, 6, 12~~ ✅ todos fechados
 - [ ] 🆕 Montar a config do **DM4170** em bancada — **só L2** (decisão #13): QinQ termination de
       todas as VLANs de acesso, trunk 802.1q pro NE8000, ACL de gerência no padrão
       `IPV4_NOC_NETPAL`. **Nenhuma SVI, nenhum OSPF nele.** 🆕 Incluir também: portas dos
@@ -106,12 +123,13 @@ RB3011, SVI NE8000 down, NAT CCR off).
       2 simples de serviço; VLAN 15/NTP vai para a CCR) — mesmo padrão que já usa hoje pras VLANs
       de POP (`MK_POP_*`) — ver [09-l2-mapeamento-vlans.md](09-l2-mapeamento-vlans.md)
 - [x] Base da CCR1036 montada em bancada (2026-08-06): RouterOS/RouterBOOT 7.23.3, VLANs 16/100,
-      `.4/27`, `.1/24`, SRC-NAT e firewall ativos, isolados pelo SFP desconectado. OSPF, VLAN 15,
+      ~~`.4/27`~~ 🆕 `.15/27` (troca 2026-08-07 — reconfigurar), `.1/24`, SRC-NAT e firewall
+      ativos, isolados pelo SFP desconectado. OSPF, VLAN 15,
       ACL roteada e demais VLANs seguem pendentes — ver [10](10-enderecamento-ccr1036.md)
 - [ ] Pré-criar no NE8000, **desativado**: zonas de firewall ([05](05-limpeza-politicas.md)),
       subinterfaces pros links da CCR1036
 - [ ] WireGuard na CCR somente depois de toda a migração concluída e validada
-- [ ] Testar integrado: VLAN 16 `.4`↔`.1`, NAT, OSPF `.4`↔`.1`, VLAN 100, VLAN 15/NTP, VLAN 66
+- [ ] Testar integrado: VLAN 16 ~~`.4`~~ 🆕 `.15`↔`.1`, NAT, OSPF ~~`.4`~~ `.15`↔`.1`, VLAN 100, VLAN 15/NTP, VLAN 66
   (TS SIX), VLAN 109 (OLT CPV) e VLAN 116 (Dude)
 - [ ] Trocar o IP do Proxmox Zabbix (`177.72.104.5` → privado novo) — **pode ser feito
       independente do resto**, é standalone, sem indisponibilidade real (checklist na
@@ -121,7 +139,7 @@ RB3011, SVI NE8000 down, NAT CCR off).
 
 ## T-1 dia: checklist final
 
-- [ ] Confirmar todos os bloqueadores restantes fechados (2, 3, 5, 6, 7, 8, 12)
+- [ ] Confirmar os bloqueadores restantes fechados (**#3, #7, #11** — os demais já estão ✅)
 - [ ] Config do DM4170 e da CCR1036 revisadas e testadas em bancada uma última vez
 - [ ] Script de rollback escrito passo a passo (não improvisar na hora)
 - [ ] Definir o critério de abortar (ex.: "se FlowSpec ou NAT não validar em 15 min, rollback")
@@ -141,7 +159,7 @@ RB3011, SVI NE8000 down, NAT CCR off).
       trunk em L2; nada de "vizinho novo" a validar nele
 - [ ] Validar: tabela de rotas do NE8000 pras VLANs recém-criadas; FlowSpec e NetStream intactos
 - [ ] CCR1036 instalada com seu **único uplink**, o trunk até o DM4170 (VLAN 16 + privadas), ativo;
-      não existe link direto CCR↔NE8000. Validar `.4`↔`.1`, OSPF, NAT, VLAN 100 e VLAN 15/NTP antes
+      não existe link direto CCR↔NE8000. Validar ~~`.4`~~ 🆕 `.15`↔`.1`, OSPF, NAT, VLAN 100 e VLAN 15/NTP antes
       de assumir tráfego real
 
 > Até aqui, nada em produção mudou. Ponto seguro pra pausar se precisar.
@@ -171,7 +189,7 @@ minutos → religar `sfp1` no RB3011 (rollback é imediato, o MK está intacto).
 - [ ] Rotas estáticas locais reavaliadas (`10.8.0.0/21` via `.9`, `10.254.0.0/22` via `.12`,
       `10.30.0.0/30`+`10.150.150.0/24` via `.19`, DNS loopbacks via `.28`) — viram *connected*
 - [ ] ~~Adjacência OSPF principal ativa (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)~~ —
-      VLAN 28 morre com o MK; nova adjacência CCR↔NE8000 sobre a VLAN 16 (`.4`↔`.1`)
+      VLAN 28 morre com o MK; nova adjacência CCR↔NE8000 sobre a VLAN 16 (~~`.4`~~ 🆕 `.15`↔`.1`)
 - [ ] Servidores locais do RB3011 (`ether6`–`ether10`) recabeados para portas GE do **DM4170**
       (🆕 confirmado 2026-07-24 — não mais a CCR1036; transceiver SFP-RJ45, ver
       [02](02-arquitetura-alvo.md) e [10](10-enderecamento-ccr1036.md))

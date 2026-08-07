@@ -24,7 +24,7 @@
 
 | VLAN | Nome | Hoje | Destino L2 | L3 | Obs |
 |---|---|---|---|---|---|
-| 16 | IP PUBLICO | sfp1 → slave da `Bridge IP Publico` | rede de acesso → DM4170; VLAN segue aos servidores, NE8000 e CCR | **NE8000** `.1/27`; **CCR** `.4/27` para NAT | Broadcast compartilhado; CCR forma OSPF com `.1` sobre essa VLAN (planejado, não aplicado) |
+| 16 | IP PUBLICO | sfp1 → slave da `Bridge IP Publico` | rede de acesso → DM4170; VLAN segue aos servidores, NE8000 e CCR | **NE8000** `.1/27`; **CCR** ~~`.4/27`~~ 🆕 `.15/27` para NAT (troca 2026-08-07) | Broadcast compartilhado; CCR forma OSPF com `.1` sobre essa VLAN (planejado, não aplicado) |
 | 15 | NTP SERVER | Proxmox Docker `enp8s0f1.15` → `vmbr15` → VM `ens21` → container `.10` | servidor → DM4170 → trunk CCR | **CCR** `192.168.116.9/30` | `.10` atende toda a NetPal; anunciar `192.168.116.8/30` passivamente no OSPF e liberar UDP/123. Configuração ainda pendente |
 | 18 | SERVERINO | sfp1 (simples) | tag 18: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | |
 | 23 | SERVIDOR CDN TV | Proxmox `enp8s0f0`/`vmbr2` → **SW_JDF `XGE0/0/14` untagged** → `XGE0/0/1` tagged | **preservar no SW_JDF; fora do DM4170** | **NE8000** `Gi0/1/8.23`, `177.72.104.105/29` | `.107` Origin, `.108` Edge, `.109` Docker-Netpal; **não misturar com VLAN 16** e não aplicar tag no Proxmox |

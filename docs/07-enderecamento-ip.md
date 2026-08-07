@@ -302,7 +302,8 @@ Qualquer que seja o desenho final, o substituto precisa, **no mesmo instante do 
 
 > ✅ **Requisitos reescritos pelas decisões #9/#13 (2026-07-24) e #11 (2026-08-06):** o **NE8000
 > assume o próprio `177.72.104.0/27`** numa SVI da VLAN 16 (via DM4170) — `.1` deixa de existir no
-> MK; o segmento `.52/30` e a VLAN 28 **morrem com o MK**; NAT fica na CCR `.4` (também na VLAN 16);
+> MK; o segmento `.52/30` e a VLAN 28 **morrem com o MK**; NAT fica na CCR ~~`.4`~~ 🆕 `.15`
+> (também na VLAN 16; troca 2026-08-07 — LoopBack1 `.4/32` do NE8000);
 > o RRFlow `.27` continua no mesmo IP, agora alcançado pelo novo caminho (ver [10](10-enderecamento-ccr1036.md)).
 
 *(O `177.72.104.1` também é o endpoint local do túnel EoIP com o NOC — ver
@@ -330,7 +331,7 @@ Ou seja: o NE8000 entrega **VLAN 28 taggeada**, o switch de topo de rack entrega
 ~~O Datacom precisará reproduzir esse multinetting — uma SVI com IP primário e secundário.~~ → ✅
 **Superado (decisão #13 + desenho 2026-08-06):** o DM4170 fica só L2, a VLAN 28 morre com o MK e o
 NE8000 termina o `/27` em SVI da VLAN 16; adjacência OSPF CCR↔NE8000 sobre a mesma VLAN 16
-(`.4`↔`.1`).
+(~~`.4`~~ 🆕 `.15`↔`.1`).
 
 ## ✅ A VPN **não** é "L2TP/IPSec" — confirmado
 

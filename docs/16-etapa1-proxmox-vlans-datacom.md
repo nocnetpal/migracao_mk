@@ -21,7 +21,7 @@
 | VLAN | Nome | Uso |
 |------|------|-----|
 | **100** | GERENCIA_SERVIDORES | **só** hypervisors Proxmox + VMs privadas |
-| **16** | IP_PUBLICO | VMs/containers `177.72.104.x` + CCR `.4` depois — **nunca** o IP do Proxmox |
+| **16** | IP_PUBLICO | VMs/containers `177.72.104.x` + CCR ~~`.4`~~ 🆕 `.15` (troca 2026-08-07) depois — **nunca** o IP do Proxmox |
 
 Cabo servidor → MK (e depois Datacom): trunk · native/untagged **100** · tagged **16**.
 

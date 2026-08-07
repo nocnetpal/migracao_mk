@@ -422,7 +422,7 @@
     <section id="bloco27">
       <div class="sec-head">
         <h2>Todos os públicos — 177.72.104.0/27</h2>
-        <p>Gateway hoje .1 · NAT CCR .4</p>
+        <p>Gateway hoje .1 · NAT CCR .15 (era .4 — trocado 2026-08-07)</p>
       </div>
       <div class="table-wrap">
         <table>
@@ -434,7 +434,7 @@
             <tr><td><span class="ip">177.72.104.1</span></td><td><span class="tag tag-gw">gateway/NAT</span></td><td>GW Servidores → NE8000</td></tr>
             <tr><td><span class="ip">177.72.104.2</span></td><td><span class="tag tag-info">ocupado</span></td><td>UniFi Controller</td></tr>
             <tr><td><span class="ip">177.72.104.3</span></td><td><span class="tag tag-info">ocupado</span></td><td>Wiki</td></tr>
-            <tr><td><span class="ip">177.72.104.4</span></td><td><span class="tag tag-ok">livre → reservado</span></td><td>NAT CCR1036</td></tr>
+            <tr><td><span class="ip">177.72.104.4</span></td><td><span class="tag tag-info">ocupado</span></td><td>LoopBack1 .4/32 do NE8000 (PPPOE_NETPAL)</td></tr>
             <tr><td><span class="ip">177.72.104.5</span></td><td><span class="tag tag-info">ocupado</span></td><td>Proxmox Zabbix (hypervisor)</td></tr>
             <tr><td><span class="ip">177.72.104.6</span></td><td><span class="tag tag-info">ocupado</span></td><td>Zabbix</td></tr>
             <tr><td><span class="ip">177.72.104.7</span></td><td><span class="tag tag-info">ocupado</span></td><td>Docs</td></tr>
@@ -445,7 +445,7 @@
             <tr><td><span class="ip">177.72.104.12</span></td><td><span class="tag tag-info">ocupado</span></td><td>OpenVPN-2</td></tr>
             <tr><td><span class="ip">177.72.104.13</span></td><td><span class="tag tag-info">ocupado</span></td><td>TIP-VOIP</td></tr>
             <tr><td><span class="ip">177.72.104.14</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusionpbx-PM-CPV</td></tr>
-            <tr><td><span class="ip">177.72.104.15</span></td><td><span class="tag tag-ok">livre</span></td><td>—</td></tr>
+            <tr><td><span class="ip">177.72.104.15</span></td><td><span class="tag tag-ok">livre → reservado</span></td><td>NAT CCR1036 (2026-08-07)</td></tr>
             <tr><td><span class="ip">177.72.104.16</span></td><td><span class="tag tag-info">ocupado</span></td><td>HubSoft</td></tr>
             <tr><td><span class="ip">177.72.104.17</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusionpbx-PM-MST</td></tr>
             <tr><td><span class="ip">177.72.104.18</span></td><td><span class="tag tag-info">ocupado</span></td><td>Fusion-0800</td></tr>
@@ -465,7 +465,7 @@
           </tbody>
         </table>
       </div>
-      <p class="foot-note">Livres: <code>.4</code> (NAT CCR) e <code>.15</code>. Pós-corte o /27 fica no NE8000.</p>
+      <p class="foot-note">Livre: <code>.15</code> (NAT CCR). <code>.4</code> é o LoopBack1 do NE8000. Pós-corte o /27 fica no NE8000.</p>
     </section>
 
     <section id="outros72">

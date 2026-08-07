@@ -3,10 +3,19 @@
 > ✅ **Base de bancada concluída em 2026-08-06:** CCR1036-8G-2S+ r2 em RouterOS/RouterBOOT
 > `7.23.3 stable`, identity `CCR-GW_PRIV_SERVIDORES-VPN_WG`. `ether1-MGMT` usa temporariamente
 > `192.168.88.1/24`; `sfp1-TRUNK-DM` é o único uplink alvo; `sfp2-RESERVA` fica desativada. VLAN 16,
-> `.4/27`, VLAN 100 `.1/24`, default via `.1` e SRC-NAT estão pré-criados e ✅ **habilitados por
+> ~~`.4/27`~~ → 🆕 **`.15/27` (troca 2026-08-07, ver abaixo)**, VLAN 100 `.1/24`, default via `.1` e
+> SRC-NAT estão pré-criados e ✅ **habilitados por
 > decisão do usuário em 2026-08-06**. Sem SFP conectado, continuam isolados em bancada. Não
 > conectar o trunk à produção enquanto o RB3011 ainda usar `192.168.254.1`. Scripts e validações em
 > [`config/ccr1036/`](../config/ccr1036/).
+
+> 🚨 **IP público da CCR trocado (2026-08-07): `177.72.104.4` → `177.72.104.15`.**
+> O dump do NE8000 (PPPOE_NETPAL) revelou o `LoopBack1 = 177.72.104.4/32` anunciado no OSPF —
+> o `.4` já é do NE8000, a CCR não pode usá-lo. `.15` confirmado livre (checagem ao vivo:
+> `config/ne8000/check-177.72.104.15-livre-2026-08-07.md`). ⚠️ **A base de bancada da CCR
+> (scripts 01–09, 2026-08-06) está com `.4` — reconfigurar para `.15`** (VLAN 16, SRC-NAT,
+> DST-NAT Dude/TS SIX) antes de conectar o trunk. Registro central: decisão #9 em
+> [03-decisoes-pendentes.md](03-decisoes-pendentes.md).
 
 > Fonte: `docs/Devices.csv` (export do The Dude). Escopo: VPN de equipe, **gerência**
 > dos servidores locais **e, 🆕 desde 2026-07-23, NAT** (SRC-NAT/DST-NAT — correção do usuário
@@ -17,11 +26,13 @@
 > direto na VLAN 16 (rede de acesso) — **essa parte segue valendo para os servidores que já têm
 > IP público próprio**. O que muda: a função de **tradução de endereço** (SRC-NAT/DST-NAT) agora
 > roda aqui. ~~Isso exigiria rotear um IP público pelo link privado com o NE8000.~~ ✅ **Caminho
-> confirmado em 2026-08-06:** a CCR recebe diretamente `177.72.104.4/27` na VLAN 16 pelo trunk
+> confirmado em 2026-08-06:** a CCR recebe diretamente ~~`177.72.104.4/27`~~ 🆕
+> `177.72.104.15/27` (troca 2026-08-07) na VLAN 16 pelo trunk
 > DM4170↔CCR, no mesmo domínio L2 do gateway `.1` no NE8000. As automações antigas foram
 > descartadas pela decisão #6 e não entram na CCR.
 >
-> ✅ **IP definido (usuário, 2026-07-24): `177.72.104.4`.** ✅ **Modelo (2026-07-27): CCR
+> ✅ **IP definido (usuário, 2026-07-24): ~~`177.72.104.4`~~ → 🆕 `177.72.104.15` (2026-08-07).**
+> ✅ **Modelo (2026-07-27): CCR
 > dentro do `/27`** (VLAN 16), igual aos servidores — sem rota `/32` por P2P privado.
 >
 > 🆕 **Correção do usuário (2026-07-24): os servidores locais não plugam mais direto na CCR1036.**
@@ -83,13 +94,14 @@ endereçamento da CCR1036/NE8000 para esses clusters.**
             na VLAN16)  na VLAN16)
 ```
 
-> ✅ **2026-07-27:** CCR **dentro do `/27`** — `177.72.104.4` na VLAN 16 (mesmo broadcast dos
+> ✅ **2026-07-27:** CCR **dentro do `/27`** — ~~`177.72.104.4`~~ 🆕 `177.72.104.15` na VLAN 16
+> (mesmo broadcast dos
 > servidores). Sem rota `/32` por P2P privado.
 
 ## Alocação de portas e VLANs (reais)
 
 > 🆕 A CCR1036 tem somente o trunk com o DM4170: VLANs privadas + VLAN 16 com
-> `177.72.104.4/27`. Não existe link direto CCR↔NE8000 no alvo.
+> `177.72.104.15/27`. Não existe link direto CCR↔NE8000 no alvo.
 >
 > ✅ **Decisão L3 de 2026-08-06:** a CCR termina as VLANs privadas locais e é o gateway delas.
 > Começa pela VLAN 100 (`192.168.254.1/24`); as demais abaixo mantêm seus IPs de gateway ao
@@ -154,29 +166,32 @@ O que precisa migrar do RB3011 para cá (ver [01-inventario-atual.md](01-inventa
   (`192.168.66.14:15389`).
 
 ✅ **Mecanismo fechado (usuário, 2026-07-27):** a CCR **fica dentro do `/27`** (VLAN 16),
-igual aos servidores — IP `177.72.104.4`. ~~`/32` via P2P~~ e ~~`10.254.254.x`~~ descartados.
+igual aos servidores — IP ~~`177.72.104.4`~~ → 🆕 **`177.72.104.15` (2026-08-07)**.
+~~`/32` via P2P~~ e ~~`10.254.254.x`~~ descartados.
 
-1. **IP de NAT:** `177.72.104.4` na VLAN 16.
+1. **IP de NAT:** ~~`177.72.104.4`~~ → **`177.72.104.15`** na VLAN 16 (troca 2026-08-07:
+   LoopBack1 `.4/32` do NE8000; `.15` livre confirmado).
 2. **Como chega:** L2 no broadcast do `/27` (DM4170 entrega VLAN 16 à CCR; NE8000 é o GW `.1`).
-   Sem rota host especial — ARP resolve `.4` como qualquer outro servidor do bloco.
-3. **DST-NAT Dude/TS SIX:** ✅ **fechado (usuário, 2026-08-06): movem para a CCR `.4`.** Quem
-   acessa de fora passa a usar `177.72.104.4`; o NE8000 não recebe NAT server nem rota `.1/32`
+   Sem rota host especial — ARP resolve ~~`.4`~~ `.15` como qualquer outro servidor do bloco.
+3. **DST-NAT Dude/TS SIX:** ✅ **fechado (usuário, 2026-08-06): movem para a CCR
+   ~~`.4`~~ 🆕 `.15`.** Quem
+   acessa de fora passa a usar `177.72.104.15`; o NE8000 não recebe NAT server nem rota `.1/32`
    (NAT fica só na CCR). Script: `07-dstnat-dude-tssix.rsc`.
 
 ```
 Internet → NE8000 (GW .1 do 177.72.104.0/27, VLAN16)
               │
-              └─ VLAN16 (L2 via DM4170) → servidores (.5 .12 .16 …) + CCR (.4 NAT)
+              └─ VLAN16 (L2 via DM4170) → servidores (.5 .12 .16 …) + CCR (.15 NAT)
 ```
 
-**Status:** CCR no `/27` ✅; DST-NAT `.1` vs `.4` aberto — decisão #9 em
+**Status:** CCR no `/27` ✅ (IP `.15` após troca 2026-08-07); DST-NAT na CCR `.15` — decisão #9 em
 [03](03-decisoes-pendentes.md).
 
 ## Endereços da própria CCR1036
 
 | Uso | Endereço |
 |---|---|
-| IP público / NAT | `177.72.104.4` na **VLAN 16** (dentro do `/27`) |
+| IP público / NAT | ~~`177.72.104.4`~~ → 🆕 **`177.72.104.15`** na **VLAN 16** (dentro do `/27`) |
 | Gateway | NE8000 `177.72.104.1` (dono do `/27`) |
 | Link adicional NE8000↔CCR | ❌ não existe no desenho final (2026-08-06) |
 | VPN WireGuard | ⏳ endereçamento a definir somente pós-migração |
@@ -195,8 +210,8 @@ Internet → NE8000 (GW .1 do 177.72.104.0/27, VLAN16)
 /interface vlan add name=vlan109-gerencia-olt   vlan-id=109 interface=ether1-trunk-dm4170
 /interface vlan add name=vlan116-proxmox-docker vlan-id=116 interface=ether1-trunk-dm4170
 
-# IP público NAT — dentro do /27 (VLAN 16), GW = NE8000 .1
-/ip address add address=177.72.104.4/27 interface=vlan16-ip-publico comment="NAT CCR"
+# IP público NAT — dentro do /27 (VLAN 16), GW = NE8000 .1   🆕 2026-08-07: .4 → .15
+/ip address add address=177.72.104.15/27 interface=vlan16-ip-publico comment="NAT CCR"
 /ip route add dst-address=0.0.0.0/0 gateway=177.72.104.1
 
 # VPN não entra nesta configuração. WireGuard somente pós-migração.
@@ -208,7 +223,7 @@ add chain=input action=accept src-address=177.93.244.165 comment="GERENCIA NOC"
 add chain=input action=drop comment="DROP ALL"
 
 /ip firewall nat
-add chain=srcnat action=src-nat to-addresses=177.72.104.4 comment="NAT GERAL" src-address-list=NAT
+add chain=srcnat action=src-nat to-addresses=177.72.104.15 comment="NAT GERAL" src-address-list=NAT
 add chain=dstnat action=dst-nat to-addresses=192.168.66.14 to-ports=15389 dst-port=15389 protocol=tcp comment="TS SIX"
 add chain=dstnat action=dst-nat to-addresses=192.168.116.30 to-ports=8291 dst-port=18291 protocol=tcp comment="DUDE — alcance a confirmar"
 ```
@@ -244,6 +259,7 @@ VLAN 15 confirmada pelo mapeamento do Docker: container `.10` em macvlan `ens21`
 `vmbr15`, cujo bridge-port físico é `enp8s0f1.15`. A rede precisa ser anunciada no OSPF para toda
 a NetPal; permitir somente UDP/123 conforme a lista de prefixos internos a consolidar.
 
-A VLAN 16 (pública) sobe pelo DM4170 até o NE8000 **e** até a CCR (`177.72.104.4` no mesmo
+A VLAN 16 (pública) sobe pelo DM4170 até o NE8000 **e** até a CCR (~~`177.72.104.4`~~ → 🆕
+`177.72.104.15` no mesmo
 broadcast). Servidores com IP público próprio também usam VLAN 16; gerência privada segue nas
 outras VLANs do trunk.

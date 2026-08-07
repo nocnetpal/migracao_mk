@@ -37,9 +37,10 @@
       configurar.
 - [x] ~~Esclarecer a sobreposição do `177.72.104.60/30`~~ → ✅ **investigado (2026-07-24, decisão
       #10):** não é conflito real — NE8000 não tem interface nesse /30, statement OSPF inerte.
-- [x] 🆕 **Mecanismo de NAT na CCR1036**: `.4/27` chega pela VLAN 16 no trunk DM4170↔CCR; a CCR
+- [x] 🆕 **Mecanismo de NAT na CCR1036**: ~~`.4/27`~~ → 🆕 **`.15/27`** (troca 2026-08-07 —
+      LoopBack1 `.4/32` do NE8000) chega pela VLAN 16 no trunk DM4170↔CCR; a CCR
       é o gateway das redes privadas (VLAN 100 `.1/24` e demais), portanto o tráfego atravessa o
-      SRC-NAT sem PBR no NE8000. Definido em 2026-08-06; falta teste integrado
+      SRC-NAT sem PBR no NE8000. Definido em 2026-08-06 (IP atualizado 08-07); falta teste integrado
 - [x] ~~🆕 **Dimensionamento do NE8000** (decisão #13): confirmar capacidade para +30
       subinterfaces/adjacências OSPF novas~~ → ✅ **confirmado (usuário, 2026-07-24): capacidade
       livre**, sem restrição de licença/hardware.
@@ -57,7 +58,7 @@
 | Roteamento inter-VLAN (~50 VLANs QinQ + simples de serviço) | **NE8000**, exceto redes privadas locais na CCR | VLAN 15/NTP reclassificada para a CCR em 2026-08-06; DM4170 fica só L2 |
 | OSPF area1 (adjacências + redistribute connected/static E1) | **NE8000** (decisão #13 — antes seria o DM4170) | Reproduzir; oportunidade de anúncios explícitos |
 | Dono do `177.72.104.0/27` (VLAN 16 sobe em L2) | **NE8000** — ✅ decidido 2026-07-23 (#9, Opção B) | Só IP público + firewall — **não faz mais o NAT** |
-| SRC-NAT/DST-NAT | **CCR1036** | `.4/27` na VLAN 16 via DM4170; CCR é gateway das redes privadas, sem PBR no NE8000 |
+| SRC-NAT/DST-NAT | **CCR1036** | ~~`.4/27`~~ 🆕 `.15/27` na VLAN 16 via DM4170; CCR é gateway das redes privadas, sem PBR no NE8000 |
 | Firewall de servidores | NE8000 (modelo de zonas do [05](05-limpeza-politicas.md)) | Aguarda passo 1 |
 | DHCP (`VLAN1066 - GERADOR MST`) | Datacom ou NE8000 | Trivial, decidir na config |
 | VPN equipe | **CCR1036, somente pós-migração** | WireGuard depois de toda a migração concluída; não entra na bancada/janela inicial |
@@ -88,7 +89,8 @@
    usa hoje pras VLANs de POP (`MK_POP_*`), tudo sobre o trunk novo vindo do DM4170. Pré-criar
    também: zonas de firewall (conforme [05](05-limpeza-politicas.md)), tudo
    **desativado/sem aplicar**. Pré-criar na **CCR1036**: regras de NAT (SRC-NAT geral +
-   DST-NAT Dude/TS SIX). 🆕 A base atual da CCR (VLAN 16, `.4`, VLAN 100, default e SRC-NAT) foi
+   DST-NAT Dude/TS SIX). 🆕 A base atual da CCR (VLAN 16, ~~`.4`~~ → 🆕 `.15` — troca
+   2026-08-07, LoopBack1 `.4/32` do NE8000, **reconfigurar**, VLAN 100, default e SRC-NAT) foi
    deixada **habilitada em bancada por decisão do usuário em 2026-08-06**; permanece isolada pelo
    SFP desconectado. DST-NAT ainda não foi criado. Não conectar o trunk antes da coordenação com o
    RB3011, que ainda usa `.1` na VLAN 100.
@@ -131,7 +133,7 @@ Migrar em bloco, na mesma janela:
       `10.30.0.0/30`+`10.150.150.0/24` via `.19`, DNS loopbacks via `.28`) — rever quais viram
       *connected* no NE8000 e quais migram para a CCR
 - [ ] ~~Adjacência OSPF principal (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)~~ — a
-      VLAN 28 morre com o MK; a nova adjacência OSPF CCR↔NE8000 será sobre a VLAN 16 (`.4`↔`.1`)
+      VLAN 28 morre com o MK; a nova adjacência OSPF CCR↔NE8000 será sobre a VLAN 16 (~~`.4`~~ 🆕 `.15`↔`.1`)
 - [ ] Servidores locais do MK (`ether6`–`10`) recabeados para portas GE do **DM4170** (🆕
       confirmado 2026-07-24 — não mais a CCR1036; usar transceiver SFP-RJ45 nas portas ópticas)
 - [ ] **Validar FlowSpec e NetStream imediatamente** (sessão BGP `177.72.104.27`, fluxo na porta 3055)

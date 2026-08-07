@@ -115,7 +115,8 @@ VLAN 100 untagged: hypervisor e RADIUS. VLAN 16 tagged: VM HUBSOFT.
 ## 2. Mapa `177.72.104.0/27` (`.0`–`.31`)
 
 Bloco dos servidores/serviços com IP público dedicado. Gateway L3 hoje: RB3011 `177.72.104.1`.
-Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
+Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em ~~`177.72.104.4`~~ → 🆕
+**`177.72.104.15`** (troca 2026-08-07: o LoopBack1 `.4/32` do NE8000/PPPOE_NETPAL ocupa o `.4`).
 
 | IP | Status | Uso |
 |---|---|---|
@@ -123,7 +124,7 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.1` | gateway / NAT hoje | GW Servidores (SRC-NAT + DST-NAT Dude/TS SIX) → NE8000 assume o bloco |
 | `.2` | ocupado | UniFi Controller (`docker-netpal`) |
 | `.3` | ocupado | Wiki (`docker-netpal`) |
-| `.4` | **livre → reservado** | NAT da CCR1036 (definido 2026-07-24) |
+| `.4` | **ocupado (NE8000)** | ~~livre → reservado NAT CCR~~ → 🆕 **LoopBack1 `.4/32` do NE8000/PPPOE_NETPAL** (dump 2026-08-07) — CCR trocou para `.15` |
 | `.5` | ✅ livre desde 2026-08-05 | antigo hypervisor Proxmox Zabbix; regras “Hubsoft/CallSys” são resíduos e não migram |
 | `.6` | ocupado | Zabbix |
 | `.7` | ocupado | Docs / DOCS Cloud |
@@ -134,7 +135,7 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.12` | ocupado | OpenVPN-2 (também next-hop `10.254.0.0/22`) |
 | `.13` | ocupado | TIP-VOIP |
 | `.14` | ocupado | Fusionpbx-PM-CPV |
-| `.15` | **livre** | único IP livre restante no `/27` (além do `.4` já reservado) |
+| `.15` | ✅ **livre → reservado (2026-08-07)** | **NAT da CCR1036** (troca do `.4`; livre confirmado por checagem ao vivo) |
 | `.16` | ocupado | HubSoft |
 | `.17` | ocupado | Fusionpbx-PM-MST |
 | `.18` | ocupado | Fusion-0800-Netpal |
@@ -152,7 +153,8 @@ Pós-corte: dono do `/27` = **NE8000**; NAT SRC = **CCR1036** em `177.72.104.4`.
 | `.30` | ocupado | OPA.SUIT / Opa ChatBot |
 | `.31` | broadcast | prefixo `/27` |
 
-**Resumo `/27`:** 2 livres utilizáveis (`.4` reservado NAT, `.15` livre); o restante ocupado ou rede/broadcast.
+**Resumo `/27`:** ~~2 livres utilizáveis (`.4` reservado NAT, `.15` livre)~~ → 🆕 **1 livre
+utilizável: `.15` (NAT CCR)**; o `.4` é do NE8000 (LoopBack1 `.4/32`).
 
 ---
 
