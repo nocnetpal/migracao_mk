@@ -1,0 +1,3 @@
+# VM 100 Docker-Netpal: net7 adicionado com tag=16 (virtio=62:57:F1:9B:D5:59,bridge=vmbr1)
+# Usuario informou: "eu tenho varias rede e varios containers"
+# Proximo passo: identificar qual rede macvlan serve os containers 177

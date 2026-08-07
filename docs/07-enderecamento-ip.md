@@ -14,7 +14,7 @@
 | `.1` | IP público geral da GW Servidores — masquerade (SRC-NAT) e alvo dos DST-NAT (Dude `:18291`, TS SIX `:15389`) | NAT rules |
 | `.2` | 🆕 **Novo (2026-07-24, consulta direta):** UniFi Controller (`unifi-controller`, `docker-netpal`) — sem regra de firewall própria conhecida, nunca esteve no `07` original | consulta direta ao Docker |
 | `.3` | 🆕 **Novo (2026-07-24):** Wiki (`Wiki`, `docker-netpal`) — já citado genericamente na seção "escala real" abaixo, agora com IP | consulta direta ao Docker |
-| `.5` | **`.5` = IP do próprio hypervisor Proxmox Zabbix** (não uma VM, confirmado — ver [12](12-mapeamento-proxmox.md)). Compartilhado: ✅ Hubsoft (`dst-port=!148`) — **confirmado vivo (usuário, 2026-07-24)**, coexiste com o Hubsoft de `.16` — e ~~CallSys (`dst-port=!45345`)~~ ❌ **confirmado morto, não existe mais na rede**. ⚠️ **Achado de segurança:** a regra Hubsoft não tem origem restrita (a `BRASIL` no nome é órfã, nunca referenciada — decisão #7) e libera **todas as portas exceto 148** direto no hypervisor, da internet inteira — inclui a `8006` (GUI) por abrangência, não por regra dedicada | firewall filter |
+| `.5` | ~~IP público do hypervisor Proxmox Zabbix~~ → ✅ **livre desde 2026-08-05**; hypervisor migrou para `192.168.254.10`. ~~HubSoft vivo em `.5`~~ → ❌ premissa refutada: só havia Proxmox `8006` e SSH `45345`; 80/443 recusavam. Regras “Hubsoft/CallSys” são resíduos que expunham a gerência e não migram | firewall filter + validação ao vivo |
 | `.6` | Accept `dst-port=80,443` — ✅ **Zabbix** (Dude, [11](11-cruzamento-dude-devices.md)) | firewall filter |
 | `.7` | Servidor Fusion Voip (`80,45345,443,3478`) — ✅ **confirmado por consulta direta (2026-07-24): é "Docs"/DOCS Cloud** — nome do firewall estava desatualizado | firewall filter |
 | `.8` | ✅ **Resolvido (2026-07-24, consulta direta ao Docker):** é o **Smokeping** (`docker-netpal`, rede macvlan `IP-DNS-177.72.104.21`) — monitoramento de latência, sem relação com Hubsoft. Não aparecer no Dude não significa morto: o Hubsoft real é `.16` (ver [12](12-mapeamento-proxmox.md)) | firewall filter, FORA_DO_NAT |
@@ -30,18 +30,18 @@
 | `.19` | FORA_DO_NAT; gateway das rotas `10.30.0.0/30` e `10.150.150.0/24` — ✅ **"VPN - WireGuard"** (Dude) — VPN à parte, não do RB3011, ver [11](11-cruzamento-dude-devices.md) | FORA_DO_NAT, /ip route |
 | `.20` | SBC VOIP — ✅ **confirmado por consulta direta (2026-07-24): é "SFTP-OPA-CHAT"** — nome do firewall estava desatualizado | firewall filter |
 | `.22` | Accept sem nome — ✅ **"Fusion - VoIP - Elaborados - Full"** (Dude) | firewall filter |
-| `.23` | Accept sem nome — ✅ **"Aplicações /etc/scripts"** (Dude) | firewall filter |
-| `.26` | ✅ **Identidade resolvida (2026-07-24):** **API-ZAP** (`proxmox-dns`). ~~Forte candidato ao destino da API HTTP estilo WhatsApp usada pelo script `dude`/netwatch~~ → ❌ **descartado (2026-07-24):** o script `dude` chama `api.focuschat.com.br` (SaaS externo), não `.26`. Função real de API-ZAP segue **não identificada** (ver decisão #6, [03](03-decisoes-pendentes.md)) | firewall filter |
+| `.23` | Accept sem nome — ✅ **"Aplicações /etc/scripts"** (Dude) → **APLICACOES** (renomeado 2026-08-06; era o "API-ZAP" real) | firewall filter |
+| `.26` | ✅ **Identidade resolvida (2026-08-06, consulta direta):** **API-WHATS** (Node.js bot WhatsApp, sem Docker/banco). ~~API-ZAP~~ era nome desatualizado do Dude — o API-ZAP real é o `.23` (APLICACOES). ~~Forte candidato ao destino da API HTTP estilo WhatsApp usada pelo script `dude`/netwatch~~ → ❌ **descartado (2026-07-24):** o script `dude` chama `api.focuschat.com.br` (SaaS externo), não `.26` (ver decisão #6, [03](03-decisoes-pendentes.md)) | firewall filter |
 | `.57` | Accept sem nome — ainda **não identificado**; `/ip arp print` no RB3011 (2026-07-24) não retornou nenhuma entrada — forte indício de residual/morto, mas não é prova definitiva | firewall filter |
 | `.24` | Accept `443,80,45345,21` — ✅ **"OLT CLOUD"** (Dude, Web Server) | firewall filter |
 | `.25` | Fusion Netpal — clientes simples — ✅ plausível ("Fusion - VoIP - Painéis Simples" no Dude) | firewall filter |
 | `.27` | Accept sem nome — **mesmo IP usado pelo NE8000 como Route-Reflector interno** (`177.72.104.27`, AS 52828) e destino do NetStream export; ✅ confirmado no Dude como **"RRFlow"** — não é coincidência, é o mesmo host/função. Ver decisão #8/#9 em [03](03-decisoes-pendentes.md). | firewall filter, [06-ne8000-bgp-core.md](06-ne8000-bgp-core.md), [11](11-cruzamento-dude-devices.md) |
-| `.21` | 🆕 **Novo (2026-07-24):** DNS2 Recursivo (`DNS2-Recursivo-104.21`, `docker-netpal`) — dá nome à própria rede macvlan (`IP-DNS-177.72.104.21`) onde vive boa parte dos containers deste host | consulta direta ao Docker |
+| `.21` | ~~DNS2 Recursivo (`DNS2-Recursivo-104.21`)~~ → ✅ **removido intencionalmente pelo usuário (2026-08-05), não é mais usado e não migra.** A rede macvlan ainda se chama historicamente `IP-DNS-177.72.104.21`, mas os outros containers continuam nela e o nome não indica ocupação do IP | consulta direta + validação pós-migração |
 | `.28` | DNS NetPal; gateway das rotas `.56/30`, `.58/32`, `.59/32` — ✅ **confirmado por consulta direta (2026-07-24): é a VM `NS-UNBOUND` (`proxmox-dns`)** | DNS_AUT, /ip route |
-| `.29` | ✅ **"AUTOMACOES"** (Dude, Web Server) — ✅ **confirmado por consulta direta (2026-07-24)**. ~~Possível relação com a decisão #6~~ → a notificação netwatch/`dude` na verdade não usa nenhum host local (vai direto pra `api.focuschat.com.br`); relação com `.26`/API-ZAP não confirmada, função exata de `AUTOMACOES` segue aberta | firewall filter |
+| `.29` | ✅ **~~"AUTOMACOES"~~ → DEVOPS-01** (renomeado 2026-08-06; dify, n8n, hubwatch, swmon) — ✅ **confirmado por consulta direta (2026-07-24)**. ~~Possível relação com a decisão #6~~ → a notificação netwatch/`dude` na verdade não usa nenhum host local (vai direto pra `api.focuschat.com.br`); relação com `.26`/API-WHATS não confirmada, função exata de `AUTOMACOES` segue aberta | firewall filter |
 | `.30` | OPA Suite (chat) — porta `45345` restrita à lista `REDE LIBERADA_OPA_SUITE` — ✅ confirmado ("Opa ChatBot" no Dude); ✅ **confirmado por consulta direta (2026-07-24)** | firewall filter |
 | `.58` | DNS NetPal — loopback — ✅ confirmado ("DNS MASTER" no Dude) **e por consulta direta: é o mesmo host `NS-UNBOUND` que responde por `.28`** — não são dois sistemas, é um só com dois IPs | DNS_AUT |
-| `.59` | DNS NetPal — loopback — ainda sem confirmação (nem Dude, nem nos 4 clusters Proxmox consultados); `/ip arp print` no RB3011 (2026-07-24) também não retornou entrada — indício de residual/morto | DNS_AUT |
+| `.59` | ~~Sem ARP, possível residual/morto~~ → ✅ **confirmado em 2026-08-05:** IP secundário/loopback `/32` da VM 105 `NS-UNBOUND`, interface `ens18:1`. Não aparece em ARP próprio porque o RB3011 possui rota `177.72.104.59/32` via `.28` | DNS_AUT + QEMU Agent |
 | `.52/30`, `.60/30` | Enlaces ponto-a-ponto anunciados na OSPF area1 | /routing ospf network |
 | `.56/30` | Rota de DNS (regra desabilitada); único prefixo aceito pelo filtro de rota OSPF de saída | /ip route, /routing filter |
 | `.105.217` | Accept sem nome — ✅ **"GW CC BCP" / "GW Escritório BCP"** (Dude) | firewall filter |
@@ -60,7 +60,7 @@
 > `config/proxmox-*/`. Todas as identidades ⚠️ (nome do firewall não batia com o Dude) foram
 > confirmadas como sendo o nome do Dude, não o do firewall — o RB3011 nunca foi atualizado. Além
 > disso, apareceram **8 sistemas dentro do `/27` que nunca tinham regra de firewall própria** (`.2`,
-> `.3`, `.8` recorrigido, `.10`, `.11`, `.21`, `.26` recorrigido) — o `07` original só enxergava o
+> `.3`, `.8` recorrigido, `.10`, `.11`, ~~`.21`~~ (removido em 2026-08-05), `.26` recorrigido) — o `07` original só enxergava o
 > que tinha regra de firewall, e esses ficaram de fora por nunca precisarem de uma.
 
 ### Sistemas fora do `/27`, mas no mesmo bloco público maior (achados 2026-07-24)
@@ -70,13 +70,17 @@ Consulta direta ao cluster Proxmox Docker revelou hosts com IP público **fora**
 
 | IP | Serviço | Observação |
 |---|---|---|
-| `177.72.104.107` | CdnTV-Origin (`docker-netpal` cluster) | Fora do `/27`; caminho de rede até aqui **não é o mesmo** da "Bridge IP Publico" do RB3011 — a confirmar como chega na rede hoje |
-| `177.72.104.108` | CdnTV-Edge | Idem |
-| `177.72.104.109` | Uma das interfaces da própria VM `Docker-Netpal` | Idem |
+| `177.72.104.107` | CdnTV-Origin (`docker-netpal` cluster) | ✅ caminho confirmado em 2026-08-05: `vmbr2` sem tag → `enp8s0f0` → VLAN 23 da rede de acesso → NE8000 `Gi0/1/8.23` (`.105/29`) |
+| `177.72.104.108` | CdnTV-Edge | ✅ mesmo caminho dedicado da `.107`: `vmbr2` sem tag; não pertence à VLAN 16 |
+| `177.72.104.109` | Uma das interfaces da própria VM `Docker-Netpal` | ✅ mesma `vmbr2` sem tag; caminho CDN/VLAN 23 |
 | `177.93.247.138` | SpeedTest (rede macvlan `MACVLAN-38-SPEED`) | Está no **segundo bloco público** (`177.93.240.0/21`), não no `/27` |
 
-Esses hosts não fazem parte do escopo da migração do RB3011 (não estão na `Bridge IP Publico`), mas
-valem registro por estarem no mesmo cluster físico que outros sistemas relevantes.
+Esses hosts não fazem parte do escopo da migração do RB3011 (não estão na `Bridge IP Publico`). A
+rede é `177.72.104.104/29`, terminada diretamente no NE8000 (`177.72.104.105/29`) pela VLAN 23. No
+Proxmox, `.107`, `.108` e `.109` saem pela NIC física dedicada `enp8s0f0`, através da `vmbr2`
+untagged, até o **SW_JDF `XGE0/0/14` untagged**; o `XGE0/0/1` leva a VLAN 23 tagged ao NE8000.
+ARP e tabela MAC confirmaram os três MACs em 2026-08-05. Portanto, **não aplicar `tag=16` nessas
+interfaces e não mover esse segundo cabo para o DM4170**.
 
 ### Blocos maiores
 
@@ -130,12 +134,10 @@ isolado o suficiente para não importar.
   `RANGENETPAL`). `182.168.0.0/16` é um bloco público real de terceiros. Se portado 1:1 pro NE8000,
   a regra viraria um "bypass de NAT" para endereços públicos de outra empresa — **não portar sem
   confirmar antes**.
-- ~~**`.5` compartilhado por dois sistemas** (Hubsoft e CallSys, diferenciados só por porta) reforça
-  que o NAT atual não é puramente 1:1 por servidor~~ → 🆕 **CallSys confirmado morto (usuário,
-  2026-07-24)** — a multiplexação por porta em `.5` era, pelo menos em parte, regra órfã. Reforça a
-  suspeita de que "Hubsoft" em `.5` também fosse resíduo — ❌ **descartada (usuário, 2026-07-24):
-  Hubsoft em `.5` está confirmado vivo**, coexiste com o de `.16` (duas instâncias distintas).
-  Relevante para o desenho de zonas do [05-limpeza-politicas.md](05-limpeza-politicas.md).
+- ~~**`.5` compartilhado por HubSoft e CallSys**~~ → ❌ **premissa corrigida em 2026-08-05.**
+  CallSys estava morto e não havia HubSoft no host: apenas Proxmox `8006` e SSH `45345` escutavam;
+  80/443 recusavam conexão. As duas regras eram resíduos/nomes enganosos que expunham a gerência.
+  `.5` ficou livre após o hypervisor migrar para `.10`; não portar essas regras.
 - ~~**`.27` coincide com o Route-Reflector do NE8000**~~ — ✅ **resolvido, e não era coincidência.**
   `177.72.104.27` é um host real dentro do `/27` que fica na `Bridge IP Publico` da GW Servidores, e
   é simultaneamente o **route-reflector de FlowSpec do NE8000** e o **coletor NetStream**. É uma
@@ -204,7 +206,7 @@ de acesso**, atendendo pelo menos:
 | **Gerência de OLTs** | ZTE CPV, PWW, PWW Nova, BCP, CCB, CASCA, MST, FSB, GGV, Praia MST, Praia São Simão, Praia Solidão, Lagoa do Bacupari, Solidão |
 | **Gerência de switches/rádios** | SW Shopping, SW4370 Solidão, S5735 Lagoa Bacupari, SW Aguapé/Povos/Pantano/Serraria/Bacupari, SW FO Shopping, SW TVR, SW Jardim Formoso, Rádios CPV |
 | **Clientes corporativos** | Banco do Brasil (PWW, CPV, MST), Consepro PWW, CEEE (Shopping, FSB, BCP, Prédio Maicon), Shopping, TIM (EDD MST) |
-| **Servidores/infra interna** | Proxmox (HUB, DOCKER/CDNTV, VOIP, DNS, PNETLAB), Graylog, LibreNMS, Wiki (x2), NTP, DNS recursivo, RADIUS Hubsoft, The Dude, TS Callcenter |
+| **Servidores/infra interna** | Proxmox (HUB, DOCKER/CDNTV, VOIP, DNS, PNETLAB), Graylog, LibreNMS, Wiki (x2), NTP, DNS recursivo, RADIUS Hubsoft, The Dude, TS Callcenter — ⚠️ **vários provavelmente mortos** (cruzamento com o Dude em 2026-08-06): LibreNMS, Wiki 2, Wiki privado, PNETLAB, Proxmox VOIP, TS Callcenter, Graylog não têm monitoramento ativo nem relação com o `/27` (ver [11](11-cruzamento-dude-devices.md)) |
 
 **Implicação para o projeto:** migrar isso para o Datacom não é "recriar algumas SVIs". São ~45
 VLANs, dezenas de enlaces ponto a ponto e uma malha de gerência que atravessa várias localidades
@@ -293,10 +295,16 @@ sessão de FlowSpec — que é justamente o mecanismo de mitigação de DDoS, ju
 
 Qualquer que seja o desenho final, o substituto precisa, **no mesmo instante do corte**:
 
-1. Assumir `177.72.104.1/27` (next-hop das rotas estáticas do NE8000 e gateway dos servidores).
-2. Continuar anunciando `177.72.104.0/27` na OSPF area 0.0.0.1.
-3. Manter o segmento `177.72.104.52/30` ↔ NE8000 ativo (`.53` deste lado, `.54` no NE8000).
-4. Manter alcançável o host `177.72.104.27` (RR de FlowSpec + coletor NetStream).
+1. ~~Assumir `177.72.104.1/27` (next-hop das rotas estáticas do NE8000 e gateway dos servidores).~~
+2. ~~Continuar anunciando `177.72.104.0/27` na OSPF area 0.0.0.1.~~
+3. ~~Manter o segmento `177.72.104.52/30` ↔ NE8000 ativo (`.53` deste lado, `.54` no NE8000).~~
+4. ~~Manter alcançável o host `177.72.104.27` (RR de FlowSpec + coletor NetStream).~~
+
+> ✅ **Requisitos reescritos pelas decisões #9/#13 (2026-07-24) e #11 (2026-08-06):** o **NE8000
+> assume o próprio `177.72.104.0/27`** numa SVI da VLAN 16 (via DM4170) — `.1` deixa de existir no
+> MK; o segmento `.52/30` e a VLAN 28 **morrem com o MK**; NAT fica na CCR ~~`.4`~~ 🆕 `.15`
+> (também na VLAN 16; troca 2026-08-07 — LoopBack1 `.4/32` do NE8000);
+> o RRFlow `.27` continua no mesmo IP, agora alcançado pelo novo caminho (ver [10](10-enderecamento-ccr1036.md)).
 
 *(O `177.72.104.1` também é o endpoint local do túnel EoIP com o NOC — ver
 [08-vlans-e-portas.md](08-vlans-e-portas.md) —, mas esse túnel está fora do ar atualmente e EoIP é
@@ -320,7 +328,10 @@ O link não é um cabo direto. Ambos os endereços da ponta Mikrotik estão em
 
 Ou seja: o NE8000 entrega **VLAN 28 taggeada**, o switch de topo de rack entrega **untagged** no
 `sfp1` do Mikrotik, e o segmento carrega **duas sub-redes** (uma privada de gerência, uma pública).
-O Datacom precisará reproduzir esse multinetting — uma SVI com IP primário e secundário.
+~~O Datacom precisará reproduzir esse multinetting — uma SVI com IP primário e secundário.~~ → ✅
+**Superado (decisão #13 + desenho 2026-08-06):** o DM4170 fica só L2, a VLAN 28 morre com o MK e o
+NE8000 termina o `/27` em SVI da VLAN 16; adjacência OSPF CCR↔NE8000 sobre a mesma VLAN 16
+(~~`.4`~~ 🆕 `.15`↔`.1`).
 
 ## ✅ A VPN **não** é "L2TP/IPSec" — confirmado
 
@@ -351,7 +362,7 @@ locais**, não uma stack L2TP/IPSec. É um requisito bem menor do que o document
 |---|---|---|
 | `use-ipsec: no` | L2TP sem IPSec | Túnel sem criptografia de transporte; depende só de MPPE |
 | `authentication: chap,mschap1,mschap2` | CHAP e MS-CHAPv1 aceitos | Ambos são algoritmos quebrados. Deveria ser **apenas `mschap2`** |
-| `ipsec-secret: ntp1030` | Definido mas inativo | Segredo exposto no equipamento sem função; note a semelhança com a chave OSPF `ntprb1030` — padrão de reuso de credencial |
+| `ipsec-secret` definido (valor no export) | Definido mas inativo | Segredo exposto no equipamento sem função; o valor é quase idêntico ao da chave OSPF da area1 — padrão de reuso de credencial |
 | Senhas dos `/ppp secret` | Texto claro no export | Rotacionar todas ao desativar o equipamento |
 
 > **Confirmado pela coleta 2 — e é pior do que parecia:** `/ppp profile print` mostrou que **os

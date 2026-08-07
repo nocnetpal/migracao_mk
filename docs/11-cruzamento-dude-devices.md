@@ -85,18 +85,22 @@ IPs accept sem nome":
 |---|---|---|
 | `.6` | sem nome | **Zabbix** |
 | `.22` | sem nome | **Fusion - VoIP - Elaborados - Full** |
-| `.23` | sem nome | **Aplicações /etc/scripts** |
+| `.23` | sem nome | **Aplicações /etc/scripts** → **APLICACOES** (renomeado 2026-08-06; era o "API-ZAP" real) |
 | `.24` | sem nome | **OLT CLOUD** (Web Server) |
-| `.29` | sem nome | **AUTOMACOES** (Web Server) — ~~provável relação com a decisão #6 (netwatch→API)~~ descartado (2026-07-24): o script `dude` chama direto um SaaS externo (`api.focuschat.com.br`), sem host local envolvido |
+| `.29` | sem nome | **AUTOMACOES** → **DEVOPS-01** (renomeado 2026-08-06; dify, n8n, hubwatch, swmon) — ~~provável relação com a decisão #6 (netwatch→API)~~ descartado (2026-07-24): o script `dude` chama direto um SaaS externo (`api.focuschat.com.br`), sem host local envolvido |
 | `.105.217` | sem nome | **GW CC BCP** / GW Escritório BCP |
 
 ~~Ainda sem nome mesmo depois do cruzamento (não aparecem no Dude): `.26`, `.57`, `.59`,
-`.105.221`.~~ ✅ **`.26` resolvido (2026-07-24, consulta direta ao Docker): é API-ZAP** —
-~~provável destino da notificação da decisão #6~~ descartado (2026-07-24): a notificação vai
-direto pra internet, não pra `.26`; função real de API-ZAP segue desconhecida. Seguem sem identificação em qualquer fonte
+`.105.221`.~~ ✅ **`.26` resolvido (2026-08-06, consulta direta): é API-WHATS** (Node.js bot
+WhatsApp, sem Docker/banco). ~~API-ZAP~~ era nome desatualizado do Dude para o `.26` — o API-ZAP
+real é o `.23` (APLICACOES); ~~provável destino da notificação da decisão #6~~ descartado
+(2026-07-24): a notificação vai
+direto pra internet, não pra `.26`. Seguem sem identificação em qualquer fonte
 (Dude, firewall antigo, consulta direta aos 4 clusters Proxmox **e** `/ip arp print` no RB3011,
-que não retornou nenhuma entrada para os três): `.57`, `.59`, `.105.221` — indício mais forte
-agora de resíduo morto, mas não definitivo.
+que não retornou nenhuma entrada para os três): `.57`, ~~`.59`~~, `.105.221`. `.59` foi
+✅ **resolvido em 2026-08-05:** loopback `/32` da VM `NS-UNBOUND`, roteado via `.28`, portanto
+sem ARP próprio por desenho; não era residual. Para `.57` e `.105.221`, permanece o indício de
+resíduo morto, mas não definitivo.
 
 ## 🚨 Duas VPNs adicionais, fora do RB3011 — impacto na decisão #5
 
@@ -132,7 +136,7 @@ demais servidores do Passo 1 do [05](05-limpeza-politicas.md).
 | `CGNAT 1/2 - Jardim Formoso` | `177.72.104.66` / `.102` | Batem exatamente com os `ip route-static` de CGNAT do NE8000 ([06](06-ne8000-bgp-core.md)) |
 | `BRAS - PPPoE - Jardim Formoso` | `10.200.255.240` | Identifica o alvo antes anônimo da regra `accept chain=forward dst-address=10.200.255.240` no RB3011 |
 
-## ✅ Resolvido: "Callcenter" não está no Dude porque ainda não existe
+## ✅ Resolvido: "Callcenter" não está no Dude porque ainda não existe (e saiu do plano — 2026-08-06)
 
 O `Devices.csv` não tem nenhum device chamado "Callcenter" — só o mapa/categoria `Proxmox Zabbix`,
 que agrupa vários hosts, não um host específico. A ausência tinha duas explicações possíveis (nome
@@ -147,7 +151,10 @@ atual. Não é um caso de nomenclatura desatualizada como os demais desta págin
       rack ligado à `sfp1` da GW Servidores.
 - [ ] Revisar o Passo 1 do [05-limpeza-politicas.md](05-limpeza-politicas.md) usando o Dude como
       fonte de verdade — em especial confirmar se `.8` (Hubsoft antigo) está mesmo morto.
-- [ ] Confirmar se `.12` (OpenVPN-2) e `.19` (WireGuard) são "VPN de equipe" (decisão #5) ou
-      serviços à parte que só precisam de firewall/NAT preservado.
-- [ ] Identidade final de `.26`, `.57`, `.59`, `.105.221` (sem nome em nenhuma fonte).
+- [x] ~~Confirmar se `.12` (OpenVPN-2) e `.19` (WireGuard) são "VPN de equipe" (decisão #5)~~ —
+      ✅ **concluído (2026-08-06):** `.19` é o **próprio RB750** (WireGuard ativo, fica até migrar);
+      `.12` é VM independente no Proxmox Docker — ambos só precisam do firewall/NAT do NE8000
+      preservado.
+- [ ] Identidade final de `.57`, `.105.221` (sem nome em nenhuma fonte). ~~`.26`~~ = ✅ API-WHATS (ex-API-ZAP do Dude, 2026-08-06) e
+  `.59` = loopback da VM NS-UNBOUND, ambos resolvidos por consulta direta aos Proxmox.
 - [x] ~~Confirmar identidade de "Callcenter"~~ — ✅ sistema novo, a implantar (não existe hoje).

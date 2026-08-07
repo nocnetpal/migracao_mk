@@ -1,0 +1,13 @@
+root@docker-netpal:~# ip addr add 177.72.104.14/27 dev ens2
+root@docker-netpal:~# ping -c 3 177.72.104.1
+PING 177.72.104.1 (177.72.104.1) 56(84) bytes of data.
+64 bytes from 177.72.104.1: icmp_seq=1 ttl=64 time=0.807 ms
+64 bytes from 177.72.104.1: icmp_seq=2 ttl=64 time=0.324 ms
+64 bytes from 177.72.104.1: icmp_seq=3 ttl=64 time=0.305 ms
+
+--- 177.72.104.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2003ms
+rtt min/avg/max/mdev = 0.305/0.478/0.807/0.232 ms
+root@docker-netpal:~# ip neigh show dev ens2
+177.72.104.19 lladdr dc:2c:6e:ed:23:18 REACHABLE
+177.72.104.1 lladdr c4:ad:34:f9:f1:70 REACHABLE

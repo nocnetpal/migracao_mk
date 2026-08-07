@@ -1,0 +1,11 @@
+# Status containers VM 100
+
+Up na rede nova:
+- unifi-controller (healthy)
+- pdns-master1
+- pdns-slave
+
+Exited na rede nova (precisam recriar):
+- smokeping
+- Wiki
+- DNS2-Recursivo-104.21

@@ -1,0 +1,51 @@
+MikroTik RouterOS 7.23.3 (c) 1999-2026
+
+[admin@MikroTik] > /system resource print
+                   uptime: 3m25s
+                  version: 7.23.3 (stable)
+               build-time: 2026-07-30 11:17:12
+         factory-software: 6.43.5
+              free-memory: 3554.1MiB
+             total-memory: 4096.0MiB
+                      cpu: tilegx
+                cpu-count: 36
+            cpu-frequency: 1200MHz
+                 cpu-load: 0%
+           free-hdd-space: 882.3MiB
+          total-hdd-space: 1024.0MiB
+  write-sect-since-reboot: 67
+         write-sect-total: 223
+               bad-blocks: 0%
+        architecture-name: tile
+               board-name: CCR1036-8G-2S+
+                 platform: MikroTik
+[admin@MikroTik] > /system routerboard print
+       routerboard: yes
+             model: CCR1036-8G-2S+
+          revision: r2
+     serial-number: 968E0A898BCE
+     firmware-type: tilegx
+  factory-firmware: 6.43.10
+  current-firmware: 7.23.3
+  upgrade-firmware: 7.23.3
+[admin@MikroTik] > /system package print
+Columns: NAME, VERSION, BUILD-TIME, SIZE
+# NAME      VERSION  BUILD-TIME           SIZE
+0 routeros  7.23.3   2026-07-30 11:17:12  16.1MiB
+[admin@MikroTik] > /system health print
+Columns: NAME, VALUE, TYPE
+#  NAME                VALUE  TYPE
+0  cpu-temperature     49     C
+1  sfp-temperature     31     C
+2  fan-state           ok
+3  fan1-speed          4005   RPM
+4  fan2-speed          3885   RPM
+5  board-temperature1  21     C
+6  psu1-state          ok
+7  psu2-state          fail
+[admin@MikroTik] > /ip address print detail
+Flags: X - DISABLED, I - INVALID; D - DYNAMIC; S - SLAVE
+[admin@MikroTik] > /ip dhcp-client print detail
+Flags: X - DISABLED, I - INVALID, D - DYNAMIC
+[admin@MikroTik] > /ip route print detail
+Flags: D - DYNAMIC; X - DISABLED, I - INACTIVE, A - ACTIVE; c - CONNECT, s - STATIC, r - RIP, b - BGP, o - OSPF, i - IS-IS, d - DHCP, v - VPN, m - MODEM, y - BGP-MPLS-VPN; H - HW-OFFLOADED; + - ECMP

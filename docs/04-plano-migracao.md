@@ -37,31 +37,33 @@
       configurar.
 - [x] ~~Esclarecer a sobreposição do `177.72.104.60/30`~~ → ✅ **investigado (2026-07-24, decisão
       #10):** não é conflito real — NE8000 não tem interface nesse /30, statement OSPF inerte.
-- [ ] 🆕 **Mecanismo de NAT na CCR1036**: 🟡 IP público **definido (`177.72.104.4`, 2026-07-24)** —
-      falta só desenhar como roteá-lo até a CCR1036 via NE8000 (decisão #9 corrigida em
-      [03](03-decisoes-pendentes.md))
+- [x] 🆕 **Mecanismo de NAT na CCR1036**: ~~`.4/27`~~ → 🆕 **`.15/27`** (troca 2026-08-07 —
+      LoopBack1 `.4/32` do NE8000) chega pela VLAN 16 no trunk DM4170↔CCR; a CCR
+      é o gateway das redes privadas (VLAN 100 `.1/24` e demais), portanto o tráfego atravessa o
+      SRC-NAT sem PBR no NE8000. Definido em 2026-08-06 (IP atualizado 08-07); falta teste integrado
 - [x] ~~🆕 **Dimensionamento do NE8000** (decisão #13): confirmar capacidade para +30
       subinterfaces/adjacências OSPF novas~~ → ✅ **confirmado (usuário, 2026-07-24): capacidade
       livre**, sem restrição de licença/hardware.
 - [ ] Passo 1 da limpeza: quais sistemas ainda estão vivos ([05](05-limpeza-politicas.md)) — 🟡
       conscientemente adiado (2026-07-24), voltar depois de fechar o resto
-- [ ] Destino das VPNs (L2TP+OpenVPN) — 🆕 as automações (backup FTP, netwatch→API) **não entram
-      mais aqui**: decisão #6 fechada, as duas foram descartadas (usuário, 2026-07-24), não migram
+- [x] Destino/ordem da VPN: **WireGuard na CCR somente pós-migração** (usuário, 2026-08-06).
+      L2TP/OpenVPN não serão recriados na bancada nem na janela inicial. As automações também não
+      migram (decisão #6)
 - [ ] Solução de acesso do NOC (o EoIP morre com o Mikrotik — e já está down)
 
 ## Mapa função → destino
 
 | Função hoje no RB3011 | Destino | Situação |
 |---|---|---|
-| Roteamento inter-VLAN (~50 VLANs QinQ + 3 simples de serviço) | **NE8000** — ✅ decidido 2026-07-24 (#13) | DM4170 fica só L2 (QinQ termination); reaproveita o padrão que o NE8000 já usa hoje pras VLANs de POP |
+| Roteamento inter-VLAN (~50 VLANs QinQ + simples de serviço) | **NE8000**, exceto redes privadas locais na CCR | VLAN 15/NTP reclassificada para a CCR em 2026-08-06; DM4170 fica só L2 |
 | OSPF area1 (adjacências + redistribute connected/static E1) | **NE8000** (decisão #13 — antes seria o DM4170) | Reproduzir; oportunidade de anúncios explícitos |
 | Dono do `177.72.104.0/27` (VLAN 16 sobe em L2) | **NE8000** — ✅ decidido 2026-07-23 (#9, Opção B) | Só IP público + firewall — **não faz mais o NAT** |
-| SRC-NAT/DST-NAT | 🆕 **CCR1036** — corrigido 2026-07-23 | Substitui a resposta anterior (NE8000). Falta definir qual IP e a rota até a CCR1036 |
+| SRC-NAT/DST-NAT | **CCR1036** | ~~`.4/27`~~ 🆕 `.15/27` na VLAN 16 via DM4170; CCR é gateway das redes privadas, sem PBR no NE8000 |
 | Firewall de servidores | NE8000 (modelo de zonas do [05](05-limpeza-politicas.md)) | Aguarda passo 1 |
 | DHCP (`VLAN1066 - GERADOR MST`) | Datacom ou NE8000 | Trivial, decidir na config |
-| VPN equipe (L2TP **e** OpenVPN) | **CCR1036** (ligada direto ao NE8000) — ✅ definido 2026-07-23 | Redesenho, não porte |
-| Backup semanal FTP + netwatch→API (script `dude`) | **CCR1036** (candidata — RouterOS roda os scripts de hoje) ou NMS existente | Em aberto |
-| Bridge L2 dos servidores (RB2011 + `Bridge IP Publico`) | 🆕 Servidores plugam no **DM4170** (correção 2026-07-24 — antes seria a CCR1036); gerência privada segue por trunk novo **DM4170→CCR1036**; VLAN 16 (pública) sobe em L2 pelo **DM4170** até o NE8000; servidores que precisarem de IP público usam **segunda NIC** na VLAN 16 | Direto |
+| VPN equipe | **CCR1036, somente pós-migração** | WireGuard depois de toda a migração concluída; não entra na bancada/janela inicial |
+| ~~Backup semanal FTP + netwatch→API~~ | — | ✅ descartados; não migram (decisão #6) |
+| Bridge L2 dos servidores (RB2011 + `Bridge IP Publico`) | Servidores plugam no **DM4170**; VLAN 16 sobe em L2 até o NE8000 **e a CCR**, e redes privadas seguem nos trunks necessários | Direto |
 | EoIP NOC (`.1` ↔ `177.93.244.165`) | Substituir por rota/VPN padrão (já está fora do ar) | Em aberto |
 
 ## Estratégia: ~~fatiada por VLAN~~ → janela única com troca de cabo (revisado 2026-07-23)
@@ -76,21 +78,25 @@
 > mitigável.
 
 ### Fase 0 — Preparação (sem tocar em produção)
-1. Resolver os bloqueios restantes da lista de pré-requisitos (a essa altura, só o mecanismo de
-   rota do NAT na CCR1036 e as portas/VLANs Proxmox HubSoft/DNS — decisão #12).
+1. Resolver os bloqueios restantes da lista de pré-requisitos: testar o mecanismo de rota do NAT
+   na CCR1036 e montar/validar no novo L2 as portas/VLANs Proxmox de HubSoft e Zabbix — decisão
+   #12. O DNS já foi migrado para a VLAN 100.
 2. 🆕 Montar a config completa do **DM4170** em bancada: **só L2** (decisão #13) — QinQ
    termination de todas as VLANs de acesso, trunk 802.1q pro NE8000, ACL de gerência no padrão
    `IPV4_NOC_NETPAL`. **Nenhuma SVI, nenhum OSPF no DM4170.**
 3. 🆕 Montar no **NE8000** todas as SVIs + adjacências OSPF area1 que **antes seriam do DM4170**
-   (as 27 QinQ + 3 simples de serviço do [09](09-l2-mapeamento-vlans.md)) — mesmo padrão que já
+   (as 27 QinQ + 2 simples de serviço do [09](09-l2-mapeamento-vlans.md)) — mesmo padrão que já
    usa hoje pras VLANs de POP (`MK_POP_*`), tudo sobre o trunk novo vindo do DM4170. Pré-criar
    também: zonas de firewall (conforme [05](05-limpeza-politicas.md)), tudo
    **desativado/sem aplicar**. Pré-criar na **CCR1036**: regras de NAT (SRC-NAT geral +
-   DST-NAT Dude/TS SIX), também desativadas até a janela.
-4. Montar o novo serviço de VPN e migrar os 4 usuários (pode ser feito antes de tudo — a VPN nova
-   convive com a velha). **Atenção aos certificados:** o OpenVPN atual exige certificado de
-   cliente (`require-client-certificate=yes`) — exportar a CA/certs do MK ou reemitir para os 4
-   usuários, senão os clientes não conectam no serviço novo.
+   DST-NAT Dude/TS SIX). 🆕 A base atual da CCR (VLAN 16, ~~`.4`~~ → 🆕 `.15` — troca
+   2026-08-07, LoopBack1 `.4/32` do NE8000, **reconfigurar**, VLAN 100, default e SRC-NAT) foi
+   deixada **habilitada em bancada por decisão do usuário em 2026-08-06**; permanece isolada pelo
+   SFP desconectado. DST-NAT ainda não foi criado. Não conectar o trunk antes da coordenação com o
+   RB3011, que ainda usa `.1` na VLAN 100.
+4. ~~Montar a nova VPN antes do corte.~~ → ❌ **adiado pelo usuário em 2026-08-06:** WireGuard
+   somente depois de toda a migração concluída e validada. Não configurar VPN na bancada nem na
+   janela inicial.
 5. ~~Migrar as automações (backup/notificação) para o servidor escolhido.~~ ✅ **removido
    (2026-07-24):** as duas automações (backup FTP semanal, notificação netwatch→FocusChat) foram
    descartadas (decisão #6) — nada a migrar aqui.
@@ -98,7 +104,7 @@
 
 ### Fase 1 — Estágio
 1. DM4170 instalado no rack, ligado ao NE8000 pelo link 10GE novo (trunk 802.1q com todas as
-   VLANs de acesso QinQ-terminadas + as 3 simples de serviço). **Sem trunk para a rede de
+   VLANs de acesso QinQ-terminadas + as simples destinadas ao NE8000). **Sem trunk para a rede de
    acesso** — ela não será mexida; o cabo QinQ só muda na janela (fase 2).
 2. 🆕 **Validar as SVIs e adjacências OSPF já criadas no NE8000** (fase 0, item 3) contra o
    [09](09-l2-mapeamento-vlans.md) — como o DM4170 não fala OSPF (decisão #13), não há
@@ -117,21 +123,25 @@
 
 ### Fase 3 — Janela do núcleo (a única com indisponibilidade real)
 Migrar em bloco, na mesma janela:
-- [ ] VLAN 16 / `177.72.104.0/27` (todas as sub-redes da antiga `Bridge IP Publico`) — para o dono
-      definido na decisão #9
+- [ ] ~~VLAN 16 / `177.72.104.0/27` (todas as sub-redes da antiga `Bridge IP Publico`)~~ — o NE8000
+      passa a anunciar o `/27` por SVI própria (decisão #9); ~~a bridge morre~~
 - [ ] `.1` para de existir no MK; anúncio OSPF do `/27` muda de origem
-- [ ] Segmento `177.72.104.52/30` com o NE8000 (`.53`)
+- [ ] ~~Segmento `177.72.104.52/30` com o NE8000 (`.53`)~~ — morre com o MK; NE8000 passa a terminar
+      o `/27` em SVI própria (VLAN 16 via DM4170), não precisa do `.52/30`
 - [ ] Ativar NAT na **CCR1036** (SRC-NAT geral + DST-NAT Dude/TS SIX) e **desativar no MK**
 - [ ] Rotas estáticas locais (`10.8.0.0/21` via `.9`, `10.254.0.0/22` via `.12`,
-      `10.30.0.0/30`+`10.150.150.0/24` via `.19`, DNS loopbacks via `.28`)
-- [ ] Adjacência OSPF principal (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)
+      `10.30.0.0/30`+`10.150.150.0/24` via `.19`, DNS loopbacks via `.28`) — rever quais viram
+      *connected* no NE8000 e quais migram para a CCR
+- [ ] ~~Adjacência OSPF principal (VLAN 28: `192.168.116.34` + secundário `177.72.104.53`)~~ — a
+      VLAN 28 morre com o MK; a nova adjacência OSPF CCR↔NE8000 será sobre a VLAN 16 (~~`.4`~~ 🆕 `.15`↔`.1`)
 - [ ] Servidores locais do MK (`ether6`–`10`) recabeados para portas GE do **DM4170** (🆕
       confirmado 2026-07-24 — não mais a CCR1036; usar transceiver SFP-RJ45 nas portas ópticas)
 - [ ] **Validar FlowSpec e NetStream imediatamente** (sessão BGP `177.72.104.27`, fluxo na porta 3055)
 
 ### Fase 4 — Descomissionamento
-1. RB3011 e RB2011 ficam **desligados mas configurados** por N semanas (rollback físico).
-2. **Rotação de credenciais** (tudo vazou em texto claro nos exports): chave OSPF MD5 `ntprb1030`
+1. RB3011 e RB2011 ficam **desligados mas configurados** por N semanas (rollback físico). RB750
+   permanece ativo (WireGuard).
+2. **Rotação de credenciais** (tudo vazou em texto claro nos exports): chave OSPF MD5 da area1 (valor nos exports em `config/`)
    (rede toda, coordenar! — estratégia na decisão #11 de [03](03-decisoes-pendentes.md)), senha
    BGP do peer Google, senhas PPP dos 4 usuários, community SNMP. 🆕 Credenciais FTP de backup
    (`mkbkp`/`hwbkp`) e token da API FocusChat **não precisam rotacionar** — as duas automações que
@@ -149,11 +159,13 @@ Migrar em bloco, na mesma janela:
 - [ ] Um ping/gerência por site: cada OLT, cada SW, cada POP (usar a tabela do [08](08-vlans-e-portas.md))
 - [ ] **MTU fim a fim**: ping com DF e payload grande (ex.: 1500) para um POP QinQ e para um
       servidor da VLAN 16 — valida baby giants no trunk novo e o MSS-clamp equivalente
-- [ ] DNS recursivo (`10.200.255.253`) e DNS públicos (`.28/.58/.59`) respondendo
+- [ ] ~~DNS recursivo (`10.200.255.253`)~~ → ❌ fora do plano da CCR (usuário, 2026-08-06) — e DNS públicos (`.28/.58/.59`) respondendo
 - [ ] Hubsoft/Fusion/VOIP acessíveis de fora (os que o passo 1 confirmar como vivos)
 - [ ] DHCP do gerador MST entregando lease
-- [ ] VPN nova: os 4 usuários conectam
-- [ ] Backup automático rodou no novo lugar
+- [ ] ~~VPN nova: os 4 usuários conectam~~ — VPN não migra no corte; WireGuard só pós-migração
+      (decisão #5, [03](03-decisoes-pendentes.md))
+- [ ] ~~Backup automático rodou no novo lugar~~ — automações de backup descartadas (decisão #6,
+      [03](03-decisoes-pendentes.md)); validar apenas que o RB750 (WireGuard) segue íntegro
 
 ## Rollback
 

@@ -1,0 +1,45 @@
+# Validacao ao vivo - Proxmox Docker/CDNTV - 2026-08-05
+# Comandos de leitura e ping executados pelo usuario.
+
+=== HOST ===
+vmbr1 UP 192.168.254.11/24 10.250.104.1/24 10.250.102.1/24
+default via 192.168.254.1 dev vmbr1
+vlan_filtering vmbr1: 1
+Configuracao persistente: address 192.168.254.11/24; gateway 192.168.254.1;
+bridge-ports eno1; bridge-vlan-aware yes; bridge-vids 2-4094.
+
+=== VMS ===
+VM 100 Docker-Netpal: running; net7 vmbr1 tag=16; net1 vmbr2 sem tag.
+VM 101 CdnTV-Origin: running; net0 vmbr2 sem tag; MAC 2A:B7:2D:D8:6E:A2.
+VM 102 CdnTV-Edge: running; net0 vmbr2 sem tag; MAC 5E:68:F6:70:6E:0D.
+VMs 103-107: running; net0 vmbr1 tag=16.
+enp8s0f0: UP/LOWER_UP.
+Os MACs .107, .108 e .109 aparecem nos taps corretos da vmbr2.
+
+=== PINGS - 3 PACOTES ===
+OK 0%: 192.168.254.1
+OK 0%: 177.72.104.2
+OK 0%: 177.72.104.3
+OK 0%: 177.72.104.8
+OK 0%: 177.72.104.10
+OK 0%: 177.72.104.11
+OK 0%: 177.72.104.12
+FALHA 100%: 177.72.104.21 - Destination Host Unreachable originado por 177.72.104.1
+OK 0%: 177.72.104.22
+OK 0%: 177.72.104.23
+OK 0%: 177.72.104.25
+OK 0%: 177.72.104.30
+OK 0%: 177.72.104.105
+OK 0%: 177.72.104.107
+OK 0%: 177.72.104.108
+OK 0%: 177.72.104.109
+OK 0%: 192.168.116.10
+OK 0%: 8.8.8.8
+
+Conclusao: infraestrutura do host, VLAN 100/16 e caminho CDN 101/102 validados.
+Bloqueio antes da fase DNS: container DNS2-Recursivo-104.21 nao responde e o gateway
+nao resolve o host. Ele estava documentado como Up/pingando apos a recriacao.
+
+Reclassificacao posterior pelo usuario:
+- O DNS2-Recursivo-104.21 foi removido intencionalmente e nao e mais utilizado.
+- A falha de .21 e esperada, nao bloqueia a Fase 2 e o servico nao migra.

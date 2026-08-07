@@ -1,0 +1,46 @@
+# Tcpdump repetido na eno1 do Proxmox HubSoft - 2026-08-05
+# Saida bruta fornecida pelo usuario.
+
+root@px-hubsoft:~# tcpdump -eni eno1 'vlan 100 and arp'
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eno1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+14:08:42.327616 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:08:43.329878 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:08:44.357828 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:12:29.759962 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:12:30.785881 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:12:31.809875 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:16:36.804378 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:16:37.825885 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:16:38.849894 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:19:13.014751 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:19:14.017951 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:19:15.041888 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:20:19.479480 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:20:20.481883 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:20:21.505906 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:21:19.928021 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:21:20.929891 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:21:21.953894 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:26:21.868526 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:26:22.881878 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:26:23.905891 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:31:03.714399 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:31:04.737892 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:31:05.761824 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:31:06.785956 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:31:07.809905 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:31:08.833895 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:33:01.849880 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:33:02.885871 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:33:03.905854 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:38:23.910394 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:38:24.929967 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+14:38:25.953827 84:2b:2b:5a:45:55 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 100, p 0, ethertype ARP (0x0806), Request who-has 192.168.254.1 tell 192.168.254.13, length 28
+
+## Observacao
+
+A captura foi feita na `eno1`, que permanece no caminho antigo via RB750. Ela repete a evidencia
+do handoff descartado e nao valida o switch temporario ou a futura `eno2`. Como os ARPs de `.13`
+continuaram aparecendo, o estado atual de `vmbr0.100`, `.13/24`, bridge VLAN e processos tcpdump
+ficou pendente de nova coleta antes de prosseguir.

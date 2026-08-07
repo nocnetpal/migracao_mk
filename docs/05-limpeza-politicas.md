@@ -26,7 +26,7 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | Sistema/regra no MK antigo | IP(s) | Nome no Dude hoje | Ainda ativo? |
 |---|---|---|---|
 | ~~Hubsoft (billing/ERP)~~ | `177.72.104.8` | Smokeping | ✅ **Resolvido (2026-07-24): não é Hubsoft nem morto — é o Smokeping**, vivo, hospedado em `docker-netpal`. Não precisa de regra "Hubsoft"; precisa de regra própria pra Smokeping se ainda fizer sentido no novo firewall |
-| Hubsoft (billing/ERP) | `177.72.104.5` | Proxmox Zabbix | ✅ **confirmado vivo (usuário, 2026-07-24)** — coexiste com o Hubsoft de `.16` (VM `HUBSOFT`), duas instâncias/apontamentos distintos, não é duplicidade a limpar. ⚠️ **Achado de segurança:** a regra que libera essa app (`dst-port=!148`, sem origem restrita) abre **todas as portas** de `.5` pra internet inteira — e `.5` é o próprio hypervisor Proxmox. Não portar 1:1; restringir à porta real do Hubsoft com origem explícita (ver decisão #7/#12 em [03](03-decisoes-pendentes.md)) |
+| ~~Hubsoft (billing/ERP)~~ | `177.72.104.5` | Proxmox Zabbix | ❌ **premissa corrigida em 2026-08-05:** não havia HubSoft em `.5`; inspeção direta encontrou apenas Proxmox `8006` e SSH `45345`, com 80/443 recusados. `.5` saiu do hypervisor e ficou livre. A regra “Hubsoft” era resíduo amplo que expunha a gerência; não migrar |
 | Fusion Netpal (clientes elaborados) | `177.72.104.14` | Fusion - VoIP - PM CPV | provável ativo |
 | Fusion Netpal (clientes simples) | `177.72.104.25` | Fusion - VoIP - Painéis Simples | provável ativo |
 | Fusion Netpal (geral) | `177.72.104.18` | Fusion - VoIP - 0800 NETPAL | provável ativo |
@@ -36,11 +36,11 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | TIP VOIP | `177.72.104.13` | Zeus - TIP - VoIP | ✅ ativo (bate) — confirmado por consulta direta (2026-07-24) |
 | MADE4IT | `177.72.104.17` | Fusion - VoIP - PM MST | ✅ **confirmado por consulta direta (2026-07-24)** — nome do MK desatualizado, ativo como "Fusionpbx-PM-MST" |
 | OPA Suite (chat) | `177.72.104.30` | Opa ChatBot | ativo (bate) |
-| CallSys | `177.72.104.5` | Proxmox Zabbix | ❌ **morto (usuário, 2026-07-24) — não existe mais na rede.** Regra `LIBERA CALLSYS` (dst-port `!45345`) não migra |
+| CallSys | `177.72.104.5` | Proxmox Zabbix | ❌ **morto (usuário, 2026-07-24) — não existe mais na rede.** A porta `45345` era o SSH do hypervisor, não CallSys; regra `LIBERA CALLSYS` não migra |
 | Servidor sala | `177.72.104.16` | HubSoft | ✅ **confirmado por consulta direta (2026-07-24): é o Hubsoft real** — `.8` é sistema não relacionado (Smokeping, ver acima) |
 | The Dude (monitoramento) | `192.168.116.30` | RB DUDE | ✅ confirmado ativo (é a própria fonte do CSV) |
 | TS SIX | `192.168.66.14` | TS SIX | ✅ confirmado ativo (bate) |
-| DNS NetPal (x3, incl. loopbacks) | `177.72.104.28/58/59` | DNS MASTER (só `.58`) | ✅ **`.28` e `.58` confirmados por consulta direta (2026-07-24): é o mesmo host, VM `NS-UNBOUND`** (não são dois sistemas). `.59` segue sem confirmação em nenhuma fonte |
+| DNS NetPal (x3, incl. loopbacks) | `177.72.104.28/58/59` | DNS MASTER (só `.58`) | ✅ `.28/27`, `.58/32` e `.59/32` confirmados diretamente na mesma VM `NS-UNBOUND`; `.59` é IP secundário/loopback (confirmação QEMU Agent + usuário, 2026-08-05) |
 | Belluno (parceiro externo) | lista `BELLUNO` (5 IPs/redes) | — | ? |
 | SixTelecom (parceiro externo) | lista `SIXTELECOM` (5 IPs/redes) | — | ? |
 | CGNAT | `177.93.242.0/24` | — | ✅ consistente com CGNAT do NE8000 ([06](06-ne8000-bgp-core.md)) |
@@ -48,11 +48,11 @@ antigo). Onde os nomes **não batem**, o nome do Dude é o forte candidato a est
 | SMTP_LIBERADO | lista nunca populada — bloqueio porta 25 sem exceção real | — | ? |
 | 🆕 (sem nome no MK) Zabbix | `177.72.104.6` | Zabbix | novo — incluir no levantamento |
 | 🆕 (sem nome no MK) | `177.72.104.22` | Fusion - VoIP - Elaborados - Full | novo — incluir |
-| 🆕 (sem nome no MK) | `177.72.104.23` | Aplicações /etc/scripts | novo — incluir |
+| 🆕 (sem nome no MK) | `177.72.104.23` | ~~Aplicações /etc/scripts~~ → **APLICACOES** (renomeado 2026-08-06; era o "API-ZAP" real: comissão_v2, netpal_nginx, filebrowser, mariadb-relatorio, influxdb) | novo — incluir |
 | 🆕 (sem nome no MK) | `177.72.104.24` | OLT CLOUD | novo — incluir |
-| 🆕 (sem nome no MK) | `177.72.104.29` | AUTOMACOES | ✅ confirmado por consulta direta (2026-07-24) — função exata segue aberta (não é o destino da notificação netwatch, ver decisão #6) |
-| 🆕 (sem nome no MK) | `177.72.104.26` | API-ZAP | ✅ **identidade resolvida (2026-07-24)** — ~~provável destino da notificação HTTP da decisão #6~~ descartado: o script `dude` chama `api.focuschat.com.br` direto, função real segue desconhecida |
-| 🆕 (sem regra no MK) | `177.72.104.2`, `.3`, `.10`, `.11`, `.21` | UniFi Controller, Wiki, PowerDNS master/slave, DNS2 Recursivo | 🆕 achados por consulta direta (2026-07-24) — nunca tiveram regra de firewall própria no MK, mas existem no `/27`. Incluir na lista final de zonas se precisarem de acesso de fora |
+| 🆕 (sem nome no MK) | `177.72.104.29` | ~~AUTOMACOES~~ → **DEVOPS-01** (renomeado 2026-08-06; dify, n8n, hubwatch, swmon) | ✅ confirmado por consulta direta (2026-07-24) — função exata segue aberta (não é o destino da notificação netwatch, ver decisão #6) |
+| 🆕 (sem nome no MK) | `177.72.104.26` | **API-WHATS** (mantém o nome; Dude tinha como "API-ZAP", desatualizado — o API-ZAP real é o `.23`=APLICACOES) | ✅ **identidade resolvida (2026-08-06, consulta direta):** Node.js bot WhatsApp, sem Docker/banco exposto; ~~provável destino da notificação HTTP da decisão #6~~ descartado: o script `dude` chama `api.focuschat.com.br` direto |
+| 🆕 (sem regra no MK) | `177.72.104.2`, `.3`, `.10`, `.11` | UniFi Controller, Wiki, PowerDNS master/slave | 🆕 achados por consulta direta (2026-07-24) — nunca tiveram regra de firewall própria no MK, mas existem no `/27`. `.21` DNS2 Recursivo foi removido intencionalmente em 2026-08-05 e não migra |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.12` | OpenVPN - 2 | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |
 | 🆕 VPN à parte (não é do MK) | `177.72.104.19` | VPN - WireGuard | fora do escopo do Passo 1 — ver decisão #5 no [03](03-decisoes-pendentes.md) |
 

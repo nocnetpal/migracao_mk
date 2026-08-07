@@ -42,10 +42,11 @@ root@docker-netpal:~# ip -d link show ens18
 # Correção 07/08: backup em /Docker/backup-wiki-20260807/; container recriado com os volumes
 #   antigos; nginx (Nginx_Netpal) assumiu o .3 e faz proxy do vhost wiki -> Wiki; cert LE via
 #   DNS-01 (hooks pdns) até 05/11/2026.
-# ⚠️ PROBLEMA INTRODUZIDO: Wiki subiu com --ip 177.72.104.5 = IP de gerência do hypervisor
-#   Proxmox Zabbix (HP físico, docs/12) -> :8006/:22 do hypervisor mascarados (verificado da
-#   DEVOPS-01: ARP .5 = 0e:db:8f:29:c7:5a, portas 8006/22 sem resposta). Proposta: mover pro .15
-#   (único livre no /27) e ajustar proxy_pass do nginx.
+# ~~PROBLEMA INTRODUZIDO: Wiki no .5 = conflito com hypervisor Proxmox Zabbix~~
+#   ✅ RECLASSIFICADO (pós git pull 2026-08-07): o hypervisor Zabbix migrou pra 192.168.254.10 em
+#   05/08 — o .5 estava realmente livre; não houve conflito. O .15 também não podia (reservado ao
+#   NAT da CCR, troca do .4). Solução final aplicada: Wiki em rede interna docker `wiki-internal`
+#   (172.30.0.10) atrás do Nginx_Netpal (.3), proxy_pass ajustado, validado HTTP 200.
 # ⚠️ Base é de 02/09/2022 — nenhuma base mais nova encontrada na VM nem na varredura de rede.
 # ⚠️ DNS2-Recursivo-104.21 (.21) segue morto (Exited 137, 05/08) — religar.
 # ⚠️ VM "Docs" (177.72.104.7, Proxmox Zabbix) = ownCloud (verificado 07/08) — não é wiki.

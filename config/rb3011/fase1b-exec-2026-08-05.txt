@@ -1,0 +1,37 @@
+[jdf@GW Servidores] > /interface bridge port remove [find interface="ether7 - Proxmox Docker CDNTV"]
+[jdf@GW Servidores] > /interface bridge port add bridge=bridge-servidores \
+\...   interface="ether7 - Proxmox Docker CDNTV" pvid=100
+[jdf@GW Servidores] > /interface bridge vlan add bridge=bridge-servidores vlan-ids=100 \
+\...   untagged="ether7 - Proxmox Docker CDNTV"
+failure: vlan already added
+[jdf@GW Servidores] > /interface bridge vlan add bridge=bridge-servidores vlan-ids=16 \
+\...   tagged="ether7 - Proxmox Docker CDNTV"
+failure: vlan already added
+[jdf@GW Servidores] > :do {
+{...   /ip address set [find address="192.168.116.121/30"] interface=vlan100-servidores
+{... } on-error={}
+[jdf@GW Servidores] > /ping 192.168.116.122 count=5
+  SEQ HOST                                     SIZE TTL TIME  STATUS                                                                                      
+    0 192.168.116.122                            56  64 0ms  
+    1 192.168.116.122                            56  64 0ms  
+    2 192.168.116.122                            56  64 0ms  
+    3 192.168.116.122                            56  64 0ms  
+    4 192.168.116.122                            56  64 0ms  
+    sent=5 received=5 packet-loss=0% min-rtt=0ms avg-rtt=0ms max-rtt=0ms 
+
+[jdf@GW Servidores] > /ping 192.168.254.1 count=2
+  SEQ HOST                                     SIZE TTL TIME  STATUS                                                                                      
+    0 192.168.254.1                              56  64 0ms  
+    1 192.168.254.1                              56  64 0ms  
+    sent=2 received=2 packet-loss=0% min-rtt=0ms avg-rtt=0ms max-rtt=0ms 
+
+[jdf@GW Servidores] > /interface bridge vlan print where bridge=bridge-servidores
+Flags: X - disabled, D - dynamic 
+ #   BRIDGE                                    VLAN-IDS  CURRENT-TAGGED                                  CURRENT-UNTAGGED                                 
+ 0 D bridge-servidores                         1                                                         bridge-servidores                                
+ 1   bridge-servidores                         100       bridge-servidores                               ether7 - Proxmox Docker CDNTV                    
+ 2   bridge-servidores                         16        bridge-servidores                              
+[jdf@GW Servidores] > /interface bridge port print where bridge=bridge-servidores
+Flags: X - disabled, I - inactive, D - dynamic, H - hw-offload 
+ #     INTERFACE                                     BRIDGE                                     HW  PVID PRIORITY  PATH-COST INTERNAL-PATH-COST    HORIZON
+ 0     ether7 - Proxmox Docker CDNTV                 bridge-servidores                          yes  100     0x80         10                 10       none

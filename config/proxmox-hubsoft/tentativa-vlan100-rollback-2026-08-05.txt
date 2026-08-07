@@ -1,0 +1,55 @@
+# Tentativa VLAN 100 HubSoft + rollback - 2026-08-05
+
+## Transporte temporario criado no RB3011
+
+- vlan100-rb750: VLAN ID 100 sobre Bridge IP Publico
+- vlan100-rb750 adicionada ao bridge-servidores com PVID 100
+- VLAN 100 manteve ether7/ether8 e acrescentou vlan100-rb750 como untagged
+- RB750 nao foi alterada
+
+## Teste temporario no px-hubsoft
+
+root@px-hubsoft:~# ip link add link vmbr0 name vmbr0.100 type vlan id 100; ip link set vmbr0.100 up; ip addr add 192.168.254.13/24 dev vmbr0.100; ip -4 -br addr show vmbr0.100; ping -I vmbr0.100 -c3 192.168.254.1
+vmbr0.100@vmbr0  UP             192.168.254.13/24
+PING 192.168.254.1 (192.168.254.1) from 192.168.254.13 vmbr0.100: 56(84) bytes of data.
+3 packets transmitted, 0 received, 100% packet loss
+
+## Rollback executado
+
+- px-hubsoft: IP removido e vmbr0.100 eliminada
+- RB3011: vlan100-rb750 removida da tabela/bridge e interface VLAN eliminada
+- VLAN 100 voltou a ter somente ether7 Docker e ether8 DNS como untagged
+
+## Validacao pos-rollback a partir do px-hubsoft
+
+192.168.115.209: 3/3, 0% perda, media 0.161 ms
+192.168.115.214: 3/3, 0% perda, media 0.668 ms
+177.72.104.16:   3/3, 0% perda, media 0.555 ms
+
+Conclusao: tentativa abortada sem impacto persistente. Nao repetir sem diagnosticar em
+captura/bridge onde a tag 100 deixou de atravessar. Gerencia permanece em 192.168.115.210/30.
+
+## Diagnostico adicional e segunda tentativa controlada
+
+1. `tcpdump -eni eno1 'vlan 100'` inicialmente capturou zero pacotes.
+2. `bridge vlan show` revelou `vmbr0 self` somente na VLAN 1; `eno1` permitia 2-4094.
+3. Apos `bridge vlan add dev vmbr0 vid 100 self`, o HubSoft passou a transmitir corretamente:
+   - tres ARP requests VLAN 100
+   - origem 84:2B:2B:5A:45:55 / 192.168.254.13
+   - destino broadcast, procurando 192.168.254.1
+4. Sniffer na RB750 ether4 confirmou os mesmos tres ARPs entrando com VLAN 100.
+5. Nao houve resposta nem trafego VLAN 100 observado no RB3011 ether10.
+6. Teste temporario com hw-offload desativado em ether4/ether5 da RB750 nao restabeleceu o ping.
+7. Teste temporario declarando VLAN 100 tagged em ether4/ether5 e ativando vlan-filtering na
+   RB750 tambem nao restabeleceu o ping.
+
+## Rollback final confirmado
+
+- RB750: vlan-filtering=no, nenhuma bridge VLAN, hw=yes restaurado.
+- RB3011: vlan100-rb750/interface/bridge-port removidos; VLAN 100 somente ether7+ether8.
+- px-hubsoft: vmbr0.100 e VLAN 100 self removidas.
+- Pos-rollback: .209, .214 e .16 responderam sem perda.
+
+Conclusao refinada: a primeira falha incluia falta da VLAN 100 no `vmbr0 self`, corrigida durante
+o diagnostico. Depois disso, a tag chegou comprovadamente a RB750 ether4, mas o caminho completo
+ate o RB3011/SVI nao se estabeleceu. Nao houve migracao nem alteracao persistente.

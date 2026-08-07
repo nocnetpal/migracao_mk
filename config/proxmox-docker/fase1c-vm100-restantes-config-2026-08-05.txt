@@ -1,0 +1,19 @@
+# Config dos 3 containers restantes
+
+smokeping:
+- IP: 177.72.104.8
+- Image: smokenetpal1:latest
+- Ports: 22001:22, 8001:80
+- Volumes: /Docker/smokeping/conf:/config, /Docker/smokeping/data:/data
+- Env: PUID=1000, PGID=1000, TZ=America/Sao_Paulo
+
+Wiki:
+- IP: 177.72.104.3
+- Image: linuxserver/wikijs:latest
+- Sem portas/volumes capturados
+
+DNS2-Recursivo-104.21:
+- IP: 177.72.104.21
+- Image: dns_recursivo_2:latest
+- Cmd: /bin/systemd
+- Sem portas/volumes capturados

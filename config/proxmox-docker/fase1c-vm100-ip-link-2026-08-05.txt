@@ -1,0 +1,13 @@
+# VM 100 Docker-Netpal - interfaces
+# Mapeamento:
+# ens18 = net0 (vmbr1) - gerencia, MAC f6:ef:da:c8:5b:0b
+# ens19 = net1 (vmbr2)
+# ens20 = net2 (vmbr3)
+# ens21 = net3 (vmbr15)
+# ens22 = net4 (vmbr15)
+# ens23 = net5 (vmbr3 tag=38)
+# ens1  = net6 (vmbr3 tag=18)
+# ens2  = net7 (vmbr1 tag=16) - NOVO, MAC 62:57:f1:9b:d5:59, estado DOWN
+#
+# Rede macvlan IP-DNS-177.72.104.21 usa parent ens18 (sem tag)
+# Precisa mudar para parent ens2 (tag 16)

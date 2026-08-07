@@ -25,6 +25,11 @@ RB GW SERVIDORES (RB3011)
                └── p5 GW SERVIDORES PORTA 10 (uplink de volta pro RB3011 ether10)
 ```
 
+> ✅ **Portas RB2011 confirmadas ao vivo em 2026-08-05:** `ether1` uplink, `ether2` TS SIX,
+> `ether3` MGNT CGNAT-1, `ether4` Régua Volt, `ether5` Dude e `ether6` RRFlow. `ether7`–`ether10`
+> estão sem link e livres. A `ether4` está `running` e aprende MAC mesmo com a Régua registrada
+> como estragada; link ativo não confirma que a função da Régua esteja operacional.
+
 🆕 **TERCEIRO Mikrotik: RB BRIDGE 750 = identity `WIREGUARD` (RB750Gr3, sn CC210F9A08D3)** —
 confirmado 2026-07-27 por MAC + `bridge host`. Duplo papel: bridge L2 (NE8000 mgmt + Zabbix +
 HubSoft, uplink `ether10` do RB3011) **e** concentrador VPN (WireGuard/OpenVPN) no
@@ -52,12 +57,20 @@ os dois estão atrás do RB750, que sobe pelo `ether10`.
 | Servidor (modelo/U) | Porta | Cabo | Vai para |
 |---|---|---|---|
 | DELL R720 2U — Proxmox HubSoft | p1 | amarelo | RB BRIDGE 750 p4 |
-| DELL R420 1U — Proxmox Docker/CDNTV | p1 | vermelho | RB GW SERVIDORES (RB3011) p7 |
+| DELL R420 1U — Proxmox Docker/CDNTV | `eno1` / p1 | vermelho | RB GW SERVIDORES (RB3011) p7 — gerência VLAN 100 nativa + VLAN 16 tagged |
+| DELL R420 1U — Proxmox Docker/CDNTV | `enp8s0f0` / p? | a identificar | ✅ SW_JDF `XGE0/0/14`, access/untagged VLAN 23 — rede CDN `177.72.104.104/29` |
 | HP DL360 G7 1U — Proxmox Zeus/Zabbix | p1 | verde | RB BRIDGE 750 p3 |
 | HP 360 G7 1U — Proxmox DNS | p1 | verde | RB GW SERVIDORES (RB3011) p8 |
 | Servidor RRFLOW | p1 | azul | RB BRIDGE SERVIDORES (RB2011) p6 |
 | Servidor DUDE 3U | p1 | amarelo | RB BRIDGE SERVIDORES (RB2011) p5 |
 | Servidor TS SIX 3U | p1 | verde | RB BRIDGE SERVIDORES (RB2011) p2 |
+
+> 🆕 **Correção 2026-08-05:** o Dell R420 possui pelo menos dois enlaces de produção. Não mover
+> apenas o cabo vermelho e assumir que todo o CDNTV está nas VLANs 100/16. As VMs 101/102 e a
+> interface `.109` da VM 100 usam o segundo enlace `enp8s0f0` pela `vmbr2`, sem tag no host. Antes
+> de configurar o DM4170 ou recabear, **preservar o segundo cabo no SW_JDF `XGE0/0/14`**, que
+> aprende os MACs `2A:B7:2D:D8:6E:A2`, `5E:68:F6:70:6E:0D` e `C6:8F:DA:94:E0:6D` na VLAN 23.
+> O uplink ativo da VLAN 23 é `SW_JDF XGE0/0/1` tagged até o NE8000 `Gi0/1/8.23`.
 
 ## Layout do rack (44U)
 

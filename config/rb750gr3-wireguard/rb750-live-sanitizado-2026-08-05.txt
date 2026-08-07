@@ -1,0 +1,37 @@
+# Coleta ao vivo sanitizada - RB750-WIREGUARD - 2026-08-05 06:59 -03
+# Export continha credencial dentro de script; valor omitido deste registro.
+
+RouterOS: 7.21.5
+Modelo: RB750Gr3
+Identity: RB750-WIREGUARD
+
+bridge1 - Servidores:
+- running
+- vlan-filtering=no
+- RSTP
+- todas as portas PVID 1, admit-all
+- nenhuma entrada em /interface bridge vlan
+- nenhuma /interface vlan
+
+Portas:
+- ether1 - LIVRE: sem link; ainda membro da bridge; DHCP client e template OSPF configurados
+- ether2 - NE8000 Gerencia: running
+- ether3 - Proxmox Zabbix: running
+- ether4 - Proxmox HubSoft: running
+- ether5 - Uplink GW Servidores: running; uplink RB3011 ether10
+
+IPs/funcoes do proprio RB750:
+- 177.72.104.19/27 no dominio da bridge (configurado em ether5, actual-interface bridge)
+- WireGuard usuarios: 10.150.150.1/24
+- WireGuard gerencia: 10.99.0.1/24
+- default via 177.72.104.1
+- SRC-NAT das redes listadas para 177.72.104.19
+
+MACs HubSoft em ether4:
+- hypervisor: 84:2B:2B:5A:45:55
+- VM HUBSOFT: 72:56:05:A7:29:E9
+- VM HUBSOFT-RADIUS: 96:4F:38:AB:86:21
+
+Achado de seguranca:
+- /export hide-sensitive nao ocultou credencial embutida no corpo do script backup_ftp.
+- Nao copiar o valor para documentos; rotina ja decidida como descartada e credencial deve ser revogada.

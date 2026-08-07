@@ -1,0 +1,37 @@
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /interface vlan add name=vlan100-PRIVADA vlan-id=100 interface=sfp1-TRUNK-DM disabled=yes comment="GW PRIVADO PROXMOX - ATIVAR NO CORTE"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip address add address=192.168.254.1/24 interface=vlan100-PRIVADA disabled=yes comment="GW VLAN 100 - ATIVAR NO CORTE"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall address-list add list=NAT-PRIVADAS address=192.168.254.0/24 disabled=yes comment="VLAN 100 - HABILITAR COM NAT NO CORTE"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /interface vlan print detail
+Flags: X - DISABLED, R - RUNNING; H - HW-OFFLOADED
+ 0 X  ;;; 177.72.104.0/27 - GW NE8000 .1
+      name="vlan16-PUBLICA" mtu=1500 mac-address=00:00:00:00:00:00 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m vlan-id=16 interface=sfp1-TRUNK-DM use-service-tag=no mvrp=no
+
+ 1 X  ;;; GW PRIVADO PROXMOX - ATIVAR NO CORTE
+      name="vlan100-PRIVADA" mtu=1500 mac-address=00:00:00:00:00:00 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m vlan-id=100 interface=sfp1-TRUNK-DM use-service-tag=no mvrp=no
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip address print detail
+Flags: X - DISABLED, I - INVALID; D - DYNAMIC; S - SLAVE
+ 0     ;;; GERENCIA TEMPORARIA BANCADA
+       address=192.168.88.1/24 network=192.168.88.0 interface=ether1-MGMT actual-interface=ether1-MGMT vrf=main
+
+ 1 X   ;;; IP PUBLICO NAT CCR - ATIVAR NO CORTE
+       address=177.72.104.4/27 network=177.72.104.0 interface=vlan16-PUBLICA actual-interface=vlan16-PUBLICA vrf=main
+
+ 2 X   ;;; GW VLAN 100 - ATIVAR NO CORTE
+       address=192.168.254.1/24 network=192.168.254.0 interface=vlan100-PRIVADA actual-interface=vlan100-PRIVADA vrf=main
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall address-list print detail where list=NAT-PRIVADAS
+Flags: X - DISABLED, D - DYNAMIC
+ 0 X ;;; VLAN 100 - HABILITAR COM NAT NO CORTE
+     list=NAT-PRIVADAS address=192.168.254.0/24 creation-time=2026-07-29 08:40:06 dynamic=no
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /system clock set date=2026-08-06 time=11:00:00
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /system clock print
+                  time: 11:00:00
+                  date: 2026-08-06
+  time-zone-autodetect: yes
+        time-zone-name: America/Sao_Paulo
+            gmt-offset: -03:00
+            dst-active: no
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > Depois gere um export sanitizado da etapa:
+expected command name (line 1 column 1)
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /export show-sensitive=no file=ccr-base-vlan100-2026-08-06
+expected end of command (line 1 column 23)
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /file print where name~"ccr-base"

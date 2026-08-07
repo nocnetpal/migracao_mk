@@ -2,6 +2,13 @@
 # NAO APLICAR: nao mexer no bridge do RB750.
 # HubSoft/Zabbix migram na troca pra CCR/Datacom.
 # Conteudo antigo preservado abaixo so como referencia — NAO COLAR.
+# Pre-check 2026-08-05 confirmou dois bloqueios adicionais:
+# 1. ativar vlan-filtering tambem muda Zabbix, WireGuard e gerencia do NE8000;
+# 2. HUBSOFT-RADIUS .214 usa gateway .213/30, que tambem precisa viajar na VLAN 100.
+# Captura final: segundo handoff entre Bridge IP Publico e bridge-servidores
+# empilha QinQ 16,100. Este desenho nao deve ser repetido.
+
+:error "BLOQUEADO: caminho RB750/RB3011 produz QinQ 16,100; migrar somente no novo L2 DM4170"
 
 # =============================================================================
 # (A) No RB750-WIREGUARD — NAO USAR AGORA
@@ -49,10 +56,14 @@ add bridge="bridge1 - Servidores" vlan-ids=16 \
 :do {
   /ip address set [find address="192.168.115.209/30"] interface=vlan100-servidores
 } on-error={}
+:do {
+  /ip address set [find address="192.168.115.213/30"] interface=vlan100-servidores
+} on-error={}
 
 /ping 192.168.254.1 count=2
 /ping 177.72.104.19 count=5
 /ping 192.168.115.210 count=3
+/ping 192.168.115.214 count=3
 /ping 177.72.104.5 count=3
 /interface bridge vlan print where bridge=bridge-servidores
 /interface bridge port print where bridge=bridge-servidores

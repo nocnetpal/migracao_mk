@@ -1,0 +1,535 @@
+show running-config
+aaa authentication-order [ local ]
+aaa user admin
+ password $1$vULTMZLB$du9g2nKsU9nbqO7H6MGiG0
+ group admin
+!
+snmp traps config-commit
+snmp traps cpu-core
+snmp traps cpu-load
+snmp traps link-status
+snmp traps login-success
+snmp agent enabled
+snmp agent version v2c
+snmp agent version v3
+snmp community nepaltelecom
+ sec-name nepaltelecom
+!
+snmp notify std_v1_trap
+ tag std_v1_trap
+!
+snmp notify std_v2_inform
+ tag std_v2_inform
+ type inform
+!
+snmp notify std_v2_trap
+ tag std_v2_trap
+!
+snmp notify std_v3_inform
+ tag std_v3_inform
+ type inform
+!
+snmp notify std_v3_trap
+ tag std_v3_trap
+!
+snmp vacm group nepaltelecom
+ member nepaltelecom
+  sec-model [ v2c ]
+ !
+ access "" v2c no-auth-no-priv
+  read-view root
+  write-view root
+ !
+!
+snmp vacm group public
+ member public
+  sec-model [ v2c ]
+ !
+ access "" v2c no-auth-no-priv
+  read-view root
+  write-view root
+  notify-view root
+ !
+!
+snmp vacm view root
+ subtree 1.3
+  included
+ !
+!
+interface gigabit-ethernet 1/1/1
+ description GE1-RRFLOW-177.72.104.27
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/2
+ description GE2-PROXMOX-DOCKER-192.168.254.11
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/3
+ description GE3-PROXMOX-ZABBIX-192.168.254.10
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/4
+ description GE4-PROXMOX-HUBSOFT-192.168.254.13
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/5
+ description GE5-PROXMOX-DNS-192.168.254.12
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/6
+ description GE6-TS-SIX-192.168.66.14
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/7
+ description GE7-DUDE-192.168.116.30
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/8
+ description GE8-OLT-CPV-192.168.115.42
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/9
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/10
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/11
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/12
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/13
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/14
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/15
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/16
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/17
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/18
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/19
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/20
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/21
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/22
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/23
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface gigabit-ethernet 1/1/24
+ no shutdown
+ negotiation
+ duplex full
+ speed 1G
+ advertising-abilities 10Mfull 100Mfull 1Gfull
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/1
+ description XS1-TRUNK-NE8000-10GE
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/2
+ description XS2-TRUNK-CCR1036
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/3
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/4
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/5
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/6
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/7
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/8
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/9
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/10
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/11
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface ten-gigabit-ethernet 1/1/12
+ no shutdown
+ no negotiation
+ duplex full
+ speed 10G
+ mdix normal
+ mtu 16338
+!
+interface mgmt 1/1/1
+ ipv4 address 192.168.0.25/24
+!
+clock timezone BRA -3
+hostname DM4170-SW_SERVIDORES
+banner login "\nACESSO RESTRITO - Redes NetPal. Uso autorizado somente para operacao.\n"
+telnet-server disabled
+access-list
+ protection
+  cpu whitelist
+ !
+ acl-profile cpu l3 whitelist
+  priority 0
+  access-list-entry 0
+   match source-ipv4-address 177.72.104.0/27
+   action permit
+  !
+  access-list-entry 1
+   match source-ipv4-address 177.93.244.165
+   action permit
+  !
+  access-list-entry 2
+   match source-ipv4-address 192.168.0.0/24
+   action permit
+  !
+  access-list-entry 100
+   match destination-port ssh
+   action deny
+  !
+  access-list-entry 101
+   match destination-port 161
+   action deny
+  !
+ !
+!
+loopback-detection
+ destination-address alternative
+!
+mac-address-table
+ aging-time 600
+!
+layer2-control-protocol
+ tunnel-mac datacom
+ tunnel-priority 7
+!
+sntp client
+sntp server 192.168.116.10
+switchport
+ interface gigabit-ethernet-1/1/1
+  native-vlan vlan-id 16
+ !
+ interface gigabit-ethernet-1/1/2
+  native-vlan vlan-id 100
+ !
+ interface gigabit-ethernet-1/1/3
+  native-vlan vlan-id 100
+ !
+ interface gigabit-ethernet-1/1/4
+  native-vlan vlan-id 100
+ !
+ interface gigabit-ethernet-1/1/5
+  native-vlan vlan-id 100
+ !
+ interface gigabit-ethernet-1/1/6
+  native-vlan vlan-id 66
+ !
+ interface gigabit-ethernet-1/1/7
+  native-vlan vlan-id 116
+ !
+ interface gigabit-ethernet-1/1/8
+  native-vlan vlan-id 109
+ !
+!
+vrf global
+!
+vrf mgmt
+!
+dot1q
+ vlan 15
+  name NTP
+  interface ten-gigabit-ethernet-1/1/1
+  !
+  interface ten-gigabit-ethernet-1/1/2
+  !
+ !
+ vlan 16
+  name IP_PUBLICO
+  interface gigabit-ethernet-1/1/1
+    untagged
+  !
+  interface gigabit-ethernet-1/1/2
+  !
+  interface gigabit-ethernet-1/1/3
+  !
+  interface gigabit-ethernet-1/1/4
+  !
+  interface gigabit-ethernet-1/1/5
+  !
+  interface ten-gigabit-ethernet-1/1/1
+  !
+  interface ten-gigabit-ethernet-1/1/2
+  !
+ !
+ vlan 66
+  name TS_SIX
+  interface gigabit-ethernet-1/1/6
+    untagged
+  !
+  interface ten-gigabit-ethernet-1/1/1
+  !
+  interface ten-gigabit-ethernet-1/1/2
+  !
+ !
+ vlan 100
+  name GERENCIA_SERVIDORES
+  interface gigabit-ethernet-1/1/2
+    untagged
+  !
+  interface gigabit-ethernet-1/1/3
+    untagged
+  !
+  interface gigabit-ethernet-1/1/4
+    untagged
+  !
+  interface gigabit-ethernet-1/1/5
+    untagged
+  !
+  interface ten-gigabit-ethernet-1/1/1
+  !
+  interface ten-gigabit-ethernet-1/1/2
+  !
+ !
+ vlan 109
+  name OLT_CPV
+  interface gigabit-ethernet-1/1/8
+    untagged
+  !
+  interface ten-gigabit-ethernet-1/1/1
+  !
+  interface ten-gigabit-ethernet-1/1/2
+  !
+ !
+ vlan 116
+  name DUDE
+  interface gigabit-ethernet-1/1/7
+    untagged
+  !
+  interface ten-gigabit-ethernet-1/1/1
+  !
+  interface ten-gigabit-ethernet-1/1/2
+  !
+ !
+!
+license mpls disabled
+DM4170-SW_SERVIDORES# 

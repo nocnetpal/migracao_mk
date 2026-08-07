@@ -1,0 +1,15 @@
+# Pre-check VLAN 100 para HubSoft - RB3011 - 2026-08-05
+# Saida de comandos somente de leitura fornecida pelo usuario.
+
+bridge-servidores:
+- running, vlan-filtering=yes, protocol-mode=none
+- VLAN 100: bridge-servidores tagged; ether7 Docker e ether8 DNS untagged
+- VLAN 16: bridge-servidores, ether7 e ether8 tagged
+- SVI vlan100-servidores: VLAN ID 100, interface bridge-servidores
+- ether7 e ether8: PVID 100
+
+Topologia relevante confirmada na coleta anterior:
+- ether10 - RB750 Bridge permanece na Bridge IP Publico
+- RB750 opera como bridge flat, vlan-filtering=no
+- RB750 ether4 = Proxmox HubSoft
+- tagged VLAN 100 pode atravessar a bridge flat sem alterar o trafego untagged atual

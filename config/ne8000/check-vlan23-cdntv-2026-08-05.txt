@@ -1,0 +1,47 @@
+# Coleta ao vivo - NE8000 BGP_NETPAL - 2026-08-05 05:30 -03
+# Comandos somente de leitura executados pelo usuario.
+
+<BGP_NETPAL>display vlan 23
+Error: The VLAN does not exist.
+
+<BGP_NETPAL>display mac-address vlan 23
+<BGP_NETPAL>
+
+# Analise: resultado esperado para uma subinterface L3 dot1q. A configuracao
+# coletada do NE8000 possui GigabitEthernet0/1/8.23 com `vlan-type dot1q 23`
+# e `ip address 177.72.104.105 255.255.255.248`. Isso nao exige que a VLAN 23
+# exista na tabela L2 local do NE8000 e nao permite localizar a porta do servidor.
+
+<BGP_NETPAL>display current-configuration interface GigabitEthernet0/1/8.23
+#
+interface GigabitEthernet0/1/8.23
+ vlan-type dot1q 23
+ description SERVIDOR_CDN_TV
+ ip address 177.72.104.105 255.255.255.248
+#
+return
+
+<BGP_NETPAL>display interface GigabitEthernet0/1/8.23
+GigabitEthernet0/1/8.23 current state : UP
+Line protocol current state : UP
+Description: SERVIDOR_CDN_TV
+Route Port,The Maximum Transmit Unit is 1500
+Internet Address is 177.72.104.105/29
+Encapsulation dot1q Virtual LAN, The number of Vlan is 1, Vlan ID 23
+Last 300 seconds input rate 0 bits/sec, 0 packets/sec
+Last 300 seconds output rate 0 bits/sec, 0 packets/sec
+Input errors/drops: 0/0
+Output errors/drops: 0/0
+
+<BGP_NETPAL>display arp interface GigabitEthernet0/1/8.23
+IP ADDRESS      MAC ADDRESS     TYPE        INTERFACE   VLAN/CEVLAN
+177.72.104.105  048c-16cc-2fbc I -         GE0/1/8.23
+177.72.104.104  Incomplete      D-10        GE0/1/8.23
+177.72.104.106  Incomplete      D-10        GE0/1/8.23
+177.72.104.107  2ab7-2dd8-6ea2 D-10        GE0/1/8.23 23/-
+177.72.104.108  5e68-f670-6e0d D-10        GE0/1/8.23 23/-
+177.72.104.109  c68f-da94-e06d D-10        GE0/1/8.23 23/-
+177.72.104.110  Incomplete      D-10        GE0/1/8.23
+
+# Conclusao: .107, .108 e .109 estao ativos na VLAN 23 e os MACs conferem
+# exatamente com as NICs virtuais ligadas a vmbr2 no Proxmox.

@@ -40,10 +40,10 @@ gerência) ainda têm o caminho de rede **não confirmado**.
 | OpenVPN - 2 (`OpenVPN2`) | `177.72.104.12` ✅ (+ `10.254.0.30` interno) | `62:B2:A1:0A:B1:AE` | VM pública |
 | Fusion - VoIP - Painéis Simples (`Fusion-Painel-Simples`) | `177.72.104.25` ✅ | `0E:C8:34:76:59:4E` | VM pública |
 | Fusion - VoIP - Elaborados - Full (`Fusion-Painel-Elaborados`) | `177.72.104.22` ✅ | `6E:26:1A:C9:19:CE` | VM pública |
-| Aplicações /etc/scripts (`APP-ETC-SCRIPTS`) | `177.72.104.23` ✅ | `36:DC:89:9D:DA:5A` | VM pública |
+| APLICACOES (ex-`APP-ETC-SCRIPTS`/API-ZAP) | `177.72.104.23` ✅ | `36:DC:89:9D:DA:5A` | VM pública — renomeado 2026-08-06 (comissão_v2, netpal_nginx, filebrowser, mariadb, influxdb) |
 | Opa ChatBot (`OPA.SUIT`) | `177.72.104.30` ✅ | `F6:C7:5C:8A:4A:A3` | VM pública |
-| 🆕 CdnTV-Origin | `177.72.104.107` | `2A:B7:2D:D8:6E:A2` | VM pública — **fora do `/27`**, ver [07](07-enderecamento-ip.md) |
-| 🆕 CdnTV-Edge | `177.72.104.108` | `5E:68:F6:70:6E:0D` | VM pública — **fora do `/27`** |
+| 🆕 CdnTV-Origin | `177.72.104.107` | `2A:B7:2D:D8:6E:A2` | VM pública — **fora do `/27`**; ✅ `vmbr2` sem tag, rede CDN/VLAN 23 |
+| 🆕 CdnTV-Edge | `177.72.104.108` | `5E:68:F6:70:6E:0D` | VM pública — **fora do `/27`**; ✅ `vmbr2` sem tag, rede CDN/VLAN 23 |
 
 MAC de fabricante **Dell** no hypervisor — consistente com ser hardware físico real, não uma VM.
 
@@ -62,10 +62,10 @@ direta dos containers (`docker-mapear-containers.sh`) revelou:
 | `NTP_SERVER` | macvlan | `192.168.116.10` | 🆕 **É a origem do NTP de toda a rede** — o RB3011 aponta pra cá ([01](01-inventario-atual.md)) |
 | `smokeping` | macvlan `IP-DNS-177.72.104.21` | `177.72.104.8` | 🆕 **Resolve o mistério do `.8`** — não é Hubsoft nem morto ([07](07-enderecamento-ip.md), [11](11-cruzamento-dude-devices.md)) |
 | `unifi-controller` | macvlan | `177.72.104.2` | 🆕 novo, nunca catalogado |
-| `Wiki` | macvlan | ~~`177.72.104.3`~~ | 🆕 novo — já citado genericamente na "escala real" do [07](07-enderecamento-ip.md). ⚠️ 2026-08-07: recriado sem volume na janela de 05/08 (base perdida do ar); restaurado em 07/08 com a base de 09/2022, mas subiu no `.5` (**conflito com o hypervisor Proxmox Zabbix** — ver [14](14-ips-servidores-e-17772.md)); `.3` agora é do `Nginx_Netpal` (proxy). Correção: Wiki sai da macvlan pra rede interna Docker atrás do nginx (sem IP do `/27`) |
+| `Wiki` | macvlan | ~~`177.72.104.3`~~ | 🆕 novo — já citado genericamente na "escala real" do [07](07-enderecamento-ip.md). ⚠️ 2026-08-07: recriado sem volume na janela de 05/08 (base sumiu do ar); restaurado em 07/08 com a base de 09/2022 — passou brevemente pelo `.5` (livre, ex-hypervisor Zabbix) e terminou em **rede interna Docker `wiki-internal` (`172.30.0.10`) atrás do `Nginx_Netpal`**, que assumiu o `.3` (ver [14](14-ips-servidores-e-17772.md)). Sem IP do `/27`. ⚠️ Base atual (pós-2022) ainda em investigação |
 | `pdns-master1` | macvlan | `177.72.104.10` | 🆕 novo — stack PowerDNS separada da "DNS NetPal" |
 | `pdns-slave` | macvlan | `177.72.104.11` | 🆕 novo |
-| `DNS2-Recursivo-104.21` | macvlan | `177.72.104.21` | 🆕 novo — dá nome à rede macvlan do host |
+| ~~`DNS2-Recursivo-104.21`~~ | macvlan | `177.72.104.21` | ✅ removido intencionalmente pelo usuário em 2026-08-05; não migra |
 | `SEVERINO` | macvlan tag `18` | `192.168.15.74` | Resolve a interface `vmbr3` tag 18 da VM |
 | `SpeedTest` | macvlan tag `38` | `177.93.247.138` | Resolve a interface `vmbr3` tag 38 — está no **segundo bloco público** (`177.93.240.0/21`) |
 | `netbox-*` (4 containers), `phpipam-*` (3), `portainer`, `Nginx_Netpal`, `webserver` | redes Docker internas (172.x.x.x) | — | Ferramentas de gestão/infra (IPAM, proxy, dashboards) — não expõem IP público direto, sem impacto na migração do RB3011 |
@@ -78,7 +78,7 @@ adivinhar por MAC). Dump bruto em
 
 | Interface (VM) | MAC | Bridge (Proxmox) | Rede Docker (parent) |
 |---|---|---|---|
-| `ens18` | `F6:EF:DA:C8:5B:0B` | `vmbr1` | `IP-DNS-177.72.104.21` (macvlan) — os 6 containers com IP `177.72.104.x` (smokeping, pdns-master1, pdns-slave, unifi-controller, Wiki, DNS2-Recursivo) saem por aqui |
+| `ens18` | `F6:EF:DA:C8:5B:0B` | `vmbr1` | `IP-DNS-177.72.104.21` (nome histórico da macvlan) — 5 containers ativos: smokeping, pdns-master1, pdns-slave, unifi-controller e Wiki; DNS2 `.21` removido |
 | `ens21` | `5A:D9:BF:85:6A:44` | `vmbr15` (1) | `MACVLAN` — rede do `NTP_SERVER` (`192.168.116.10`) |
 | `ens1` | `C2:BB:BB:23:3A:B3` | `vmbr3` tag `18` | `MACVLAN-18-SEVERINO` — já confirmado antes |
 | `ens23` | `36:56:3A:7B:40:A9` | `vmbr3` tag `38` | `MACVLAN-38-SPEED` — já confirmado antes |
@@ -94,7 +94,7 @@ o usuário antes de assumir que dá pra remover essas 2 portas do plano de porta
 ser resquício de configuração antiga (os nomes `null` sugerem redes criadas e depois abandonadas,
 sem limpar).
 
-## 2. Proxmox Zabbix — ⚠️ caso à parte, hypervisor parece estar direto no IP público
+## 2. Proxmox Zabbix — ✅ migrado para VLAN 100/16
 
 > ✅ **11 VMs confirmadas por consulta direta ao host (`proxmox3`), 2026-07-24** — todas batem com
 > o Dude, nenhuma reclassificação necessária. `Dude-VLSul` tem um segundo IP (`100.6.6.4`, faixa
@@ -102,7 +102,7 @@ sem limpar).
 
 | Host/VM | IP | MAC (fabricante) | Tipo |
 |---|---|---|---|
-| **"Proxmox Zabbix"** | `177.72.104.5` | **Hewlett Packard** | ⚠️ ver nota abaixo |
+| **Proxmox Zabbix** | ~~`177.72.104.5/27`~~ → ✅ `192.168.254.10/24` | **Hewlett Packard** | hypervisor, VLAN 100; gateway `.1` |
 | Zabbix | `177.72.104.6` ✅ | `4E:01:6C:C9:F0:78` | VM pública |
 | Fusion - VoIP - PM CPV (`Fusionpbx-PM-CPV`) | `177.72.104.14` ✅ | `EE:2A:8A:5A:EE:E0` | VM pública |
 | Fusion - VoIP - 0800 NETPAL (`Fusion-0800-Netpal`) | `177.72.104.18` ✅ | `16:8C:EF:D4:03:FD` | VM pública |
@@ -115,13 +115,12 @@ sem limpar).
 | Dude PM CPV (`Dude-PM-CPV`) | `192.168.17.42` ✅ | `22:C6:6C:11:AB:E3` | VM **privada**, sem IP público |
 | Servidor Monsta (`Monsta`) | `192.168.115.62` ✅ | `E2:E9:C9:DC:BA:BF` | VM **privada**, sem IP público |
 
-Todas as 11, sem exceção, estão no mesmo `vmbr0`, **sem VLAN tag** — público e privado convivem no
-mesmo domínio L2 hoje (ver nota no topo do documento).
+~~Todas as 11 estavam no mesmo `vmbr0`, sem tag.~~ ✅ Desde 2026-08-05, as 8 públicas
+102–108/110 estão em `vmbr1/tag 16`; as privadas 100/101/109 estão em `vmbr1` untagged/VLAN 100.
+Os gateways `.37/30`, `.41/30` e `.61/30` estão em `vlan100-servidores`.
 
-⚠️ **Diferente dos outros 3 clusters, não existe nenhum IP de gerência privada para este
-hypervisor no Dude.** O device chamado literalmente `"Proxmox Zabbix"` está no IP **público**
-`177.72.104.5` e tem MAC de fabricante real (**Hewlett Packard**) — evidência de que é hardware
-físico, não uma VM.
+~~Não existia gerência privada.~~ ✅ O hypervisor agora usa somente `.10/24`; `.5` foi removido.
+No IP antigo havia apenas Proxmox `8006` e SSH `45345`, não uma segunda aplicação HubSoft.
 
 ✅ **Confirmado (usuário, 2026-07-23):** hipótese (a) procede — **é standalone** (não faz parte de
 cluster Proxmox, então trocar o IP não exige reconfigurar corosync/quorum) e tem **~10 VMs**
@@ -130,9 +129,7 @@ Isso confirma que migrar esse host é redesenho (dar a ele gerência privada pel
 só reapontar gateway — mas também confirma que é a operação **mais simples possível** desse tipo
 (sem cluster pra coordenar).
 
-**Ainda falta confirmar** antes da troca: se algo está amarrado no `.5` como IP do host em si
-(GUI/API do Proxmox porta `8006`, job de backup, allowlist de firewall) — ver checklist de troca
-em [03-decisoes-pendentes.md](03-decisoes-pendentes.md), decisão #12.
+✅ Migração validada fim a fim; porta antiga `ether3` da RB750 desativada e `enp3s0f0` sem carrier.
 
 ## 3. Proxmox HubSoft
 
@@ -140,14 +137,13 @@ em [03-decisoes-pendentes.md](03-decisoes-pendentes.md), decisão #12.
 
 | Host/VM | IP | MAC (fabricante) | Tipo |
 |---|---|---|---|
-| **Proxmox HubSoft** (hypervisor) | `192.168.115.210/30` ✅ **confirmado por `ip addr` direto no host (2026-07-24)** | Dell Inc. | gerência privada — ⚠️ fora do plano da CCR1036 (decisão #12) |
+| **Proxmox HubSoft** (hypervisor) | ~~`192.168.115.210/30`~~ → ✅ `192.168.254.13/24` | Dell Inc. | gerência privada, VLAN 100; gateway `.1` |
 | HubSoft (`HUBSOFT`) | `177.72.104.16` ✅ | `72:56:05:A7:29:E9` | VM pública |
 | Radius HubSoft (`HUBSOFT-RADIUS`) | `192.168.115.214` ✅ | `96:4F:38:AB:86:21` | VM **privada**, sem IP público |
 
 MAC **Dell** de novo no hypervisor — mesmo padrão do cluster Docker.
-`192.168.115.214` (Radius HubSoft) já aparecia na lista `FORA_DO_NAT_RADIUS` do RB3011
-([07](07-enderecamento-ip.md)) — agora sabe-se de qual VM/cluster é. Assim como no Zabbix, **as duas
-VMs estão no mesmo `vmbr0` sem VLAN tag** — público e privado juntos no mesmo domínio L2.
+`192.168.115.214` (Radius HubSoft) já aparecia na lista `FORA_DO_NAT_RADIUS` do RB3011.
+Desde 2026-08-05, HubSoft `.16` está em `vmbr1/tag 16` e RADIUS `.214` em `vmbr1` untagged.
 
 ## 4. Proxmox DNS
 
@@ -158,11 +154,11 @@ VMs estão no mesmo `vmbr0` sem VLAN tag** — público e privado juntos no mesm
 
 | Host/VM | IP | MAC (fabricante) | Tipo |
 |---|---|---|---|
-| **Proxmox DNS** (hypervisor) | `192.168.115.138/30` ✅ **confirmado por `ip addr` direto no host (2026-07-24)** | Hewlett Packard | gerência privada — ⚠️ fora do plano da CCR1036 (decisão #12) |
+| **Proxmox DNS** (hypervisor) | ~~`192.168.115.138/30`~~ → ✅ `192.168.254.12/24` (VLAN 100, concluído em 2026-08-05) | Hewlett Packard | gerência privada; gateway `192.168.254.1`; IP e gateway antigos removidos |
 | OLT CLOUD (`OLT-CLOUD`) | `177.72.104.24` ✅ | `BC:24:11:89:AD:23` | VM pública (Web Server) |
-| DNS MASTER / NetPal (`NS-UNBOUND`) | `177.72.104.28` **e** `177.72.104.58` ✅ | `BC:24:11:E7:B0:75` | VM pública — 🆕 **um único host com dois IPs**, não dois sistemas |
-| AUTOMACOES | `177.72.104.29` ✅ | `BC:24:11:BF:0B:B5` | VM pública (Web Server) |
-| 🆕 API-ZAP | `177.72.104.26` | `BC:24:11:50:14:F9` | VM pública — **resolve o mistério do `.26`**. ~~Provável destino da notificação da decisão #6~~ descartado (2026-07-24): o script `dude` do RB3011 chama `api.focuschat.com.br` direto, sem host local — função real de API-ZAP segue desconhecida |
+| DNS MASTER / NetPal (`NS-UNBOUND`) | `177.72.104.28/27` + `.58/32` + `.59/32` ✅ | `BC:24:11:E7:B0:75` | VM pública — **um único host com três IPs**; `.58`/`.59` são secundários/loopbacks |
+| DEVOPS-01 (ex-`AUTOMACOES`) | `177.72.104.29` ✅ | `BC:24:11:BF:0B:B5` | VM pública — renomeado 2026-08-06 (dify, n8n, hubwatch, swmon) |
+| 🆕 API-WHATS | `177.72.104.26` | `BC:24:11:50:14:F9` | VM pública — **resolve o mistério do `.26`** (2026-08-06, consulta direta: Node.js bot WhatsApp, sem Docker/banco). ~~API-ZAP~~ era nome desatualizado do Dude — o API-ZAP real é o `.23` (APLICACOES). ~~Provável destino da notificação da decisão #6~~ descartado (2026-07-24): o script `dude` do RB3011 chama `api.focuschat.com.br` direto, sem host local |
 
 ## Resumo — o que falta pra fechar o endereçamento
 
@@ -172,13 +168,36 @@ VMs estão no mesmo `vmbr0` sem VLAN tag** — público e privado juntos no mesm
 | Item | Status |
 |---|---|
 | Gerência do cluster Docker na CCR1036 | ✅ no plano (`ether3`) |
-| Gerência dos clusters HubSoft e DNS na CCR1036 | ❌ faltam porta/VLAN (decisão #12) |
-| Gerência do cluster Zabbix | ✅ confirmado standalone, sem gerência privada hoje (checklist da decisão #12) |
-| VMs privadas fora do `/30` de gerência (Radius HubSoft, Dude VLSUL, Dude PM CPV, Servidor Monsta) | ✅ IPs confirmados por consulta direta — ❌ caminho de rede (VLAN dedicada) ainda não definido |
-| VMs públicas (19 no total, incluindo CdnTV-Origin/Edge) | ✅ modelo definido: segunda NIC/bridge direto na VLAN 16, sem passar pela CCR1036 |
-| Separação público/privado nos hosts HubSoft e Zabbix | ❌ hoje não existe — todas as VMs dividem o mesmo `vmbr0` sem VLAN. Precisam de bridge VLAN-aware + tag por VM pra caber no modelo de gerência privada/pública do desenho alvo |
+| Gerência dos clusters HubSoft e DNS | ✅ `.13` e `.12` na VLAN 100 |
+| Gerência do cluster Zabbix | ✅ `.10` na VLAN 100; `.5` removido |
+| VMs privadas fora do `/30` de gerência (Radius HubSoft, Dude VLSUL, Dude PM CPV, Servidor Monsta) | ✅ mantêm IPs atuais, untagged na VLAN 100; gateways secundários movidos para `vlan100-servidores` |
+| VMs públicas (19 no total) | ✅ regra geral: VLAN 16 sem passar pela CCR1036; **exceção confirmada:** CdnTV `.107`/`.108` e `.109` usam a rede própria `/29` pela `vmbr2` untagged/VLAN 23 |
+| Separação público/privado nos hosts HubSoft e Zabbix | ✅ concluída: públicas tag 16, privadas untagged/VLAN 100 |
 | Separação público/privado no host Docker/CDNTV | ✅ **já existe parcialmente** — usa VLAN tag (`18`, `38`) em parte das interfaces macvlan; não é o mesmo problema do HubSoft/Zabbix |
-| 🆕 Sistemas descobertos sem relação com o RB3011 (NetBox, phpIPAM, Portainer, PowerDNS, NTP server, UniFi, Wiki, Smokeping, API-ZAP) | ✅ identificados — impacto na migração é indireto (definem a origem real do NTP; a notificação da decisão #6 não depende de nenhum deles — vai direto pra `api.focuschat.com.br`), mas não mudam o desenho de rede do DM4170/CCR1036 |
-| 🆕 `.107`, `.108`, `.109` (CdnTV) e `177.93.247.138` (SpeedTest) | ⚠️ fora do `/27` da migração — caminho de rede até esses hosts ainda não confirmado, provavelmente não faz parte do escopo do corte |
+| 🆕 Sistemas descobertos sem relação com o RB3011 (NetBox, phpIPAM, Portainer, PowerDNS, NTP server, UniFi, Wiki, Smokeping, API-WHATS) | ✅ identificados — impacto na migração é indireto (definem a origem real do NTP; a notificação da decisão #6 não depende de nenhum deles — vai direto pra `api.focuschat.com.br`), mas não mudam o desenho de rede do DM4170/CCR1036 |
+| 🆕 `.107`, `.108`, `.109` (CdnTV) e `177.93.247.138` (SpeedTest) | ✅ CDN confirmado fora do `/27`: `.107`/`.108`/`.109` usam `vmbr2`/`enp8s0f0` untagged até a VLAN 23 no NE8000; SpeedTest continua em caminho próprio |
 
 Ver decisões #6, #9 e #12 em [03-decisoes-pendentes.md](03-decisoes-pendentes.md).
+
+> ~~⛔ **Bloqueio operacional em 2026-08-05:** o Zabbix permanecia com o próprio hypervisor em
+> `177.72.104.5/27`; `192.168.254.10/24` estava apenas reservado. O host tinha `vmbr0`
+> não VLAN-aware sobre `enp3s0f0` e uma interface separada `enp3s0f1` em `10.1.1.2/24`. Como o
+> transporte VLAN 100 pelo caminho compartilhado RB750→RB3011 produziu QinQ `16,100` no handoff
+> entre as bridges do RB3011, o script `zabbix-m2-proxmox.sh` foi bloqueado com `exit 1`. Não
+> repetir esse desenho: antes da virada, mapear `enp3s0f1` e montar a porta no novo L2 DM4170 sem
+> remover `.5` até a validação fim a fim.~~ ✅ **Resolvido no mesmo dia pelo segundo cabo.**
+
+> ~~🆕 **HubSoft tinha caminho temporário planejado:** `eno2` livre → switch não gerenciável
+> intercalado na RB3011 `ether8`; `eno1` permanece na RB750 até `.13`, VM `.16` e RADIUS `.214`
+> estarem validados no novo caminho.~~ ✅ HubSoft e Zabbix concluídos nesse L2 temporário.
+
+> 🆕 **Pré-check físico do Zabbix (2026-08-05):** `enp4s0f0` e `enp4s0f1` estão livres; a primeira
+> é candidata ao segundo cabo no mesmo switch temporário. `enp3s0f0` continua em produção com
+> `.5`. ~~`enp3s0f1` permanece reservada para `10.1.1.2/24`.~~ ✅ O usuário confirmou que essa
+> porta/rede não é usada; a configuração é órfã. Mesmo assim, `enp4s0f0` é preferível por já estar
+> limpa. Assim, `.10/24` pode ser testado em
+> paralelo sem retirar `.5`; a migração das VMs segue bloqueada até definir tags/redes privadas.
+
+> ✅ **Execução final:** `enp3s0f1` (`44:1E:A1:48:2F:02`) recebeu `vmbr1/.10`; o IP órfão saiu,
+> `enp3s0f0` ficou `NO-CARRIER` e todas as 11 VMs foram validadas. Evidência:
+> [`config/proxmox-zabbix/teste-vmbr1-segundo-cabo-2026-08-05.txt`](../config/proxmox-zabbix/teste-vmbr1-segundo-cabo-2026-08-05.txt).

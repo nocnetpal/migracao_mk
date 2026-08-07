@@ -1,0 +1,69 @@
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall filter add chain=forward action=accept connection-state=established,related,untracked comment="FORWARD - ESTABLISHED RELATED"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall filter add chain=forward action=drop connection-state=invalid comment="FORWARD - DROP INVALID"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall filter add chain=forward action=accept connection-nat-state=dstnat comment="FORWARD - DSTNAT"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall filter add chain=forward action=accept src-address-list=NAT-PRIVADAS out-interface=vlan16-PUBLICA comment="FORWARD - PRIVADAS PARA INTERNET"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall filter add chain=forward action=drop comment="FORWARD - DROP FINAL"
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > Depois ative os componentes:
+expected command name (line 1 column 1)
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /interface vlan enable [find name=vlan16-PUBLICA]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /interface vlan enable [find name=vlan100-PRIVADA]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip address enable [find comment="IP PUBLICO NAT CCR - ATIVAR NO CORTE"]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip address enable [find comment="GW VLAN 100 - ATIVAR NO CORTE"]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall address-list enable [find list=NAT-PRIVADAS address=192.168.254.0/24]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip route enable [find comment="DEFAULT NE8000 - ATIVAR NO CORTE"]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall nat enable [find comment="NAT GERAL - ATIVAR SOMENTE NO CORTE"]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /interface vlan print
+Columns: NAME, MTU, ARP, VLAN-ID, INTERFACE
+# NAME              MTU  ARP      VLAN-ID  INTERFACE
+;;; IP PUBLICO - GW NE8000 .1
+0 vlan16-PUBLICA   1500  enabled       16  sfp1-TRUNK-DM
+;;; GW PRIVADO PROXMOX
+1 vlan100-PRIVADA  1500  enabled      100  sfp1-TRUNK-DM
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip address print
+Columns: ADDRESS, NETWORK, INTERFACE, VRF
+# ADDRESS           NETWORK        INTERFACE        VRF
+;;; GERENCIA TEMPORARIA BANCADA
+0 192.168.88.1/24   192.168.88.0   ether1-MGMT      main
+;;; IP PUBLICO NAT CCR
+1 177.72.104.4/27   177.72.104.0   vlan16-PUBLICA   main
+;;; GW VLAN 100
+2 192.168.254.1/24  192.168.254.0  vlan100-PRIVADA  main
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip route print
+Flags: D - DYNAMIC; I - INACTIVE, A - ACTIVE; c - CONNECT, s - STATIC
+Columns: DST-ADDRESS, GATEWAY, ROUTING-TABLE, DISTANCE
+#     DST-ADDRESS       GATEWAY          ROUTING-TABLE  DISTANCE
+;;; DEFAULT NE8000
+0  Is 0.0.0.0/0         177.72.104.1     main                  1
+  DIc 177.72.104.0/27   vlan16-PUBLICA   main                  0
+  DAc 192.168.88.0/24   ether1-MGMT      main                  0
+  DIc 192.168.254.0/24  vlan100-PRIVADA  main                  0
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall nat print
+Flags: X - DISABLED, I - INVALID; D - DYNAMIC
+ 0    ;;; NAT GERAL
+      chain=srcnat action=src-nat to-addresses=177.72.104.4 src-address-list=NAT-PRIVADAS out-interface=vlan16-PUBLICA
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall address-list print where list=NAT-PRIVADAS
+Columns: LIST, ADDRESS, CREATION-TIME
+# LIST          ADDRESS           CREATION-TIME
+;;; VLAN 100
+0 NAT-PRIVADAS  192.168.254.0/24  2026-07-29 08:40:06
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /export file=ccr-base-ativa-2026-08-06
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /file print where name~"ccr-base-ativa"
+Columns: NAME, TYPE, SIZE, LAST-MODIFIED
+# NAME                           TYPE    SIZE  LAST-MODIFIED
+0 ccr-base-ativa-2026-08-06.rsc  script  4392  2026-08-06 14:02:50
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall filter print where chain=forward
+Flags: X - DISABLED, I - INVALID; D - DYNAMIC
+ 0    ;;; FORWARD - ESTABLISHED RELATED
+      chain=forward action=accept connection-state=established,related,untracked
+
+ 1    ;;; FORWARD - DROP INVALID
+      chain=forward action=drop connection-state=invalid
+
+ 2    ;;; FORWARD - DSTNAT
+      chain=forward action=accept connection-nat-state=dstnat
+
+ 3    ;;; FORWARD - PRIVADAS PARA INTERNET
+      chain=forward action=accept src-address-list=NAT-PRIVADAS out-interface=vlan16-PUBLICA
+
+ 4    ;;; FORWARD - DROP FINAL
+      chain=forward action=drop

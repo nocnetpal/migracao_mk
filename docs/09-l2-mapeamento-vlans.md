@@ -5,10 +5,9 @@
 > [02-arquitetura-alvo.md](02-arquitetura-alvo.md) — **o DM4170 entra no lugar do RB3011**
 > (herda o trunk QinQ da rede de acesso); a rede de acesso **não é tocada**.
 >
-> 🆕 **Atualizado pela decisão #13 (2026-07-24): o DM4170 fica só em L2.** Todo destino que dizia
-> "DM4170 (SVI)" abaixo mudou para **NE8000** — o DM4170 só faz QinQ termination e entrega tudo
-> como trunk 802.1q até o NE8000, que termina a SVI + OSPF de cada VLAN (mesmo padrão que já usa
-> hoje pras VLANs de POP `MK_POP_*`). Ver [02](02-arquitetura-alvo.md#2a-✅-decisão-13-fechada-2026-07-24-dm4170-fica-só-em-l2).
+> 🆕 **Atualizado pela decisão #13 (2026-07-24) e refinado em 2026-08-06:** o DM4170 fica só em
+> L2. VLANs de acesso terminam no NE8000; VLANs privadas de servidores terminam na CCR. O switch
+> entrega cada tag pelo trunk correspondente. Ver [02](02-arquitetura-alvo.md).
 
 ## Legenda de destinos
 
@@ -17,19 +16,20 @@
 | **NE8000 (SVI QinQ)** | 🆕 Sobe QinQ pelo trunk rede de acesso ↔ DM4170 (DM4170 só termina o QinQ em L2) → trunk 802.1q até o NE8000, que termina a **SVI roteada** na tag interna (decisão #13, 2026-07-24 — antes seria o DM4170) |
 | **NE8000 (SVI)** | 🆕 VLAN simples taggeada, atravessa o DM4170 em L2 e termina no NE8000 (decisão #13 — antes seria o DM4170) |
 | **NE8000 (L2)** | VLAN 16: atravessa o DM4170 em L2 e termina no NE8000 (decisão #9B) — sem mudança, já era assim |
-| **CCR1036** | Porta local na CCR1036 (servidor em cobre) + tag no link CCR1036↔NE8000 |
+| **CCR1036** | Servidor entra no DM4170; VLAN segue no trunk DM4170↔CCR, onde fica o gateway privado |
 | **Transporte** | Tag existe só em L2 na rede de acesso/trunk — nenhuma SVI a criar |
 | **✝ Não migra** | Morta (sem IP/sem bridge) ou tecnologia que morre com o MK |
 
-## 1. VLANs de serviço / servidores (5)
+## 1. VLANs de serviço / servidores
 
 | VLAN | Nome | Hoje | Destino L2 | L3 | Obs |
 |---|---|---|---|---|---|
-| 16 | IP PUBLICO | sfp1 → slave da `Bridge IP Publico` | tag 16: rede de acesso → DM4170 → **sobe em L2 ao NE8000** | **NE8000** `.1/27` (decisão #9B) | A bridge morre; vira VLAN comum de trânsito. Servidores locais que precisarem de IP público usam **segunda NIC** na VLAN 16 (rede de acesso), não passam pela CCR1036 |
-| 15 | NTP SERVER | sfp1 (simples) | tag 15: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | |
+| 16 | IP PUBLICO | sfp1 → slave da `Bridge IP Publico` | rede de acesso → DM4170; VLAN segue aos servidores, NE8000 e CCR | **NE8000** `.1/27`; **CCR** ~~`.4/27`~~ 🆕 `.15/27` para NAT (troca 2026-08-07) | Broadcast compartilhado; CCR forma OSPF com `.1` sobre essa VLAN (planejado, não aplicado) |
+| 15 | NTP SERVER | Proxmox Docker `enp8s0f1.15` → `vmbr15` → VM `ens21` → container `.10` | servidor → DM4170 → trunk CCR | **CCR** `192.168.116.9/30` | `.10` atende toda a NetPal; anunciar `192.168.116.8/30` passivamente no OSPF e liberar UDP/123. Configuração ainda pendente |
 | 18 | SERVERINO | sfp1 (simples) | tag 18: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | |
+| 23 | SERVIDOR CDN TV | Proxmox `enp8s0f0`/`vmbr2` → **SW_JDF `XGE0/0/14` untagged** → `XGE0/0/1` tagged | **preservar no SW_JDF; fora do DM4170** | **NE8000** `Gi0/1/8.23`, `177.72.104.105/29` | `.107` Origin, `.108` Edge, `.109` Docker-Netpal; **não misturar com VLAN 16** e não aplicar tag no Proxmox |
 | 1066 | GERADOR MST | sfp1 (simples) | tag 1066: rede de acesso → DM4170 (L2) → trunk até o NE8000 | **NE8000** (SVI) 🆕 decisão #13 | Único DHCP vivo (`192.168.90.0/24`) — escopo migra junto (decidir onde na config do NE8000) |
-| 10 | SERVIDOR DNS RECURSIVO | taggeada sobre `ether8` | porta tagged na **CCR1036** + tag 10 no link CCR1036↔NE8000 | NE8000 | Gerência privada do servidor local |
+| ~~10~~ | ~~SERVIDOR DNS RECURSIVO~~ | ~~taggeada sobre `ether8`~~ | ❌ **não entra na CCR (usuário, 2026-08-06)** | ~~CCR `10.200.255.253/30`~~ | ~~Gerência privada do servidor local~~ — reclassificado: IP `10.200.255.253/30` removido do plano da CCR |
 
 > ⚠️ **Ponto em aberto (VLAN 16):** hoje o domínio L2 "IP Público" = VLAN16 vinda da rede de
 > acesso + 4 servidores locais no RB3011. No alvo, o braço da rede de acesso atravessa o DM4170
@@ -115,8 +115,8 @@ da `ether1` ("REGUA VOLT"), e a **VLAN 28** (link MK↔NE8000, que deixa de exis
 
 | VLAN | Uso | IDs |
 |---|---|---|
-| Trunk DM4170 ↔ NE8000 | 🆕 Carrega as ~50 VLANs de acesso QinQ-terminadas + 3 simples de serviço até o NE8000 (decisão #13) — **não é adjacência OSPF do DM4170** (ele não fala OSPF, só encaminha em L2); cada VLAN vira subinterface roteada no NE8000 | **a definir** (não reutilizar 28) |
-| Serviços CCR1036 ↔ NE8000 | Ponto a ponto da VPN/serviços da CCR1036 | **a definir** |
+| Trunk DM4170 ↔ NE8000 | Carrega as VLANs de acesso QinQ-terminadas, simples destinadas ao NE8000 e VLAN 16; DM4170 não fala OSPF | **a definir** (não reutilizar 28) |
+| Trunk DM4170 ↔ CCR1036 | VLAN 16 + VLANs privadas locais (100, 15, 66, 109, 116 e demais consolidadas; ~~10 e 999~~ fora do plano — 2026-08-06) | IDs reais |
 | Gerência | VLAN única de management (modelo `IPV4_NOC_NETPAL` — passo 3 do [05](05-limpeza-politicas.md)) | **a definir** |
 
 ## 6. Armadilhas e pendências L2
@@ -135,9 +135,12 @@ da `ether1` ("REGUA VOLT"), e a **VLAN 28** (link MK↔NE8000, que deixa de exis
   **e** DM4170 ↔ NE8000; MSS-clamp equivalente no NE8000 (hoje é mangle no MK).
 - **Gerência do Datacom antigo** (hoje `192.168.15.49/30` via EoIP): precisa de VLAN/caminho novo
   — provavelmente pendurar na VLAN de gerência nova.
-- 🆕 **Dimensionamento do NE8000** (decisão #13): confirmar que ele comporta +30 subinterfaces/
-  adjacências OSPF novas (27 QinQ + 3 simples) além das que já tem hoje para os POPs.
+- **Segundo cabo do Proxmox Docker/CDNTV:** ✅ identificado como SW_JDF `XGE0/0/14`,
+  access/untagged VLAN 23; deve permanecer intocado. O cabo `eno1` é outro enlace, com VLAN 100
+  nativa + VLAN 16 tagged, e é o único do host que migra do RB3011 ao DM4170. Tratar ambos como um
+  único trunk quebra a CDN TV.
+- 🆕 **Dimensionamento do NE8000** (decisão #13): capacidade já confirmada; após reclassificar a
+  VLAN 15, recebe 27 QinQ + 2 simples, além das interfaces existentes.
 
-**Resumo numérico:** 60 VLANs hoje → **27 + 3 = 30 migram para SVIs no NE8000** (🆕 decisão #13,
-antes seria o DM4170) · **2** de servidor na CCR1036 · **16** viram só transporte no DM4170 ·
-**11** não migram · **+3 novas** a criar.
+**Resumo atualizado:** 27 QinQ + 2 simples terminam no NE8000; VLAN 15 e redes privadas locais
+terminam na CCR1036; VLAN 16 é L2 compartilhada; 16 outer ficam como transporte; 11 não migram.

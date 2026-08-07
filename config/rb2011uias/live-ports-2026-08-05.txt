@@ -1,0 +1,42 @@
+# Coleta ao vivo - RB Bridge Servidores (RB2011UiAS) - 2026-08-05
+# Comandos somente de leitura fornecidos pelo usuario.
+
+RouterOS: 6.49.18
+Identity: RB Bridge Servidores
+
+Bridge:
+- bridge1 running
+- vlan-filtering=no
+- RSTP
+- IP 192.168.116.22/30 na bridge1
+- nenhuma /interface vlan
+
+Portas e estado:
+- ether1: running, uplink para RB3011 ether6
+- ether2: running, TS SIX
+- ether3: running, MGNT CGNAT-1
+- ether4: running, Regua Volt (registrada como estragada; link/MAC ainda ativos)
+- ether5: running, Servidor Dude
+- ether6: running, Servidor RRFlow
+- ether7: sem link, membro inativo da bridge
+- ether8: sem link, membro inativo da bridge
+- ether9: sem link, membro inativo da bridge
+- ether10: sem link, membro inativo da bridge
+- sfp1: disabled
+
+MACs externos por porta:
+- ether1: varios MACs remotos via RB3011, inclusive RB750/Zabbix/HubSoft
+- ether2: 00:E0:4C:BE:02:36
+- ether3: nenhum MAC externo no instante da coleta
+- ether4: 54:10:EC:25:87:A7
+- ether5: 70:85:C2:D1:F9:41
+- ether6: 00:E0:4C:DA:00:C3
+
+Conclusao:
+- mapa fisico anterior confirmado por estado e tabela MAC
+- ether7-ether10 estao fisicamente livres no momento da coleta
+- bridge continua flat; nenhuma separacao VLAN existe nesta RB2011
+
+Alteracao operacional posterior, sem mudanca de trafego:
+- portas renomeadas conforme o mapa acima (`ether1 - UPLINK RB3011` ate `ether10 - LIVRE`)
+- bridge, IP e encaminhamento permaneceram inalterados

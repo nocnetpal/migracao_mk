@@ -1,0 +1,2 @@
+# Usuario priorizou subir pdns-master1 e pdns-slave
+# Precisamos das imagens e IPs antes de recriar

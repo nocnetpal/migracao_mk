@@ -1,0 +1,38 @@
+# Coleta de rede da VM Zabbix - 2026-08-05
+# Saida bruta fornecida pelo usuario. Esta maquina nao e o hypervisor Proxmox.
+
+Last login: Mon Aug  3 11:30:52 2026 from 177.72.104.19
+root@zabbix:~# hostname; cat /etc/network/interfaces; ip -br link; ip -4 -br addr; bridge link
+zabbix
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug ens18
+iface ens18 inet static
+        address 177.72.104.6/27
+        gateway 177.72.104.1
+        # dns-* options are implemented by the resolvconf package, if installed
+        dns-nameservers 177.72.104.58
+        dns-search netpaltelecom.online
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens18            UP             4e:01:6c:c9:f0:78 <BROADCAST,MULTICAST,UP,LOWER_UP>
+docker0          DOWN           02:42:f4:69:30:d9 <NO-CARRIER,BROADCAST,MULTICAST,UP>
+br-b0e12fe53c69  UP             02:42:3c:7c:85:c8 <BROADCAST,MULTICAST,UP,LOWER_UP>
+veth6a04d3d@if33 UP             7a:b2:9e:dc:c9:08 <BROADCAST,MULTICAST,UP,LOWER_UP>
+vethfca83f5@if35 UP             42:57:e5:36:33:a0 <BROADCAST,MULTICAST,UP,LOWER_UP>
+veth365e3bb@if117 UP             9a:dc:7d:86:88:db <BROADCAST,MULTICAST,UP,LOWER_UP>
+lo               UNKNOWN        127.0.0.1/8
+ens18            UP             177.72.104.6/27
+docker0          DOWN           172.17.0.1/16
+br-b0e12fe53c69  UP             172.18.0.1/16
+34: veth6a04d3d@if33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br-b0e12fe53c69 state forwarding priority 32 cost 2
+36: vethfca83f5@if35: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br-b0e12fe53c69 state forwarding priority 32 cost 2
+118: veth365e3bb@if117: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br-b0e12fe53c69 state forwarding priority 32 cost 2
+root@zabbix:~#

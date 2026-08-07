@@ -1,0 +1,2 @@
+root@proxmoxDockerCDNTV:~# cat /sys/class/net/vmbr1/bridge/vlan_filtering
+0

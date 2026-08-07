@@ -7,13 +7,26 @@
 > ⚠️ **Não aplicar agora (usuário, 2026-07-27):** só preparar.
 >
 > ✅ **Decisão (usuário, 2026-07-27):** **não mexer no bridge do RB750-WIREGUARD.**
-> HubSoft + Zabbix ficam **fora** desta etapa no MK — migram quando o 750 sair e for
-> pra **CCR/Datacom**. Etapa 1 no Mikrotik = só **Docker (ether7)** + **DNS (ether8)**.
+> HubSoft + Zabbix ficam **fora** desta etapa no MK — ~~migram quando o 750 sair e for
+> pra **CCR/Datacom**~~ → ✅ **concluído em 2026-08-05** via switch temporário/segundo cabo
+> ([16](16-etapa1-proxmox-vlans-datacom.md)); o **RB750 permanece** (WireGuard `.19`) até a VPN
+> migrar pós-corte (2026-08-06). Etapa 1 no Mikrotik = só **Docker (ether7)** + **DNS (ether8)**.
 
 **IPs alvo nesta etapa:** `.1` GW · `.11` Docker · `.12` DNS  
 **Depois (CCR):** `.10` Zabbix · `.13` HubSoft  
 **VLANs:** 100 = gerência (native) · 16 = público (tagged)  
 **Regra:** nunca `tag=16` no Proxmox antes do trunk no Mikrotik.
+
+**Status em 2026-08-05:** ✅ Docker e DNS executados. Proxmox DNS concluído em
+`192.168.254.12/24`, VMs 101/102/103/105 na tag 16 e Unbound `.28/.58/.59` respondendo
+`NOERROR`. HubSoft/Zabbix continuam fora desta etapa. Captura no RB3011 comprovou que estender a
+VLAN 100 pelo caminho flat do RB750 cria QinQ `16,100` ao cruzar o handoff VLAN 16 existente;
+**não repetir os scripts antigos nem criar outro handoff entre as duas bridges**. Para o HubSoft,
+há plano temporário ainda não executado: switch não gerenciável intercalado na `ether8`, DNS
+validado primeiro e `eno2` do HubSoft como segundo cabo; `eno1` permanece na RB750 até concluir a
+migração. O Zabbix pode usar o mesmo switch pela NIC 2 `enp3s0f1`, mantendo `enp3s0f0/.5` na
+RB750; o IP órfão `10.1.1.2/24` já saiu do estado ao vivo, mas link, bridge e `.10/24` ainda
+aguardam execução e validação.
 
 ---
 
@@ -155,10 +168,13 @@ ping -c 3 192.168.254.1
 
 /interface bridge port add bridge=bridge-servidores \
   interface="ether8 - Proxmox DNS" pvid=100
-/interface bridge vlan add bridge=bridge-servidores vlan-ids=100 \
-  untagged="ether8 - Proxmox DNS"
-/interface bridge vlan add bridge=bridge-servidores vlan-ids=16 \
-  tagged="ether8 - Proxmox DNS"
+# VLANs ja existem por causa do Docker: acrescentar ether8 nas entradas atuais.
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=100] \
+  tagged=bridge-servidores \
+  untagged="ether7 - Proxmox Docker CDNTV,ether8 - Proxmox DNS"
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=16] \
+  tagged="bridge-servidores,ether7 - Proxmox Docker CDNTV,ether8 - Proxmox DNS" \
+  untagged=""
 
 :do {
   /ip address set [find address="192.168.115.137/30"] interface=vlan100-servidores
@@ -193,6 +209,8 @@ qm set 103 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:BF:0B:B5
 qm set 105 -net0 virtio,bridge=vmbr0,tag=16,firewall=1,macaddr=BC:24:11:E7:B0:75
 
 ping -c 3 177.72.104.28
+ping -c 3 177.72.104.58
+ping -c 3 177.72.104.59
 
 # --- Se OK: virar default + gravar + tirar .138 ---
 ip route replace default via 192.168.254.1
@@ -209,8 +227,10 @@ ping -c 3 192.168.254.1
 ### ROLLBACK DNS (RB3011)
 
 ```rsc
-/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=100 untagged~"ether8"]
-/interface bridge vlan remove [find bridge=bridge-servidores vlan-ids=16 tagged~"ether8"]
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=100] \
+  tagged=bridge-servidores untagged="ether7 - Proxmox Docker CDNTV"
+/interface bridge vlan set [find bridge=bridge-servidores vlan-ids=16] \
+  tagged="bridge-servidores,ether7 - Proxmox Docker CDNTV" untagged=""
 /interface bridge port remove [find bridge=bridge-servidores interface~"ether8"]
 :do {
   /ip address set [find address="192.168.115.137/30"] interface="Bridge IP Publico"
@@ -230,6 +250,8 @@ ping -c 3 192.168.254.1
 /ping 192.168.254.11 count=3
 /ping 192.168.254.12 count=3
 /ping 177.72.104.28 count=2
+/ping 177.72.104.58 count=2
+/ping 177.72.104.59 count=2
 /ping 177.72.104.12 count=2
 
 /export file=gw-servidores-pos-etapa1-docker-dns

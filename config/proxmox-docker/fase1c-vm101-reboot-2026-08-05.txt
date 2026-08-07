@@ -1,0 +1,2 @@
+# Usuario deu reboot na VM 101 apos aplicar tag=16
+# Aguardando validacao se Ubuntu/netplan detectou VLAN 16 automaticamente

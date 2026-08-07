@@ -1,0 +1,27 @@
+root@proxmoxDockerCDNTV:~# qm config 101
+boot: order=scsi0;net0
+cores: 8
+cpu: host
+memory: 16384
+name: CdnTV-Origin
+net0: virtio=2A:B7:2D:D8:6E:A2,bridge=vmbr1,firewall=1,queues=8,tag=16
+numa: 0
+onboot: 1
+ostype: l26
+scsi0: Docker:vm-101-disk-0,size=150G
+scsihw: virtio-scsi-pci
+smbios1: uuid=9e9cbab4-f332-4dee-bc11-53170e9823c0
+sockets: 2
+vmgenid: f3c1daf1-de8a-4a9b-87d8-1905d677eae9
+root@proxmoxDockerCDNTV:~# qm status 101
+status: running
+root@proxmoxDockerCDNTV:~# qm agent 101 network-get-interfaces 2>/dev/null || echo "QEMU agent nao responde"
+QEMU agent nao responde
+root@proxmoxDockerCDNTV:~# brctl showmacs vmbr1 | grep -i 2a:b7:2d:d8:6e:a2
+  8     2a:b7:2d:d8:6e:a2       no                 0.11
+root@proxmoxDockerCDNTV:~# ping -c 3 177.72.104.107
+PING 177.72.104.107 (177.72.104.107) 56(84) bytes of data.
+
+
+--- 177.72.104.107 ping statistics ---
+3 packets transmitted, 0 received, 100% packet loss, time 2025ms

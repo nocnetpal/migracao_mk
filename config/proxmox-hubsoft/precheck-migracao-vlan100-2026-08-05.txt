@@ -1,0 +1,63 @@
+# Pre-check migracao VLAN 100 - Proxmox HubSoft - 2026-08-05
+# Saida bruta fornecida pelo usuario; comandos somente de leitura.
+
+hostname: px-hubsoft
+kernel: Linux 5.11.22-4-pve
+
+=== /etc/network/interfaces ===
+auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+        address 192.168.115.210/30
+        gateway 192.168.115.209
+        bridge-ports eno1
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+        bridge-stp off
+        bridge-fd 0
+
+iface eno2 inet manual
+iface eno3 inet manual
+iface eno4 inet manual
+iface enp7s0f0 inet manual
+iface enp7s0f1 inet manual
+
+=== LINKS ===
+eno1             UP             84:2b:2b:5a:45:55 LOWER_UP
+eno2             DOWN           84:2b:2b:5a:45:57
+eno3             DOWN           84:2b:2b:5a:45:59
+eno4             DOWN           84:2b:2b:5a:45:5b
+enp7s0f0         DOWN           00:1b:21:bc:2f:be
+enp7s0f1         DOWN           00:1b:21:bc:2f:bf
+vmbr0            UP             84:2b:2b:5a:45:55 LOWER_UP
+
+=== ENDERECAMENTO E ROTA ===
+vmbr0            UP             192.168.115.210/30
+default via 192.168.115.209 dev vmbr0 proto kernel onlink
+192.168.115.208/30 dev vmbr0 proto kernel scope link src 192.168.115.210
+vlan_filtering vmbr0: 1
+
+=== VMS ===
+101 HUBSOFT-RADIUS running 8192 MB
+name: HUBSOFT-RADIUS
+net0: virtio=96:4F:38:AB:86:21,bridge=vmbr0,firewall=1
+QEMU Agent: sem resposta
+
+102 HUBSOFT running 32000 MB
+name: HUBSOFT
+net0: virtio=72:56:05:A7:29:E9,bridge=vmbr0
+QEMU Agent: sem resposta
+
+=== TESTES ===
+192.168.115.209: 3/3, 0% perda, media 0.186 ms
+192.168.254.1:   3/3, 0% perda, media 0.184 ms
+192.168.115.214: 3/3, 0% perda, media 0.493 ms, TTL 63
+177.72.104.16:   3/3, 0% perda, media 0.641 ms, TTL 63
+8.8.8.8:         3/3, 0% perda, media 14.638 ms
+
+# Observacao inicial: o TTL 63 para 192.168.115.214 confirma que a VM RADIUS
+# nao esta na sub-rede /30 do hypervisor; existe roteamento entre as redes.

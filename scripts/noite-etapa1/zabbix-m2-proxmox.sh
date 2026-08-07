@@ -4,6 +4,10 @@
 # Hoje: 177.72.104.5/27 no vmbr0 — OBRIGATORIO sair
 set -euo pipefail
 
+echo "BLOQUEADO: caminho RB750/RB3011 produz QinQ 16,100 no handoff entre bridges." >&2
+echo "Nao alterar .5, vmbr0 ou tags antes da porta direta e validada no novo L2 DM4170." >&2
+exit 1
+
 echo "=== 1) VLAN-aware vmbr0 ==="
 grep -A20 'iface vmbr0' /etc/network/interfaces || true
 echo "bridge-vlan-aware yes; ifreload -a"

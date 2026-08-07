@@ -1,0 +1,132 @@
+MikroTik RouterOS 7.23.3 (c) 1999-2026
+
+Gateway da rede privada dos servidores | NAT | VPN WireGuard
+
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /import file-name=01-base-bancada-routeros7.rsc
+Script file loaded and executed successfully
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /system identity print
+  name: CCR-GW_PRIV_SERVIDORES-VPN_WG
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /interface ethernet print
+Flags: X - DISABLED, R - RUNNING
+Columns: NAME, MTU, MAC-ADDRESS, ARP
+#   NAME            MTU  MAC-ADDRESS        ARP
+;;; GERENCIA BANCADA
+0 R ether1-MGMT    1500  74:4D:28:57:0C:72  enabled
+;;; RESERVA
+1 X ether2         1500  74:4D:28:57:0C:73  enabled
+;;; RESERVA
+2 X ether3         1500  74:4D:28:57:0C:74  enabled
+;;; RESERVA
+3 X ether4         1500  74:4D:28:57:0C:75  enabled
+;;; RESERVA
+4 X ether5         1500  74:4D:28:57:0C:76  enabled
+;;; RESERVA
+5 X ether6         1500  74:4D:28:57:0C:77  enabled
+;;; RESERVA
+6 X ether7         1500  74:4D:28:57:0C:78  enabled
+;;; RESERVA
+7 X ether8         1500  74:4D:28:57:0C:79  enabled
+;;; TRUNK DM4170 - VLAN 16 + REDES PRIVADAS
+8   sfp1-TRUNK-DM  1500  74:4D:28:57:0C:70  enabled
+;;; RESERVA
+9 X sfp2-RESERVA   1500  74:4D:28:57:0C:71  enabled
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /interface vlan print detail
+Flags: X - DISABLED, R - RUNNING; H - HW-OFFLOADED
+ 0 X  ;;; 177.72.104.0/27 - GW NE8000 .1
+      name="vlan16-PUBLICA" mtu=1500 mac-address=00:00:00:00:00:00 arp=enabled arp-timeout=auto loop-protect=default loop-protect-status=off loop-protect-send-interval=5s loop-protect-disable-time=5m vlan-id=16 interface=sfp1-TRUNK-DM use-service-tag=no mvrp=no
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip address print detail
+Flags: X - DISABLED, I - INVALID; D - DYNAMIC; S - SLAVE
+ 0     ;;; GERENCIA TEMPORARIA BANCADA
+       address=192.168.88.1/24 network=192.168.88.0 interface=ether1-MGMT actual-interface=ether1-MGMT vrf=main
+
+ 1 X   ;;; IP PUBLICO NAT CCR - ATIVAR NO CORTE
+       address=177.72.104.4/27 network=177.72.104.0 interface=vlan16-PUBLICA actual-interface=vlan16-PUBLICA vrf=main
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip route print detail
+Flags: D - DYNAMIC; X - DISABLED, I - INACTIVE, A - ACTIVE; c - CONNECT, s - STATIC, r - RIP, b - BGP, o - OSPF, i - IS-IS, d - DHCP, v - VPN, m - MODEM, y - BGP-MPLS-VPN; H - HW-OFFLOADED; + - ECMP
+ 0  Xs   ;;; DEFAULT NE8000 - ATIVAR NO CORTE
+         dst-address=0.0.0.0/0 gateway=177.72.104.1
+
+   DAc   dst-address=192.168.88.0/24 routing-table=main gateway=ether1-MGMT immediate-gw=ether1-MGMT distance=0 scope=10 target-scope=5 local-address=192.168.88.1%ether1-MGMT
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall nat print detail
+Flags: X - DISABLED, I - INVALID; D - DYNAMIC
+ 0 X  ;;; NAT GERAL - ATIVAR SOMENTE NO CORTE
+      chain=srcnat action=src-nat to-addresses=177.72.104.4 src-address-list=NAT-PRIVADAS out-interface=vlan16-PUBLICA
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip firewall filter print
+Flags: X - DISABLED, I - INVALID; D - DYNAMIC
+ 0    ;;; INPUT - ESTABLISHED RELATED
+      chain=input action=accept connection-state=established,related,untracked
+
+ 1    ;;; INPUT - DROP INVALID
+      chain=input action=drop connection-state=invalid
+
+ 2    ;;; INPUT - ICMP
+      chain=input action=accept protocol=icmp
+
+ 3    ;;; INPUT - GERENCIA BANCADA
+      chain=input action=accept src-address=192.168.88.0/24 in-interface-list=MGMT
+
+ 4    ;;; INPUT - DROP FINAL
+      chain=input action=drop
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip service print
+Flags: D - DYNAMIC; X - DISABLED, I - INVALID
+Columns: NAME, PORT, PROTO, ADDRESS, CERTIFICATE, VRF, MAX-SESSIONS
+ #    NAME           PORT  PROTO  ADDRESS          CERTIFICATE  VRF   MAX-SESSIONS
+ 0  X ftp              21  tcp                                  main            20
+ 1    ssh              22  tcp    192.168.88.0/24               main            20
+ 2  X telnet           23  tcp                                  main            20
+ 3  X www              80  tcp                                  main            20
+ 4    reverse-proxy   443  tcp                     none         main            20
+ 5  X www-ssl         443  tcp                     none         main            20
+ 6 D  route_BFD      3784  udp
+ 7 D  route_BFD      4784  udp
+ 8    winbox         8291  tcp    192.168.88.0/24               main            20
+ 9  X api            8728  tcp                                  main            20
+10  X api-ssl        8729  tcp                     none         main            20
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip service disable [find name=reverse-proxy]
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip service print where name=reverse-proxy
+Flags: X - DISABLED, I - INVALID
+Columns: NAME, PORT, PROTO, CERTIFICATE, VRF, MAX-SESSIONS
+#   NAME           PORT  PROTO  CERTIFICATE  VRF   MAX-SESSIONS
+4 X reverse-proxy   443  tcp    none         main            20
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ipv6 settings print
+                     disable-ipv6: yes
+                          forward: yes
+            multipath-hash-policy: l3
+                 accept-redirects: yes-if-forwarding-disabled
+     accept-router-advertisements: yes-if-forwarding-disabled
+  accept-router-advertisements-on: all
+       disable-link-local-address: no
+   stale-neighbor-detect-interval: 30
+           stale-neighbor-timeout: 60
+             min-neighbor-entries: 4096
+        soft-max-neighbor-entries: 8191
+             max-neighbor-entries: 8192
+                  allow-fast-path: yes
+            ipv6-fast-path-active: no
+           ipv6-fast-path-packets: 0
+             ipv6-fast-path-bytes: 0
+            ipv6-fasttrack-active: no
+           ipv6-fasttrack-packets: 0
+             ipv6-fasttrack-bytes: 0
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /system note print
+      show-at-login: yes
+  show-at-cli-login: no
+               note: Gateway da rede privada dos servidores | NAT | WireGuard somente pos-migracao
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /tool mac-server print
+  allowed-interface-list: MGMT
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /tool mac-server mac-winbox print
+  allowed-interface-list: MGMT
+[admin@CCR-GW_PRIV_SERVIDORES-VPN_WG] > /ip neighbor discovery-settings print
+   discover-interface-list: MGMT
+         discover-interval: 30s
+                  lldp-med: yes
+  lldp-med-net-policy-vlan: disabled
+       lldp-mac-phy-config: no
+       lldp-max-frame-size: no
+            lldp-vlan-info: no
+                  protocol: cdp
+                            lldp
+                            mndp
+                      mode: tx-and-rx
+           add-dns-entries: no
+    add-dns-entries-suffix: lan

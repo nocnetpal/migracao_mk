@@ -16,11 +16,15 @@
 :do {
   /ip address set [find address="192.168.115.209/30"] interface="Bridge IP Publico"
 } on-error={}
+:do {
+  /ip address set [find address="192.168.115.213/30"] interface="Bridge IP Publico"
+} on-error={}
 
 # Conferir nome exato do ether10:
 /interface bridge port add bridge="Bridge IP Publico" \
   interface="ether10 - RB750 Bridge" hw=yes
 
 /ping 192.168.115.210 count=3
+/ping 192.168.115.214 count=3
 /ping 177.72.104.5 count=3
 /ping 177.72.104.19 count=3

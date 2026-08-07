@@ -1,0 +1,13 @@
+# Env vars completos dos pdns
+
+pdns-master1:
+- IP: 177.72.104.10
+- Image: pdns-master25051:latest
+- Port: 85:8081/tcp
+- Cmd: /usr/sbin/pdns_server
+
+pdns-slave:
+- IP: 177.72.104.11
+- Image: pdns_slave_1:latest
+- Sem portas
+- Cmd: /usr/sbin/pdns_server

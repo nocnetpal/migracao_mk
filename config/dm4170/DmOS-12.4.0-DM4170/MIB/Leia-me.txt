@@ -1,0 +1,3 @@
+O usuário pode exportar um arquivo com todas as MIBs SNMP suportadas pelo equipamento para um servidor SCP ou TFTP. O comando a seguir encaminhará o arquivo com as MIBs via protocolo TFTP com o nome datacom-mibs.tar.gz para o servidor 172.1.1.1.
+
+#copy mibs tftp://172.1.1.1

@@ -1,0 +1,81 @@
+# Pre-check do segundo cabo - Proxmox HubSoft - 2026-08-05
+# Saida bruta fornecida pelo usuario; comandos somente de leitura.
+
+root@px-hubsoft:~# echo "=== LINKS ==="
+root@px-hubsoft:~# ip -br link show eno1 eno2 vmbr0
+Error: either "dev" is duplicate, or "eno2" is a garbage.
+
+root@px-hubsoft:~# echo "=== ENDERECOS ==="
+root@px-hubsoft:~# ip -4 -br addr show
+lo               UNKNOWN        127.0.0.1/8
+vmbr0            UP             192.168.115.210/30
+
+root@px-hubsoft:~# echo "=== ROTAS ==="
+root@px-hubsoft:~# ip -4 route show
+default via 192.168.115.209 dev vmbr0 proto kernel onlink
+192.168.115.208/30 dev vmbr0 proto kernel scope link src 192.168.115.210
+
+root@px-hubsoft:~# echo "=== ENO2 ==="
+root@px-hubsoft:~# ethtool eno2 | grep -E 'Speed:|Duplex:|Link detected:'
+-bash: ethtool: command not found
+
+root@px-hubsoft:~# echo "=== BASELINE ==="
+root@px-hubsoft:~# ping -c 3 -W 1 192.168.115.209
+3 packets transmitted, 3 received, 0% packet loss
+
+root@px-hubsoft:~# ping -c 3 -W 1 192.168.115.214
+3 packets transmitted, 3 received, 0% packet loss
+
+root@px-hubsoft:~# ping -c 3 -W 1 177.72.104.16
+3 packets transmitted, 3 received, 0% packet loss
+
+root@px-hubsoft:~# ping -c 3 -W 1 192.168.254.12
+3 packets transmitted, 3 received, 0% packet loss
+
+root@px-hubsoft:~# ping -c 3 -W 1 8.8.8.8
+3 packets transmitted, 3 received, 0% packet loss
+
+# Observacoes:
+# - Baseline antigo integro antes de configurar a eno2.
+# - Esta versao do iproute2 nao aceita varios dispositivos em um unico
+#   "ip -br link show".
+# - ethtool nao esta instalado; carrier/velocidade serao consultados em /sys.
+
+## Confirmacao da eno2
+
+root@px-hubsoft:~# ip -br link show dev eno1
+eno1             UP             84:2b:2b:5a:45:55 <BROADCAST,MULTICAST,UP,LOWER_UP>
+
+root@px-hubsoft:~# ip -br link show dev eno2
+eno2             DOWN           84:2b:2b:5a:45:57 <BROADCAST,MULTICAST>
+
+root@px-hubsoft:~# ip -d link show dev eno2
+3: eno2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 84:2b:2b:5a:45:57 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 46 maxmtu 9000 addrgenmode eui64 numtxqueues 8 numrxqueues 8 gso_max_size 65536 gso_max_segs 65535
+    altname enp1s0f1
+
+root@px-hubsoft:~# cat /sys/class/net/eno2/carrier
+cat: /sys/class/net/eno2/carrier: Invalid argument
+root@px-hubsoft:~# cat /sys/class/net/eno2/operstate
+down
+root@px-hubsoft:~# readlink /sys/class/net/eno2/master 2>/dev/null || echo "eno2 sem bridge/master"
+eno2 sem bridge/master
+
+# Conclusao: eno2 livre, sem master e administrativamente DOWN. O erro ao ler
+# carrier e esperado enquanto a interface estiver administrativamente down.
+
+## Link fisico levantado
+
+root@px-hubsoft:~# ip link set dev eno2 up
+root@px-hubsoft:~# ip -br link show dev eno2
+eno2             UP             84:2b:2b:5a:45:57 <BROADCAST,MULTICAST,UP,LOWER_UP>
+root@px-hubsoft:~# cat /sys/class/net/eno2/carrier
+1
+root@px-hubsoft:~# cat /sys/class/net/eno2/operstate
+up
+root@px-hubsoft:~# cat /sys/class/net/eno2/speed
+1000
+root@px-hubsoft:~# cat /sys/class/net/eno2/duplex
+full
+
+# Conclusao: segundo cabo validado, link 1 Gbit/s full duplex na eno2.

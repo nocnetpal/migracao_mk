@@ -1,0 +1,45 @@
+# Validacao ao vivo - RB3011 GW Servidores - 2026-08-05
+# Comandos de leitura e ping executados pelo usuario.
+
+=== BRIDGE SERVIDORES ===
+ether7 - Proxmox Docker CDNTV:
+  bridge=bridge-servidores
+  pvid=100
+  hw=yes
+
+VLAN 100:
+  tagged=bridge-servidores
+  current-untagged=ether7 - Proxmox Docker CDNTV
+
+VLAN 16:
+  tagged=bridge-servidores,ether7 - Proxmox Docker CDNTV
+  current-tagged=bridge-servidores,ether7 - Proxmox Docker CDNTV
+
+=== ENDERECOS RELEVANTES ===
+192.168.116.121/30 em vlan100-servidores (muleta temporaria antiga)
+192.168.254.1/24 em vlan100-servidores (GW VLAN 100)
+177.72.104.1/27 em Bridge IP Publico
+192.168.115.137/30 em Bridge IP Publico (GW atual Proxmox DNS)
+
+=== NAT ===
+list=NAT address=192.168.254.0/24
+comment=Etapa1 VLAN100 gerencia servidores
+
+=== PINGS DO RB3011 ===
+192.168.254.11: 3/3, perda 0%
+177.72.104.107: 3/3, perda 0%
+177.72.104.108: 3/3, perda 0%
+177.72.104.109: 3/3, perda 0%
+
+=== BASELINE DNS ANTES DA FASE 2 ===
+192.168.115.138: 5/5, perda 0%
+177.72.104.24: 3/3, perda 0%
+177.72.104.26: 3/3, perda 0%
+177.72.104.28: 3/3, perda 0%
+177.72.104.58: 3/3, perda 0%
+177.72.104.29: 3/3, perda 0%
+
+=== CONFIRMACAO DO USUARIO ===
+177.72.104.21 (DNS2-Recursivo-104.21) foi removido intencionalmente e nao e
+mais utilizado. A ausencia de resposta e esperada; nao bloqueia a Fase 2 e o
+servico nao deve ser recriado/migrado.

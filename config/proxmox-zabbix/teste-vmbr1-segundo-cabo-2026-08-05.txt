@@ -1,0 +1,384 @@
+# Teste vmbr1 pelo segundo cabo - Proxmox Zabbix - 2026-08-05
+# Saida bruta fornecida pelo usuario; comandos iniciais somente de leitura.
+
+## Host
+
+- hostname: proxmox3
+- PVE: pve-manager/7.3-3
+- kernel: 5.15.74-1-pve
+
+## Interfaces
+
+enp3s0f0         UP             44:1e:a1:48:2f:00 <BROADCAST,MULTICAST,UP,LOWER_UP>
+enp3s0f1         UP             44:1e:a1:48:2f:02 <BROADCAST,MULTICAST,UP,LOWER_UP>
+
+enp3s0f1:
+
+- carrier: 1
+- operstate: up
+- speed: 1000
+- duplex: full
+- sem bridge/master
+- sem IPv4 ao vivo
+
+## Estado de rede inicial
+
+lo               UNKNOWN        127.0.0.1/8
+vmbr0            UP             177.72.104.5/27
+
+default via 177.72.104.1 dev vmbr0 proto kernel onlink
+177.72.104.0/27 dev vmbr0 proto kernel scope link src 177.72.104.5
+
+## Configuracao persistente inicial relevante
+
+auto enp3s0f1
+iface enp3s0f1 inet static
+        address 10.1.1.2/24
+
+auto vmbr0
+iface vmbr0 inet static
+        address 177.72.104.5/27
+        gateway 177.72.104.1
+        bridge-ports enp3s0f0
+        bridge-stp off
+        bridge-fd 0
+
+## Baseline no caminho antigo
+
+- gateway 177.72.104.1: 3/3
+- gateway futuro 192.168.254.1: 3/3, roteado pelo caminho antigo
+- Zabbix 177.72.104.6: 3/3
+- Dude VLSUL 192.168.17.38: 3/3
+- Dude PM CPV 192.168.17.42: 3/3
+- Monsta 192.168.115.62: 3/3; RB3011 emitiu ICMP redirect
+- internet 8.8.8.8: 2/3, uma perda no caminho antigo
+
+## Conclusao
+
+Segundo cabo validado fisicamente. O IP orfao 10.1.1.2 ja nao existe ao vivo,
+mas ainda seria restaurado por reboot; substituir a stanza ao persistir vmbr1.
+Nenhuma VM ou rota foi alterada neste pre-check.
+
+## Teste temporario da vmbr1
+
+Configuracao aplicada somente ao vivo:
+
+- vmbr1 sobre enp3s0f1
+- `192.168.254.10/24` em vmbr1
+- default mantida em `177.72.104.1` por vmbr0
+
+Resultados pelo caminho novo:
+
+- gateway `192.168.254.1`: 3/3
+- DNS `.12`: 3/3
+- HubSoft `.13`: 3/3
+- internet `1.1.1.1` via rota /32 temporaria e origem `.10`: 5/5
+
+Produção antiga depois do teste:
+
+- Zabbix `.6`: 3/3
+- Dude VLSUL `.38`: 3/3
+- Dude PM CPV `.42`: 3/3
+- Monsta `.62`: 3/3
+
+# Novo L2, gateway e NAT validados fim a fim. vmbr1 ainda precisa ser
+# persistida; nenhuma VM e nenhuma default route foram movidas.
+
+## Persistencia da vmbr1
+
+Backup criado:
+
+`/etc/network/interfaces.pre-vmbr1-zabbix-2026-08-05`
+
+Alteracoes persistentes:
+
+- removido `auto enp3s0f1`
+- enp3s0f1 passou de static `10.1.1.2/24` para manual
+- criada vmbr1 VLAN-aware, `192.168.254.10/24`, porta enp3s0f1, sem gateway
+
+`ifreload -a` aplicado com sucesso:
+
+- vmbr0 continua `177.72.104.5/27`, default antiga
+- vmbr1 possui `.10/24` e `vlan_filtering 1`
+- ping `.10 -> .1`: 3/3
+- Zabbix `.6` no caminho antigo: 3/3
+
+# A indicacao DOWN/NO-CARRIER da bridge e inconsistente com LOWER_UP e os pings
+# bem-sucedidos, mesmo comportamento observado no HubSoft; nao representa perda
+# de transporte. Nenhuma VM foi migrada ainda.
+
+## Inventario imediatamente antes das VMs
+
+Todas as 11 VMs estavam running e em vmbr0, sem tag.
+
+Publicas, destino vmbr1/tag 16:
+
+- 102 SFTP-OPA-CHAT `.20`
+- 103 Docs `.7`
+- 104 Fusionpbx-PM-CPV `.14`
+- 105 TIP-VOIP `.13`
+- 106 Fusionpbx-PM-MST `.17`
+- 107 OVPN `.9`
+- 108 Fusion-0800-Netpal `.18`
+- 110 Zabbix `.6`
+
+Privadas, destino vmbr1 untagged:
+
+- 100 Dude-VLSul `.38`, gateway `.37/30`; tambem possui `100.6.6.4`
+- 101 Monsta `.62`, gateway `.61/30`
+- 109 Dude-PM-CPV `.42`, gateway `.41/30`
+
+Gateways confirmados no RB3011 em `Bridge IP Publico`; serao movidos para
+`vlan100-servidores` junto com suas VMs.
+
+Subinterfaces antigas ainda presentes no host:
+
+- enp3s0f0.1 -> vmbr0v1
+- enp3s0f0.50 -> vmbr0v50
+
+Nenhuma configuracao QEMU atual referencia tag 1 ou 50. As interfaces serao
+mantidas intactas ate a validacao final do novo caminho.
+
+## Piloto VLAN 16 - VM 110 Zabbix
+
+Backup das 11 configuracoes criado em:
+
+`/root/vm-config-pre-vmbr1-zabbix-2026-08-05/`
+
+VM 110 alterada ao vivo para:
+
+`net0: virtio=4E:01:6C:C9:F0:78,bridge=vmbr1,firewall=1,tag=16`
+
+Validacao:
+
+- VM permaneceu running, sem pending
+- fwpr110p0 forwarding na vmbr1, VLAN 16 PVID/Egress Untagged para a VM
+- `177.72.104.6`: 5/5
+- HTTP: 200
+- HTTPS: 200
+- Docs `.7` e Dude VLSUL `.38` continuaram 3/3 no caminho antigo
+
+# Piloto aprovado; transporte tagged VLAN 16 confirmado no segundo cabo.
+
+## Primeira tentativa da VM 102 SFTP
+
+- VM 102 movida para vmbr1/tag 16
+- apos 3 segundos, `.20` nao respondeu a 3 pings
+- rollback automatico executado para vmbr0 sem tag
+- verificacao final mostrou `.20` novamente OK
+- nenhuma das VMs 103-108 foi alterada, pois o loop parou no primeiro erro
+- VM 110 Zabbix permaneceu funcional no novo caminho
+
+# Resultado seguro, sem indisponibilidade persistente. Como a VLAN 16 esta
+# comprovada pela VM 110, investigar FDB/ARP antigo para o MAC da VM 102 antes
+# de repetir; nao aumentar o tempo cegamente.
+
+## Causa da falha inicial da VM 102
+
+RB3011 depois do rollback:
+
+- MAC F2:19:E1:4A:8C:8A ainda ativo na `Bridge IP Publico` pelo caminho antigo
+  `ether10 - RB750 Bridge`
+- o mesmo MAC permaneceu temporariamente aprendido na `bridge-servidores`,
+  `vid=16`, pela `ether8 - Proxmox DNS`, com age crescente
+- ARP `.20` continuou completo para o MAC correto, mas associado a
+  `Bridge IP Publico`
+
+Comparacao com a VM 110 funcional:
+
+- MAC 4E:01:6C:C9:F0:78 em `bridge-servidores`, vid 16, ether8
+- entrada externa na `Bridge IP Publico` com `on-interface=vlan16-servidores`
+- ARP `.6` completo
+
+# Causa operacional: FDB da bridge publica ainda encaminhava `.20` ao caminho
+# antigo durante a janela curta do teste. Na repeticao, mover a VM e limpar
+# FDB/ARP para forcar reaprendizado por vlan16-servidores.
+
+## Segunda tentativa da VM 102
+
+- VM confirmada em vmbr1/tag 16, running
+- fwpr102p0 forwarding na vmbr1
+- RouterOS recusou remover FDB dinamica (`can not remove dynamic`), comportamento
+  normal para esse tipo de entrada
+- ARP `.20` foi removido com sucesso
+- ping RB3011 -> `.20`: 5/5, 0% perda
+
+# A limpeza de ARP e o tempo adicional permitiram alcancabilidade no novo
+# caminho. Falta validar TCP/22 antes de liberar as demais VMs publicas.
+
+Validacao de aplicacao da VM 102:
+
+- ICMP `.20`: 5/5
+- TCP/22: `connection refused` (host alcancado, servico nao escuta nessa porta)
+- porta correta informada pelo usuario: TCP/45345
+- TCP/45345: aberto
+
+# VM 102 aprovada. O teste em TCP/22 nao era aplicavel ao servico real.
+
+## Primeira tentativa da VM 103 Docs
+
+- VM movida para vmbr1/tag 16
+- mesmo apos 10 segundos, `.7` nao respondeu enquanto o ARP antigo permaneceu
+- rollback automatico para vmbr0 executado
+- `.7` respondeu novamente na verificacao final
+- nenhuma VM 104-108 foi alterada
+
+# O segundo caso confirma o padrao: nao basta esperar; e necessario remover o
+# ARP correspondente no RB3011 logo depois de cada hot-move para que o broadcast
+# ARP force reaprendizado da FDB pelo novo caminho.
+
+## Segunda tentativa da VM 103 Docs
+
+- VM movida para vmbr1/tag 16
+- ARP `.7` removido no RB3011 imediatamente depois
+- MAC reaprendido em `bridge-servidores`, vid 16, ether8
+- ICMP: 5/5
+- HTTP: 200
+- HTTPS: connection refused/000 (servico nao escuta em 443)
+
+# VM 103 aprovada pelo servico HTTP real.
+
+## VM 104 FusionPBX PM-CPV
+
+- VM movida para vmbr1/tag 16
+- ARP `.14` removido no RB3011
+- ping do RB3011: 5/5
+- HTTPS: 302
+- HTTP: timeout/000
+- ping originado pelo hypervisor `.5`: sem resposta
+
+# O ping do hypervisor deixou de ser teste valido para VMs ja migradas porque
+# `.5/27` ainda tem rota connected pela vmbr0 antiga. RB3011 e acesso HTTPS
+# confirmam o novo caminho. Validacao de ramais/troncos ainda depende de
+# confirmacao operacional do usuario.
+
+## Lote das VMs 105-108
+
+Depois dos hot-moves, os ARPs `.13`, `.17`, `.9` e `.18` foram removidos em uma
+unica linha no RB3011. Resultado do RB3011:
+
+- `.13`: 3/3
+- `.17`: 3/3
+- `.9`: 3/3
+- `.18`: 3/3
+
+# Falta apenas confirmar as configuracoes QEMU em vmbr1/tag 16 antes do lote
+# das VMs privadas; ICMP sozinho nao prova de qual caminho cada VM respondeu.
+
+Confirmacao QEMU posterior: as oito VMs publicas 102-108 e 110 estao em
+`bridge=vmbr1,tag=16`.
+
+## Lote das VMs privadas
+
+Gateways movidos no RB3011 para `vlan100-servidores`:
+
+- `192.168.17.37/30` Dude VLSUL
+- `192.168.17.41/30` Dude PM CPV
+- `192.168.115.61/30` Monsta
+
+VMs movidas para vmbr1 untagged:
+
+- 100 Dude-VLSul
+- 101 Monsta
+- 109 Dude-PM-CPV
+
+Depois da limpeza de ARP no RB3011:
+
+- `.38`: 3/3
+- `.42`: 3/3
+- `.62`: 3/3
+- `100.6.6.4`: 3/3, TTL 60
+
+# Todas as 11 VMs usam o novo cabo. Falta migrar a default route e remover o
+# IP publico `.5` do proprio hypervisor, depois isolar a porta antiga.
+
+## Servicos do hypervisor `.5`
+
+Nenhuma VM permaneceu em vmbr0.
+
+Servicos escutando no host:
+
+- SSH: TCP/45345
+- Proxmox pveproxy: TCP/8006
+- HTTP/80: connection refused
+- HTTPS/443: connection refused
+- Proxmox/8006: HTTP 200
+
+# A regra historica chamada HubSoft para `.5` nao corresponde a uma aplicacao
+# web HubSoft no hypervisor. O IP `.5` serve gerencia Proxmox/SSH e pode sair
+# depois de abrir sessao equivalente em `.10` e atualizar o monitoramento.
+
+Pings locais do host depois da migracao:
+
+- responderam: `.6`, `.7`, `.14`, `.20`, `.38`, `.42`, `.62`
+- nao responderam localmente: `.9`, `.13`, `.17`, `.18`
+
+# As quatro ausencias locais sao esperadas enquanto `.5/27` mantem rota
+# connected pela vmbr0 antiga; os quatro IPs responderam 3/3 pelo RB3011 logo
+# apos a limpeza de ARP, que e o teste valido do novo caminho.
+
+## Rollback funcional da VM 101 Monsta
+
+Apesar de `.62` responder 3/3 depois da migracao, o usuario informou que o
+servico Monsta ficou fora. Rollback imediato executado:
+
+- VM 101 voltou para vmbr0 sem tag
+- gateway `192.168.115.61/30` voltou para `Bridge IP Publico`
+- usuario confirmou que o servico voltou
+
+# O problema e funcional e especifico do Monsta; ICMP nao foi gate suficiente.
+# Manter VM 101 e gateway `.61` no caminho antigo ate identificar a dependencia.
+# As outras dez VMs permanecem no novo caminho.
+
+## Segunda tentativa da VM 101 Monsta
+
+- gateway `.61/30` movido novamente para `vlan100-servidores`
+- VM 101 movida isoladamente para vmbr1 untagged
+- ARP `.62` removido
+- ping RB3011 -> `.62`: 5/5
+- usuario confirmou acesso web ao Monsta
+
+# Segunda tentativa aprovada funcionalmente. Todas as 11 VMs agora estao no
+# novo caminho; a excecao temporaria do Monsta foi encerrada.
+
+## Virada final do hypervisor
+
+Sessao de seguranca confirmada:
+
+`177.72.104.19 -> 192.168.254.10:45345`
+
+Backup criado:
+
+`/etc/network/interfaces.pre-virada-final-zabbix-2026-08-05`
+
+Configuracao persistente final:
+
+- vmbr0 manual, enp3s0f0, sem IP e sem gateway
+- vmbr1 `192.168.254.10/24`, gateway `192.168.254.1`, enp3s0f1, VLAN-aware
+
+Validacao ao vivo:
+
+- gateway `.1`: 3/3
+- internet `1.1.1.1`: 3/3
+- IP publico `.5/27` removido do host
+- unico IPv4: `.10/24` em vmbr1
+- default via `.1` por vmbr1
+- nenhuma VM em vmbr0
+- as 8 VMs publicas e 3 privadas responderam 2/2 pelo novo caminho
+
+# Virada logica concluida. Falta desativar ether3 do Zabbix na RB750 e confirmar
+# NO-CARRIER em enp3s0f0.
+
+## Isolamento final do caminho antigo
+
+A porta `ether3 - Proxmox Zabbix` foi desativada na RB750. Validacao no host:
+
+- enp3s0f0: `DOWN`, `NO-CARRIER`
+- enp3s0f1: `UP`, `LOWER_UP`
+- gateway `.1`: 3/3
+- internet `1.1.1.1`: 3/3
+- Zabbix `.6`: 3/3
+- Monsta `.62`: 3/3
+
+# Migracao do Proxmox Zabbix concluida e caminho antigo efetivamente isolado.
+# Rollback fisico: habilitar novamente ether3 na RB750.
