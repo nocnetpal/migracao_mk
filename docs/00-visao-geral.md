@@ -49,15 +49,21 @@ futura. 📌 Escopo fechado: **a rede de acesso não é tocada.**
 - **CCR1036 100% em bancada (2026-08-06, scripts 01–09):** VLANs 15/16/66/100/109/116, OSPF
   (ptp+MD5 com o NE8000, privadas passivas), firewall, SRC-NAT, DST-NAT Dude/TS SIX, gerência
   remota, backup pré-corte — [`config/ccr1036/`](../config/ccr1036/).
-  ⚠️ **Ainda está com `.4` — trocar para `.15` antes do trunk subir** (passo 3 do
-  [runbook-noite.html](runbook-noite.html): inclui router-id do OSPF e `dst-address` dos DST-NAT;
-  os `.rsc` antigos têm `.4`, não re-executar)
+  ✅ **Troca `.4` → `.15` aplicada em 2026-08-07** (IP VLAN 16, SRC-NAT, `dst-address` dos
+  DST-NAT e **router-id do OSPF**) — ver
+  [`config/ccr1036/troca-4-15-aplicada-2026-08-07.md`](../config/ccr1036/troca-4-15-aplicada-2026-08-07.md).
+  ⚠️ Os `.rsc` antigos têm `.4` — **não re-executar** (passo 3 do runbook); gerar export novo no
+  fim da noite (`/export file=ccr1036-pre-corte-v2`)
 - **DM4170 em bancada (2026-08-07):** DmOS 12.4.0, hostname `DM4170-SW_SERVIDORES`, SNTP/SNMP/ACL
   de CPU, VLANs 15/16/66/100/109/116, trunks **XS1→NE8000** e **XS2→CCR**, GE 1/1/1–8
   placeholders dos servidores, **sem SVI/OSPF** — [`config/dm4170/`](../config/dm4170/)
 - **NE8000 — LoopBacks de gerência (2026-08-07):** `10.200.255.241` (PPPOE) e `10.200.255.242`
   (BGP_NETPAL) criadas e no OSPF — a gerência não depende mais do `.54`
   ([`config/ne8000/loopbacks-gerencia-2026-08-07.md`](../config/ne8000/loopbacks-gerencia-2026-08-07.md))
+- **NE8000 — prep do trunk DM4170 (2026-08-07):** GE0/1/3 da VS BGP_NETPAL com
+  `GE0/1/3.16` (`177.72.104.1/27`, shutdown) e `GE0/1/3.48` (`192.168.15.49/30`, shutdown) —
+  enlace de gerência com o DM4170 (`.50/30` MGMT, sem cabo). Portas ocupadas mapeadas (GE0/1/2 =
+  Juca Ana `.198`, GE0/1/7 = `.4053`) — [`config/ne8000/portas-em-uso-2026-08-07.md`](../config/ne8000/portas-em-uso-2026-08-07.md)
 - **IP da CCR definido `.15` (2026-08-07):** o `.4` é o LoopBack1 do NE8000/PPPOE_NETPAL;
   `.15` confirmado livre ao vivo
   ([`config/ne8000/check-177.72.104.15-livre-2026-08-07.md`](../config/ne8000/check-177.72.104.15-livre-2026-08-07.md))

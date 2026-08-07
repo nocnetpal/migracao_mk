@@ -3,7 +3,9 @@
 > ✅ **Base de bancada concluída em 2026-08-06:** CCR1036-8G-2S+ r2 em RouterOS/RouterBOOT
 > `7.23.3 stable`, identity `CCR-GW_PRIV_SERVIDORES-VPN_WG`. `ether1-MGMT` usa temporariamente
 > `192.168.88.1/24`; `sfp1-TRUNK-DM` é o único uplink alvo; `sfp2-RESERVA` fica desativada. VLAN 16,
-> ~~`.4/27`~~ → 🆕 **`.15/27` (troca 2026-08-07, ver abaixo)**, VLAN 100 `.1/24`, default via `.1` e
+> ~~`.4/27`~~ → ✅ **`.15/27` aplicado em 2026-08-07** (inclui router-id OSPF e dst-address dos
+> DST-NAT — ver `config/ccr1036/troca-4-15-aplicada-2026-08-07.md`), VLAN 100 `.1/24`, default via
+> `.1` e
 > SRC-NAT estão pré-criados e ✅ **habilitados por
 > decisão do usuário em 2026-08-06**. Sem SFP conectado, continuam isolados em bancada. Não
 > conectar o trunk à produção enquanto o RB3011 ainda usar `192.168.254.1`. Scripts e validações em

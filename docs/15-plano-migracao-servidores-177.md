@@ -86,7 +86,7 @@ Checklist (bancada ou rack, **sem** tráfego de produção):
       ~~`vlan10`~~/~~`vlan999`~~ — fora do plano (2026-08-06), `vlan109` + as duas da decisão #12 quando fecharem) — ✅ 2026-08-07 (+ VLAN 15 e 100)
 - [x] Porta 10GE → NE8000: trunk com VLAN 16 + VLANs de gerência acima — ✅ 2026-08-07: **XS1 = ten-gigabit-ethernet 1/1/1**, tagged 15/16/66/100/109/116
 - [x] Porta → CCR: trunk com VLAN 16 pública + VLANs privadas ([10](10-enderecamento-ccr1036.md)) — ✅ 2026-08-07: **XS2 = ten-gigabit-ethernet 1/1/2**, tagged 15/16/66/100/109/116
-- [x] Portas GE dos servidores: criar/nomear placeholders (mapa § A.5), deixar `shutdown` ou sem cabo — ✅ 2026-08-07: GE 1/1/1–1/1/8 configuradas (native/tagged conforme A.6); **GE 1/1/9 (CGNAT-1) e 1/1/10 (Gerência NE8000) aguardando destino confirmar**
+- [x] Portas GE dos servidores: criar/nomear placeholders (mapa § A.5), deixar `shutdown` ou sem cabo — ✅ 2026-08-07: GE 1/1/1–1/1/8 configuradas (native/tagged conforme A.6) + descriptions; **GE 1/1/9** = ~~CGNAT-1~~ ✅ **sem uso** (CGNAT direto no NE8000, 2026-08-07); **GE 1/1/10** (Gerência NE8000) sem config — ✅ caminho alternativo criado: enlace `192.168.15.48/30` (NE `.49` GE0/1/3.48 ↔ DM `.50` MGMT, preparado sem cabo) — ver `config/ne8000/gerencia-dm4170-48-30-2026-08-07.md`
 - [x] **Não** configurar QinQ termination de acesso nesta etapa (fica pra janela futura) — ✅ 2026-08-07: QinQ permanece no RB3011 (decisão do usuário)
 
 ### A.4 Config — NE8000
@@ -136,7 +136,7 @@ Numeração sugerida nas 24× GE SFP (ajustar no rack). Uplink 10GE usa as XS, n
 | GE7 | Dude `192.168.116.30` | SFP-RJ45 | gerência Dude (confirmar VLAN) |
 | GE8 | OLT CPV mgmt | SFP-RJ45 | `vlan109` |
 | GE9 | ~~CGNAT-1 mgmt `.66`~~ → ✅ **não usa porta do DM4170 (2026-08-07)** | — | CGNAT-1 (Hillstone) está **direto no NE8000**: GE0/1/4+0/1/5 → Eth-Trunk1, VLANs 400/401 (`.66/30` OUTSIDE na VS BGP_NETPAL, `.70/30` INSIDE); não passa pelo RB2011/DM4170. GE 1/1/9 fica **sem config** |
-| GE10 | Gerência NE8000 (sai do RB750) | a confirmar | a confirmar |
+| GE10 | Gerência NE8000 | a confirmar | ✅ **alternativa criada (2026-08-07):** enlace `192.168.15.48/30` — NE8000 `.49` (GE0/1/3.48) ↔ DM4170 `.50` (MGMT), preparado sem cabo (`config/ne8000/gerencia-dm4170-48-30-2026-08-07.md`); GE 1/1/10 segue sem config |
 | XS1 | Trunk 10GE → NE8000 | SFP+ | trunk |
 | XS2 | Trunk → CCR1036 | SFP+ ou GE | VLAN 16 + VLANs privadas, incluindo 100 e 15 |
 | — | QinQ acesso | — | **fora desta fase** |

@@ -131,7 +131,7 @@
     <span class="num">5</span><span class="step-title">Cabo físico NE8000 ↔ DM4170 (XS1, 10GE)</span>
     <span class="tag tag-fisico">FÍSICO</span><span class="chevron">▶</span></div>
     <div class="step-body">
-      <div class="do"># SFP+ 10GE no NE8000 (porta livre: GE0/1/2, 0/1/7 ou mover uma LIVRE_10G) ↔ XS1 do DM4170 (ten 1/1/1).<br># No NE8000: system-view → interface GigabitEthernet0/1/x → undo shutdown</div>
+      <div class="do"># SFP+ 10GE no NE8000 **GE0/1/3** (já atribuída à VS BGP_NETPAL, trunk do DM4170) ↔ XS1 do DM4170 (ten 1/1/1).<br><span class="cm"># ⚠️ GE0/1/2 = Juca Ana (.198) e GE0/1/7 = .4053 estão OCUPADAS — não usar (levantamento 2026-08-07)</span></div>
       <div class="expect">Esperado: link UP nos dois lados (show interface / show interface transceivers no DM4170).</div>
     </div>
   </div>
@@ -140,10 +140,10 @@
     <span class="num">6</span><span class="step-title">NE8000: prep das subinterfaces do trunk (todas SHUTDOWN)</span>
     <span class="tag tag-config">CONFIG</span><span class="chevron">▶</span></div>
     <div class="step-body">
-      <div class="warnbox">Tudo desativado: <b>sem impacto em produção</b>. A SVI do /27 fica shutdown até a virada (o RB3011 ainda é o gateway).</div>
+      <div class="warnbox">Tudo desativado: <b>sem impacto em produção</b>. A SVI do /27 fica shutdown até a virada (o RB3011 ainda é o gateway). <b>Já aplicado em bancada (2026-08-07).</b></div>
       <div class="okbox">✅ O NE8000 só tem sub-interface do <b>público</b> (VLAN 16, `.1/27`) — as VLANs privadas (100/15/66/109/116) são gateway <b>só da CCR</b>, não duplicar aqui.</div>
-      <div class="do"># VS BGP_NETPAL — porta escolhida ex.: GE0/1/2:<br>interface GigabitEthernet0/1/2.16<br>&nbsp;vlan-type dot1q 16<br>&nbsp;ip address 177.72.104.1 255.255.255.224<br>&nbsp;shutdown<br>commit</div>
-      <div class="expect">Esperado: sub-interface `.16` criada, administrativamente down. <code>display interface GigabitEthernet0/1/2.16</code> mostra administratively down. OSPF NÃO habilitado nela ainda.</div>
+      <div class="do"># VS BGP_NETPAL — porta <b>GE0/1/3</b> (trunk DM4170) — JÁ FEITO:<br>interface GigabitEthernet0/1/3<br>&nbsp;undo ip address<br>interface GigabitEthernet0/1/3.16<br>&nbsp;vlan-type dot1q 16<br>&nbsp;ip address 177.72.104.1 255.255.255.224<br>&nbsp;shutdown<br>interface GigabitEthernet0/1/3.48<br>&nbsp;vlan-type dot1q 48<br>&nbsp;ip address 192.168.15.49 255.255.255.252<br>&nbsp;shutdown<br>commit<br><span class="cm"># (QinQ de acesso + 18/1066: somente na janela futura)</span></div>
+      <div class="expect">Esperado: sub-interface `.16` (`.1/27`) e `.48` (`.49/30`) administrativamente down. <code>display ip interface brief | include GigabitEthernet0/1/3</code>. OSPF NÃO habilitado. Na virada: <code>undo shutdown</code> na `.16` + OSPF.</div>
     </div>
   </div>
 
