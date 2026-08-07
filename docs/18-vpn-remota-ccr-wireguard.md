@@ -83,6 +83,22 @@ Você remoto → Internet → 177.72.104.15:13231 (WG na CCR, VLAN 16)
 - Se o WG da CCR não funcionar: o RB750 permanece configurado até a retirada — o operador usa o WG antigo (`.19`) como reserva enquanto ele existir.
 - Depois da retirada: RB750/RB2011 ficam desligados mas configurados por N semanas (rollback físico — fase 4 do plano).
 
+
+## 🆕 Dois WireGuards na CCR (decisão 2026-08-10)
+
+A CCR sobe **os dois WGs que hoje vivem no RB750** (que sai na janela):
+
+| Interface | Porta | Rede | IP na CCR | Uso |
+|---|---|---|---|---|
+| wireguard1 | 13231 | 10.150.150.0/24 | 10.150.150.1/24 | VPN usuários/equipe — remoto (endpoint .15) |
+| wg-mgmt | 51820 | 10.99.0.0/24 (+10.90.0.0/22) | 10.99.0.1/24 | gerência Condominio RARO (peer26, public-key em config/rb750gr3-wireguard/) |
+
+Replicar na CCR:
+- peer26 do wg-mgmt (allowed-address 10.99.0.2/32,10.90.0.0/22) + chave pública salva
+- firewall do wg-mgmt (RB750): accept wg-mgmt→wg-mgmt; drop dst 10.90.0.0/16 fora do wg-mgmt
+- SRC-NAT do wg-mgmt → .15 (mesma lógica do wireguard1: retorno sempre volta p/ CCR)
+- ⚠️ O lado cliente (RARO) precisa atualizar: endpoint → 177.72.104.15:51820 + public-key nova da CCR
+
 ## Pendências para segunda-feira
 
 - [x] Abordagem A escolhida: endpoint `.15` (2026-08-07)
