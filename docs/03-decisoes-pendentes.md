@@ -1,5 +1,24 @@
 # Decisões pendentes
 
+> 📇 **Sumário** (detalhe em cada seção abaixo; ⚠️ a ordem física no arquivo é 1–11, 13, 12, 14):
+
+| # | Decisão | Status | Resultado resumido |
+|---|---|---|---|
+| 1 | NAT e DHCP | ✅ 2026-07-23 | NAT → **CCR1036**; NE8000 só `/27`+firewall; DHCP = 1 escopo trivial |
+| 2 | Quais MKs saem | ✅ 2026-08-06 | RB3011 + RB2011 saem; **RB750 fica** (WireGuard `.19`) até VPN migrar |
+| 3 | Redundância/HA | ✅ 2026-07-24 | **Sem redundância** — mesmo SPOF de hoje, aceito |
+| 4 | OSPF / adjacências | ✅ | VLAN 28 morre com o MK; nova adjacência CCR `.15`↔NE8000 `.1` na VLAN 16 |
+| 5 | VPN de equipe | ✅ 2026-08-06 | WireGuard na CCR **só pós-migração**; L2TP/OpenVPN/PPTP não recriados |
+| 6 | Automações (backup FTP, netwatch→FocusChat) | ✅ 2026-07-24 | **Descartadas**, não migram; token FocusChat só revogar (fase 4) |
+| 7 | Geo-allowlist BRASIL | ✅ 2026-07-24 | **Descartar** — lista órfã, nunca referenciada |
+| 8 | Dependências NE8000↔GW Servidores | ✅ | Resolvida pela #9 (`/27` connected no NE8000); LoopBacks de gerência criadas 2026-08-07 |
+| 9 | Dono do `/27` + IP da CCR | ✅ 2026-08-07 | NE8000 dono (`.1`); CCR ~~`.4`~~ → **`.15`** VLAN 16; DST-NAT Dude/TS SIX na CCR |
+| 10 | Sobreposição `177.72.104.60/30` | ✅ 2026-07-24 | Sem conflito; `.60/30` migra pro NE8000 |
+| 11 | Chave OSPF MD5 | ✅ 2026-07-24 | Opção A — mantém `ntprb1030` no corte, rotação fase 4 |
+| 12 | Gerência dos 4 Proxmox | ✅ 2026-08-05 | Concluída: hosts `.10`–`.13` na VLAN 100, VMs públicas tag 16 |
+| 13 | DM4170 L2 ou L3 | ✅ 2026-07-24 | Opção B — **DM4170 só L2**; SVIs QinQ no NE8000; privadas na CCR |
+| 14 | Firewall dos servidores locais | ✅ 2026-07-24 | Sobe **sem regra dedicada**; endurecimento pós-corte |
+
 ## 1. Onde ficam NAT e DHCP?
 
 Firewall L3 já definido: vai para o NE8000. Mas NAT e DHCP ainda não foram decididos entre:
