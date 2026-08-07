@@ -113,12 +113,13 @@
   </div>
 
   <div class="step warn" data-i="2"><div class="step-head">
-    <span class="num">3</span><span class="step-title">CCR1036: trocar NAT de .4 para .15 (antes do trunk subir)</span>
+    <span class="num">3</span><span class="step-title">CCR1036: trocar NAT de .4 para .15 — ✅ JÁ APLICADO 2026-08-07</span>
     <span class="tag tag-pre">PRÉ</span><span class="chevron">▶</span></div>
     <div class="step-body">
       <div class="warnbox">O <span class="ip-err">177.72.104.4</span> é o LoopBack1 .4/32 do NE8000 (PPPOE). A CCR <b>não pode</b> usar esse IP. O <span class="ip">177.72.104.15</span> foi confirmado livre (ping/ARP 2026-08-07).</div>
       <div class="do">/ip address set [find where address="177.72.104.4/27"] address=177.72.104.15/27<br>/ip firewall nat set [find where to-addresses="177.72.104.4"] to-addresses=177.72.104.15<br><span class="cm"># router-id do OSPF tambem esta .4 (e o IP da LoopBack1 do NE8000!) — trocar:</span><br>/routing ospf instance set [find name="ospf1"] router-id=177.72.104.15<br><span class="cm"># DST-NAT Dude/TS SIX casam so por porta — amarrar ao .15 (senao sequestram transito de clientes WG):</span><br>/ip firewall nat set [find comment="DUDE - era .1:18291"] dst-address=177.72.104.15<br>/ip firewall nat set [find comment="TS SIX - era .1:15389"] dst-address=177.72.104.15<br>/ip address print<br>/ip firewall nat print<br>/routing ospf instance print</div>
       <div class="expect">Esperado: VLAN 16 com <span class="ip">177.72.104.15/27</span>, SRC-NAT saindo como .15, router-id do ospf1 = .15, DST-NAT com dst-address .15. SFP do trunk <b>desconectado</b> (sem conflito).</div>
+      <div class="okbox">✅ Aplicado e validado em bancada 2026-08-07 (IP VLAN 16, SRC-NAT, router-id OSPF, dst-address dos DST-NAT) — evidência: <code>config/ccr1036/troca-4-15-aplicada-2026-08-07.md</code> + backup <code>ccr1036-pre-noite-2026-08-07.rsc</code>. Na noite: só conferir, <b>não reaplicar</b>.</div>
       <div class="warnbox">⚠️ Os scripts <code>config/ccr1036/*.rsc</code> e o backup <code>ccr1036-pre-corte-2026-08-06.rsc</code> ainda têm o <span class="ip-err">.4</span> — <b>não re-executar nenhum deles</b> depois desta troca. Ao final da noite, gerar export novo: <code>/export file=ccr1036-pre-corte-v2</code>.</div>
     </div>
   </div>
